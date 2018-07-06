@@ -5,6 +5,10 @@ open System.Collections
 open System.Collections.Generic
 open FSharpx.Collections
 
+open ResultDotNet.FSharp
+
+open SafetyFirst.ErrorTypes
+
 /// A lazy sequence constrained to be finite in length.
 type FiniteSeq<'a when 'a : comparison> (xs : LazyList<'a>) = 
   //this implementation is modeled off of how array hashes are computed, here: 
@@ -107,11 +111,25 @@ module FiniteSeq =
   /// through the computation. Begin by applying the function to the first two elements.
   /// Then feed this result into the function along with the third element and so on.
   /// Return the final result.  
-  /// Returns None if the sequence is empty
-  let inline tryReduce f (FSeq xs) = 
+  /// Returns a SeqIsEmpty Error if the sequence is empty
+  let reduceSafe f (FSeq xs) = 
     match xs with
-    | LazyList.Cons (head, tail) -> Some (LazyList.fold f head tail)
-    | LazyList.Nil -> None
+    | LazyList.Cons (head, tail) -> Ok <| LazyList.fold f head tail
+    | LazyList.Nil -> Error reduceErr
+
+  /// Applies a function to each element of the sequence, threading an accumulator argument
+  /// through the computation. Begin by applying the function to the first two elements.
+  /// Then feed this result into the function along with the third element and so on.
+  /// Return the final result.  
+  /// Returns a SeqIsEmpty Error if the sequence is empty
+  let inline reduce' f xs = reduceSafe f xs   
+
+  /// Applies a function to each element of the sequence, threading an accumulator argument
+  /// through the computation. Begin by applying the function to the first two elements.
+  /// Then feed this result into the function along with the third element and so on.
+  /// Return the final result.  
+  /// Returns None if the sequence is empty
+  let tryReduce f xs = reduce' f xs |> Result.toOption
 
   /// Builds a new collection whose elements are the results of applying the given function
   /// to each of the elements of the collection. The given function will be applied
@@ -176,37 +194,95 @@ module FiniteSeq =
 
   /// Returns the first element for which the given function returns True.
   /// Return None if no such element exists.
-  let inline tryFind predicate (FSeq xs) = LazyList.tryFind predicate xs
+  let tryFind predicate (FSeq xs) = LazyList.tryFind predicate xs
+
+  /// Returns the first element for which the given function returns True.
+  /// Returns a NoMatchingElement Error if no such element is found.
+  let findSafe predicate xs = 
+    tryFind predicate xs |> Result.ofOption findErr
   
+  /// Returns the first element for which the given function returns True.
+  /// Returns a NoMatchingElement Error if no such element is found.
+  let inline find' predicate xs = findSafe predicate xs
+
   /// Returns the first element of the sequence.
-  let inline tryHead (FSeq xs) = LazyList.tryHead xs
+  let tryHead (FSeq xs) = LazyList.tryHead xs
+
+  /// Returns the first element of the sequence.
+  let headSafe xs = tryHead xs |> Result.ofOption headErr
+
+  /// Returns the first element of the sequence.
+  let inline head' xs = headSafe xs
 
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
-  /// Returns None if the sequences are different lengths
-  let tryMap2 f xs ys  =
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let map2Safe f xs ys =
     if length xs <> length ys 
-    then None
-    else Some (map2 f xs ys)
- 
+    then Error (map2Err (length xs) (length ys)) 
+    else Ok (map2 f xs ys)
 
-  /// O(n), where n is count. Return option the list which skips the first 'n' elements of
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let inline map2' f xs ys = map2Safe f xs ys
+
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  
+  /// Returns None if the sequences are different lengths.
+  let tryMap2 f xs ys = map2' f xs ys |> Result.toOption
+
+  /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
-  let inline trySkip n (FSeq xs) = Option.map fseq (LazyList.trySkip n xs)
+  let trySkip n (FSeq xs) = Option.map fseq (LazyList.trySkip n xs)
+
+  /// O(n), where n is count. Return the list which skips the first 'n' elements of
+  /// the input list.
+  let skipSafe n xs = 
+    trySkip n xs 
+    |> Result.ofOptionWith (fun () -> skipErr n (length xs))
+    
+  /// O(n), where n is count. Return the list which skips the first 'n' elements of
+  /// the input list.
+  let inline skip' n xs = skipSafe n xs  
+
+  /// O(1). Return option the list corresponding to the remaining items in the sequence.
+  /// Forces the evaluation of the first cell of the list if it is not already evaluated.
+  let tryTail (FSeq xs) = Option.map fseq (LazyList.tryTail xs)
   
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
-  let inline tryTail (FSeq xs) = Option.map fseq (LazyList.tryTail xs)
-  
+  let tailSafe xs = tryTail xs |> Result.ofOption tailErr
+
+  /// O(1). Return option the list corresponding to the remaining items in the sequence.
+  /// Forces the evaluation of the first cell of the list if it is not already evaluated.
+  let inline tail' xs = tailSafe xs
+
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
-  let inline tryTake n (FSeq xs) = Option.map fseq (LazyList.tryTake n xs)
-  
+  let tryTake n (FSeq xs) = Option.map fseq (LazyList.tryTake n xs)
+
+  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
+  /// the input list.
+  let takeSafe n xs = 
+    tryTake n xs 
+    |> Result.ofOptionWith (fun () -> takeErr n (length xs))
+
+  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
+  /// the input list.
+  let inline take' n xs = takeSafe n xs 
+
   /// O(1). Returns tuple of head element and tail of the list.
-  let inline tryUncons (FSeq xs) = 
+  let unconsSafe (FSeq xs) = 
     match LazyList.tryUncons xs with
-    | Some (head, tail) -> Some (head, fseq tail)
-    | None -> None
+    | Some (head, tail) -> Ok (head, fseq tail)
+    | None -> Error unconsErr
+
+  /// O(1). Returns tuple of head element and tail of the list.
+  let inline uncons' xs = unconsSafe xs
+
+  /// O(1). Returns tuple of head element and tail of the list.
+  let tryUncons xs = uncons' xs |> Result.toOption 
 
   /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other
@@ -214,11 +290,19 @@ module FiniteSeq =
   let inline zip (FSeq xs) (FSeq ys) = fseq (LazyList.zip xs ys)
 
   /// Combines the two sequences into a list of pairs. 
-  /// Returns None if the sequences are different lengths
-  let tryZip xs ys =
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let zipSafe xs ys =
     if length xs <> length ys 
-    then None
-    else Some (zip xs ys)
+    then Error (zipErr (length xs) (length ys)) 
+    else Ok (zip xs ys)
+
+  /// Combines the two sequences into a list of pairs. 
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let inline zip' xs ys = zipSafe xs ys  
+
+  /// Combines the two sequences into a list of pairs. 
+  /// Returns None if the sequences are different lengths.
+  let tryZip xs ys = zipSafe xs ys |> Result.toOption
   
 module FSeq =
   /// Returns the length of the sequence
@@ -231,6 +315,20 @@ module FSeq =
 
   /// Returns true if the sequence contains no elements, false otherwise.
   let inline isEmpty xs = FiniteSeq.isEmpty xs
+
+  /// Applies a function to each element of the sequence, threading an accumulator argument
+  /// through the computation. Begin by applying the function to the first two elements.
+  /// Then feed this result into the function along with the third element and so on.
+  /// Return the final result.  
+  /// Returns a SeqIsEmpty Error if the sequence is empty.
+  let inline reduceSafe f xs = FiniteSeq.reduceSafe f xs
+
+  /// Applies a function to each element of the sequence, threading an accumulator argument
+  /// through the computation. Begin by applying the function to the first two elements.
+  /// Then feed this result into the function along with the third element and so on.
+  /// Return the final result.  
+  /// Returns a SeqIsEmpty Error if the sequence is empty.
+  let inline reduce' f xs = FiniteSeq.reduce' f xs
 
   /// Applies a function to each element of the sequence, threading an accumulator argument
   /// through the computation. Begin by applying the function to the first two elements.
@@ -305,29 +403,83 @@ module FSeq =
   /// Returns the first element of the sequence.
   let inline tryHead xs = FiniteSeq.tryHead xs
 
+  /// Returns the first element of the sequence.
+  let inline headSafe xs = FiniteSeq.headSafe xs
+
+  /// Returns the first element of the sequence.
+  let inline head' xs = FiniteSeq.head' xs
+
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// Returns None if the sequences are different lengths
   let inline tryMap2 f xs ys = FiniteSeq.tryMap2 f xs ys 
 
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let inline map2Safe f xs ys = FiniteSeq.map2Safe f xs ys
+
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let inline map2' f xs ys = FiniteSeq.map2' f xs ys
+
   /// O(n), where n is count. Return option the list which skips the first 'n' elements of
   /// the input list.
   let inline trySkip n xs = FiniteSeq.trySkip n xs
+
+  /// O(n), where n is count. Return the list which skips the first 'n' elements of
+  /// the input list.
+  let inline skipSafe n xs = FiniteSeq.skipSafe n xs
+
+  /// O(n), where n is count. Return the list which skips the first 'n' elements of
+  /// the input list.
+  let inline skip' n xs = FiniteSeq.skip' n xs
 
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   let inline tryTail xs = FiniteSeq.tryTail xs
 
+  /// O(1). Return option the list corresponding to the remaining items in the sequence.
+  /// Forces the evaluation of the first cell of the list if it is not already evaluated.
+  let inline tailSafe xs = FiniteSeq.tailSafe xs
+
+  /// O(1). Return option the list corresponding to the remaining items in the sequence.
+  /// Forces the evaluation of the first cell of the list if it is not already evaluated.
+  let inline tail' xs = FiniteSeq.tail' xs
+
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   let inline tryTake n xs = FiniteSeq.tryTake n xs
+    
+  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
+  /// the input list.
+  let inline takeSafe n xs = FiniteSeq.takeSafe n xs
+    
+  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
+  /// the input list.
+  let inline take' n xs = FiniteSeq.take' n xs
 
   /// O(1). Returns tuple of head element and tail of the list.
   let inline tryUncons xs = FiniteSeq.tryUncons xs
 
+  /// O(1). Returns tuple of head element and tail of the list.
+  let inline unconsSafe xs = FiniteSeq.unconsSafe xs
+  
+  /// O(1). Returns tuple of head element and tail of the list.
+  let inline uncons' xs = FiniteSeq.uncons' xs
+
   /// Combines the two sequences into a list of pairs. 
   /// Returns None if the sequences are different lengths
   let inline tryZip xs ys = FiniteSeq.tryZip xs ys
+
+  /// Combines the two sequences into a list of pairs. 
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let inline zipSafe xs ys = FiniteSeq.zipSafe xs ys
+
+  /// Combines the two sequences into a list of pairs. 
+  /// Returns a DifferingLengths Error if the sequences are different lengths.
+  let inline zip' xs ys = FiniteSeq.zip' xs ys
 
   /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other

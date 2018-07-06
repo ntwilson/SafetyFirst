@@ -8,15 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="ErrorTypes.fs" />
+    <Compile Include="Seq.fs" />
+    <Compile Include="List.fs" />
     <Compile Include="InfiniteSeq.fs" />
     <Compile Include="FiniteSeq.fs" />
     <Compile Include="NonEmptySeq.fs" />
-    <Compile Include="Seq.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.1.17" />
     <PackageReference Include="FSharpX.Collections" Version="1.17.0" />
+    <PackageReference Include="ResultDotNet" Version="2.0.5" />
   </ItemGroup>
 
 </Project>
