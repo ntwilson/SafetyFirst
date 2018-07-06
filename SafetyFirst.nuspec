@@ -14,6 +14,7 @@
 
     <dependencies>
       <dependency id="FSharp.Core" version="4.1.17" />
+      <dependency id="FSharpx.collections" version="1.17.0" />
     </dependencies>
   </metadata>
   <files>

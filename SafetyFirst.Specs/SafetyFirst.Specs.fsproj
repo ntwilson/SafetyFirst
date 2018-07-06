@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Compile Include="SeqSpec.fs" />
+    <Compile Include="FSeqSpec.fs" />
   </ItemGroup>
 
   <ItemGroup>
