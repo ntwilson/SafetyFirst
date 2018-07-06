@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="SeqSpec.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="fsharp.core" Version="4.5.0" />
+    <PackageReference Include="microsoft.net.test.sdk" Version="15.7.2" />
+    <PackageReference Include="nunit" Version="3.10.1" />
+    <PackageReference Include="nunit3TestAdapter" Version="3.10.0" />
+    <PackageReference Include="unquote" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SafetyFirst\SafetyFirst.fsproj" />
+  </ItemGroup>
+
+</Project>

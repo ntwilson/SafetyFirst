@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>SafetyFirst</id>
+    <version>0.0.0</version>
+    <authors>nathan wilson</authors>
+    <owners>nathan wilson</owners>
+    <description>Monadic error handling made convenient for F# and C#</description>
+    <summary>Monadic error handling made convenient for F# and C#</summary>
+    <releaseNotes></releaseNotes>
+    <licenseUrl>https://github.com/ntwilson/SafetyFirst/blob/master/LICENSE.md</licenseUrl>
+    <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
+    <tags>result safety collections functional-programming</tags>
+
+    <dependencies>
+      <dependency id="FSharp.Core" version="4.1.17" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="README.md" target="" />
+    <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.dll" target="lib\netstandard2.0" />
+    <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.XML" target="lib\netstandard2.0" />
+    <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.pdb" target="lib\netstandard2.0" />
+    <file src="SafetyFirst\bin\Release\net45\SafetyFirst.dll" target="lib\net45" />
+    <file src="SafetyFirst\bin\Release\net45\SafetyFirst.XML" target="lib\net45" />
+    <file src="SafetyFirst\bin\Release\net45\SafetyFirst.pdb" target="lib\net45" />
+    <file src="SafetyFirst\**\*.fs" target="src\SafetyFirst" />
+  </files>
+</package>
