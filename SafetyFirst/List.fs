@@ -326,6 +326,22 @@ let skipSafe count xs =
 /// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
 let inline skip' count xs = skipSafe count xs
 
+/// Splits a list into two lists, at the given index.
+/// Returns an IndexOutOfBounds Error when split index exceeds 
+/// the number of elements in the list.
+let splitAtSafe index xs = 
+  if index < 0 
+    then Error <| indexNegativeErr index
+  elif index > List.length xs
+    then Error <| indexTooLargeErr index (List.length xs)
+  else
+    Ok <| List.splitAt index xs
+
+/// Splits a list into two lists, at the given index.
+/// Returns an IndexOutOfBounds Error when split index exceeds 
+/// the number of elements in the list.
+let inline splitAt' index xs = splitAtSafe index xs 
+
 /// Splits the input list into at most count chunks.
 /// Returns a NegativeInput Error if <c>count</c> is not positive.
 let splitIntoSafe count xs = 
@@ -395,3 +411,5 @@ let zip3Safe xs ys zs =
 /// Combines the three lists into a list of triples. The lists must have equal lengths.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 let inline zip3' xs ys zs = zip3Safe xs ys zs
+
+//TODO: transpose, split once we use a newer FSharp.Core

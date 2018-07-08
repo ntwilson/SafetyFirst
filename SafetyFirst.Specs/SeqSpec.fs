@@ -22,13 +22,13 @@ let errorsAndThrowsOrNeither safeVersion unsafeVersion =
 
   in (throws && isError) || (not throws && not isError)
 
-let errorsWheneverThrows1 (safeVersion : _ list -> _) (unsafeVersion : _ list -> _) = 
+let errorsWheneverThrows1 safeVersion unsafeVersion = 
   let prop inputs  =
     errorsAndThrowsOrNeither (safeVersion inputs) (lazy (unsafeVersion inputs))
 
   Check.QuickThrowOnFailure prop
 
-let errorsWheneverThrows2 (safeVersion : _ -> _ list -> _) (unsafeVersion : _ -> _ list -> _) = 
+let errorsWheneverThrows2 safeVersion unsafeVersion = 
   let prop input1 input2 =
     errorsAndThrowsOrNeither (safeVersion input1 input2) (lazy (unsafeVersion input1 input2))
 
@@ -46,6 +46,14 @@ let errorsWheneverThrows4 safeVersion unsafeVersion =
 
   Check.QuickThrowOnFailure prop
 
+let errorsWheneverThrowsForSeq1 safeVersion unsafeVersion = 
+  errorsWheneverThrows1 (List.toSeq >> safeVersion) (List.toSeq >> unsafeVersion)
+
+let errorsWheneverThrowsForSeq2 safeVersion unsafeVersion = 
+  errorsWheneverThrows2 
+    (fun a xs -> safeVersion a (List.toSeq xs))
+    (fun a xs -> unsafeVersion a (List.toSeq xs))
+
 let averageFloats' (xs:float seq) = Seq.average' xs
 let averageFloats (xs:float seq) = Seq.average xs
 let averageByFloats' (projection:_ -> float) xs = Seq.averageBy' projection xs
@@ -53,29 +61,29 @@ let averageByFloats (projection:_ -> float) xs = Seq.averageBy projection xs
 
 [<Test>]
 let ``Safe Seq functions error whenever unsafe versions throw for all random inputs`` () =
-  errorsWheneverThrows1 averageFloats'        averageFloats
-  errorsWheneverThrows2 averageByFloats'      averageByFloats
-  errorsWheneverThrows2 Seq.chunkBySize'      Seq.chunkBySize
-  errorsWheneverThrows1 Seq.exactlyOne'       Seq.exactlyOne
-  errorsWheneverThrows2 Seq.find'             Seq.find
-  errorsWheneverThrows2 Seq.findBack'         Seq.findBack
-  errorsWheneverThrows2 Seq.findIndex'        Seq.findIndex
-  errorsWheneverThrows2 Seq.findIndexBack'    Seq.findIndexBack
-  errorsWheneverThrows1 Seq.head'             Seq.head
-  errorsWheneverThrows2 Seq.item'             Seq.item
-  errorsWheneverThrows1 Seq.last'             Seq.last
-  errorsWheneverThrows1 Seq.max'<int>         Seq.max<int>
-  errorsWheneverThrows2 Seq.maxBy'<int, int>  Seq.maxBy<int, int>
-  errorsWheneverThrows1 Seq.min'<int>         Seq.min<int>
-  errorsWheneverThrows2 Seq.minBy'<int, int>  Seq.minBy<int, int>
-  errorsWheneverThrows2 Seq.pick'             Seq.pick
-  errorsWheneverThrows2 Seq.reduce'           Seq.reduce
-  errorsWheneverThrows2 Seq.reduceBack'       Seq.reduceBack
-  errorsWheneverThrows2 Seq.skip'             Seq.skip
-  errorsWheneverThrows2 Seq.splitInto'        Seq.splitInto
-  errorsWheneverThrows1 Seq.tail'             Seq.tail
-  errorsWheneverThrows2 Seq.take'             Seq.take
-  errorsWheneverThrows2 Seq.windowed'         Seq.windowed
+  errorsWheneverThrowsForSeq1 averageFloats'        averageFloats
+  errorsWheneverThrowsForSeq2 averageByFloats'      averageByFloats
+  errorsWheneverThrowsForSeq2 Seq.chunkBySize'      Seq.chunkBySize
+  errorsWheneverThrowsForSeq1 Seq.exactlyOne'       Seq.exactlyOne
+  errorsWheneverThrowsForSeq2 Seq.find'             Seq.find
+  errorsWheneverThrowsForSeq2 Seq.findBack'         Seq.findBack
+  errorsWheneverThrowsForSeq2 Seq.findIndex'        Seq.findIndex
+  errorsWheneverThrowsForSeq2 Seq.findIndexBack'    Seq.findIndexBack
+  errorsWheneverThrowsForSeq1 Seq.head'             Seq.head
+  errorsWheneverThrowsForSeq2 Seq.item'             Seq.item
+  errorsWheneverThrowsForSeq1 Seq.last'             Seq.last
+  errorsWheneverThrowsForSeq1 Seq.max'<int>         Seq.max<int>
+  errorsWheneverThrowsForSeq2 Seq.maxBy'<int, int>  Seq.maxBy<int, int>
+  errorsWheneverThrowsForSeq1 Seq.min'<int>         Seq.min<int>
+  errorsWheneverThrowsForSeq2 Seq.minBy'<int, int>  Seq.minBy<int, int>
+  errorsWheneverThrowsForSeq2 Seq.pick'             Seq.pick
+  errorsWheneverThrowsForSeq2 Seq.reduce'           Seq.reduce
+  errorsWheneverThrowsForSeq2 Seq.reduceBack'       Seq.reduceBack
+  errorsWheneverThrowsForSeq2 Seq.skip'             Seq.skip
+  errorsWheneverThrowsForSeq2 Seq.splitInto'        Seq.splitInto
+  errorsWheneverThrowsForSeq1 Seq.tail'             Seq.tail
+  errorsWheneverThrowsForSeq2 Seq.take'             Seq.take
+  errorsWheneverThrowsForSeq2 Seq.windowed'         Seq.windowed
 
 let (|Seq|_|) x = 
   match box x with
@@ -97,13 +105,13 @@ let safeAndUnsafeVersionProduceSameOutput safeVersion unsafeVersion =
   | _ -> true
 
 
-let alwaysProduceSameOutput1 (safeVersion : _ list -> _) (unsafeVersion : _ list -> _) = 
+let alwaysProduceSameOutput1 safeVersion unsafeVersion = 
   let prop inputs =
     safeAndUnsafeVersionProduceSameOutput (safeVersion inputs) (lazy (unsafeVersion inputs))
 
   Check.QuickThrowOnFailure prop
 
-let alwaysProduceSameOutput2 (safeVersion : _ -> _ list -> _) (unsafeVersion : _ -> _ list -> _) = 
+let alwaysProduceSameOutput2 safeVersion unsafeVersion = 
   let prop input1 input2 =
     safeAndUnsafeVersionProduceSameOutput (safeVersion input1 input2) (lazy (unsafeVersion input1 input2))
 
@@ -121,31 +129,39 @@ let alwaysProduceSameOutput4 safeVersion unsafeVersion =
 
   Check.QuickThrowOnFailure prop
 
+let alwaysProduceSameOutputForSeq1 safeVersion unsafeVersion = 
+  alwaysProduceSameOutput1 (List.toSeq >> safeVersion) (List.toSeq >> unsafeVersion)
+
+let alwaysProduceSameOutputForSeq2 safeVersion unsafeVersion = 
+  alwaysProduceSameOutput2 
+    (fun a xs -> safeVersion a (List.toSeq xs))
+    (fun a xs -> unsafeVersion a (List.toSeq xs))
+
 
 [<Test>]
 let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
-  alwaysProduceSameOutput1 averageFloats'       averageFloats
-  alwaysProduceSameOutput2 averageByFloats'     averageByFloats
-  alwaysProduceSameOutput2 Seq.chunkBySize'     Seq.chunkBySize
-  alwaysProduceSameOutput1 Seq.exactlyOne'      Seq.exactlyOne
-  alwaysProduceSameOutput2 Seq.find'            Seq.find
-  alwaysProduceSameOutput2 Seq.findBack'        Seq.findBack
-  alwaysProduceSameOutput2 Seq.findIndex'       Seq.findIndex
-  alwaysProduceSameOutput2 Seq.findIndexBack'   Seq.findIndexBack
-  alwaysProduceSameOutput1 Seq.head'            Seq.head
-  alwaysProduceSameOutput2 Seq.item'            Seq.item
-  alwaysProduceSameOutput1 Seq.last'            Seq.last
-  alwaysProduceSameOutput1 Seq.max'<int>        Seq.max
-  alwaysProduceSameOutput2 Seq.maxBy'<int, int> Seq.maxBy
-  alwaysProduceSameOutput1 Seq.min'<int>        Seq.min
-  alwaysProduceSameOutput2 Seq.minBy'<int, int> Seq.minBy
-  alwaysProduceSameOutput2 Seq.pick'            Seq.pick
-  alwaysProduceSameOutput2 Seq.reduce'          Seq.reduce
-  alwaysProduceSameOutput2 Seq.reduceBack'      Seq.reduceBack
-  alwaysProduceSameOutput2 Seq.skip'            Seq.skip
-  alwaysProduceSameOutput2 Seq.splitInto'       Seq.splitInto
-  alwaysProduceSameOutput1 Seq.tail'            Seq.tail
-  alwaysProduceSameOutput2 Seq.take'            Seq.take
-  alwaysProduceSameOutput2 Seq.windowed'        Seq.windowed
+  alwaysProduceSameOutputForSeq1 averageFloats'       averageFloats
+  alwaysProduceSameOutputForSeq2 averageByFloats'     averageByFloats
+  alwaysProduceSameOutputForSeq2 Seq.chunkBySize'     Seq.chunkBySize
+  alwaysProduceSameOutputForSeq1 Seq.exactlyOne'      Seq.exactlyOne
+  alwaysProduceSameOutputForSeq2 Seq.find'            Seq.find
+  alwaysProduceSameOutputForSeq2 Seq.findBack'        Seq.findBack
+  alwaysProduceSameOutputForSeq2 Seq.findIndex'       Seq.findIndex
+  alwaysProduceSameOutputForSeq2 Seq.findIndexBack'   Seq.findIndexBack
+  alwaysProduceSameOutputForSeq1 Seq.head'            Seq.head
+  alwaysProduceSameOutputForSeq2 Seq.item'            Seq.item
+  alwaysProduceSameOutputForSeq1 Seq.last'            Seq.last
+  alwaysProduceSameOutputForSeq1 Seq.max'<int>        Seq.max
+  alwaysProduceSameOutputForSeq2 Seq.maxBy'<int, int> Seq.maxBy
+  alwaysProduceSameOutputForSeq1 Seq.min'<int>        Seq.min
+  alwaysProduceSameOutputForSeq2 Seq.minBy'<int, int> Seq.minBy
+  alwaysProduceSameOutputForSeq2 Seq.pick'            Seq.pick
+  alwaysProduceSameOutputForSeq2 Seq.reduce'          Seq.reduce
+  alwaysProduceSameOutputForSeq2 Seq.reduceBack'      Seq.reduceBack
+  alwaysProduceSameOutputForSeq2 Seq.skip'            Seq.skip
+  alwaysProduceSameOutputForSeq2 Seq.splitInto'       Seq.splitInto
+  alwaysProduceSameOutputForSeq1 Seq.tail'            Seq.tail
+  alwaysProduceSameOutputForSeq2 Seq.take'            Seq.take
+  alwaysProduceSameOutputForSeq2 Seq.windowed'        Seq.windowed
 
 

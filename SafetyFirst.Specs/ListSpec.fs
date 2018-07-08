@@ -37,6 +37,7 @@ let ``Safe Seq functions error whenever unsafe versions throw for all random inp
   errorsWheneverThrows2 List.reduce'            List.reduce
   errorsWheneverThrows2 List.reduceBack'        List.reduceBack
   errorsWheneverThrows2 List.skip'              List.skip
+  errorsWheneverThrows2 List.splitAt'           List.splitAt
   errorsWheneverThrows2 List.splitInto'         List.splitInto
   errorsWheneverThrows1 List.tail'              List.tail
   errorsWheneverThrows2 List.take'              List.take
@@ -71,6 +72,7 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutput2 List.reduce'            List.reduce
   alwaysProduceSameOutput2 List.reduceBack'        List.reduceBack
   alwaysProduceSameOutput2 List.skip'              List.skip
+  alwaysProduceSameOutput2 List.splitAt'           List.splitAt
   alwaysProduceSameOutput2 List.splitInto'         List.splitInto
   alwaysProduceSameOutput1 List.tail'              List.tail
   alwaysProduceSameOutput2 List.take'              List.take
