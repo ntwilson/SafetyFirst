@@ -15,11 +15,15 @@
     <Compile Include="InfiniteSeq.fs" />
     <Compile Include="FiniteSeq.fs" />
     <Compile Include="NonEmptySeq.fs" />
+    <Compile Include="IEnumerable.fs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FSharp.Control.AsyncSeq" Version="2.0.21" />
     <PackageReference Include="fsharp.core" Version="4.1.17" />
+    <PackageReference Include="fsharpx.async" Version="1.13.2" />
     <PackageReference Include="FSharpX.Collections" Version="1.17.0" />
+    <PackageReference Include="fsharpx.extras" Version="2.2.1" />
     <PackageReference Include="ResultDotNet" Version="2.0.5" />
   </ItemGroup>
 

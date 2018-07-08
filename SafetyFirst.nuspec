@@ -2,12 +2,12 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>0.0.2</version>
+    <version>1.0.0</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Monadic error handling made convenient for F# and C#</description>
     <summary>Monadic error handling made convenient for F# and C#</summary>
-    <releaseNotes>Add Seq, List, and Array safety functions</releaseNotes>
+    <releaseNotes>Add C# LINQ safety functions</releaseNotes>
     <licenseUrl>https://github.com/ntwilson/SafetyFirst/blob/master/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
@@ -15,6 +15,7 @@
     <dependencies>
       <dependency id="FSharp.Core" version="4.1.17" />
       <dependency id="FSharpx.collections" version="1.17.0" />
+      <dependency id="ResultDotNet" version="2.0.5" />
     </dependencies>
   </metadata>
   <files>

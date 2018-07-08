@@ -486,3 +486,10 @@ module FSeq =
   /// sequence are ignored.
   let inline zip xs ys = FiniteSeq.zip xs ys
   
+open System.Runtime.CompilerServices
+
+[<Extension>]
+module EnumerableExtensions = 
+  [<Extension>]
+  let Finite (xs) = fseq xs
+

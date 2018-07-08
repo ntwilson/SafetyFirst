@@ -49,7 +49,53 @@ Using `unless` is recommended over using `expect`, since the further up the call
 
 This library will add `<function>Safe` functions to many of the modules in the FSharp.Core and Linq libraries:
 
-> TODO: fill in functions here
+#### F# Functions
+
+- `Seq/List/Array.average`
+- `Seq/List/Array.averageBy`
+- `Seq/List/Array.chunkBySize`
+- `Seq/List/Array.exactlyOne`
+- `Seq/List/Array.find`
+- `Seq/List/Array.findBack`
+- `Seq/List/Array.findIndex`
+- `Seq/List/Array.findIndexBack`
+- `Seq/List/Array.head`
+- `Seq/List/Array.item`
+- `Seq/List/Array.last`
+- `Seq/List/Array.max`
+- `Seq/List/Array.maxBy`
+- `Seq/List/Array.min`
+- `Seq/List/Array.minBy`
+- `Seq/List/Array.pick`
+- `Seq/List/Array.reduce`
+- `Seq/List/Array.reduceBack`
+- `Seq/List/Array.skip`
+- `Seq/List/Array.splitInto`
+- `Seq/List/Array.tail`
+- `Seq/List/Array.take`
+- `Seq/List/Array.windowed`
+- `List/Array.fold2`
+- `List/Array.foldBack2`
+- `List/Array.iter2`
+- `List/Array.iteri2`
+- `List/Array.map2`
+- `List/Array.mapi2`
+- `List/Array.map3`
+- `List/Array.splitAt`
+- `List/Array.zip`
+- `List/Array.zip3`
+- `Array.sub`
+
+#### LINQ Functions
+
+- `Aggregate`
+- `Average`
+- `ElementAt`
+- `First`
+- `Last`
+- `Max`
+- `Min`
+- `Single`
 
 From F#, there is also an alias using the postfix apostrophe (`<function>'`) for functions that return Results instead of throwing.  So you can use `Seq.head'` as a shorthand for `Seq.headSafe`.   
 
@@ -71,7 +117,7 @@ From F#, there is also an alias using the postfix apostrophe (`<function>'`) for
 
 #### `FiniteSeq`
 
-There are three main sequence types in F#: Array, List, and Seq.  Working with Lists makes any interop with C# intolerable.  Arrays are mutable, eager, and certain operations (like `tail` or `cons`) perform poorly.  Of course, we can choose whichever of the two is better suited for our use upon creation, and then use `Seq` everywhere else, but the `Seq` provides many challenges because of the fact that it _could_ be infinite.  The worst is that it has reference equality instead of structural equality (which means if you include it in any records or union types, those types lose their structural equality as well).  There are also several functions in the `Seq` module that should never be called for an infinite sequence, and you will only discover a violation of this at runtime (like `length`, `fold`, `rev`, etc.).  This library introduces the FiniteSeq type for a lazily evaluated sequence that is constrained to be finite.  It has structural equality, and can be constructed from any other sequence in _O(1)_ time, just like a `seq`.  The functions in the FiniteSeq module are safe for use with any FiniteSeq.  It's built on top of the `LazyList` type provided by the [FSharpx.Collections](http://fsprojects.github.io/FSharpx.Collections/) package.
+There are three main sequence types in F#: Array, List, and Seq.  There are similarly three main sequence types in C#: Array, List, and IEnumerable (where, somewhat confusingly, when I say "List" from F# and C#, I'm talking about _different_ types, but when I say "Seq" and "IEnumerable", I'm talking about the same type). Working with F# Lists makes any interop with C# intolerable.  Arrays are mutable, eager, and certain operations (like `tail` or `cons`) perform poorly.  C# lists are similarly mutable and eager, and make F# interop difficult.  Of course, we can choose whichever is best suited for our use upon creation, and then use `Seq`/`IEnumerable` everywhere else, but this provides many challenges because of the fact that it _could_ be infinite.  The worst is that it has reference equality instead of structural equality (which means if you include it in any records or union types, those types lose their structural equality as well).  There are also several functions in the `Seq` module and in LINQ that should never be called for an infinite sequence, and you will only discover a violation of this at runtime (like `length`, `fold`, `rev`, etc.).  This library introduces the FiniteSeq type for a lazily evaluated sequence that is constrained to be finite.  It has structural equality, and can be constructed from any other sequence in _O(1)_ time, just like a `seq`/`IEnumerable`.  Even from C#, two `FiniteSeq` instances will be equal if they contain the same elements.  The functions in the FiniteSeq module are safe for use with any FiniteSeq.  It's built on top of the `LazyList` type provided by the [FSharpx.Collections](http://fsprojects.github.io/FSharpx.Collections/) package.  Note that from C#, this is one of the more convenient ways of caching an `IEnumerable` but keeping it lazy.  You can use the `.Finite()` extension method to make any `IEnumerable` into a `FiniteSeq`.
 
 The FiniteSeq type also uses the alias `fseq` and the FiniteSeq module also uses the alias `FSeq`
 
@@ -103,6 +149,8 @@ To go along with FiniteSeq, it's helpful to have a type for representing a seque
 
 `InfiniteSeq.init (fun _ -> 0) |> InfiniteSeq.filter ((<>) 0)` will hang if you were to use any eager calculations with it, like `take` or `head` or `find`).
 
+Note that from C#, you can use the InfiniteSeq module directly, but InfiniteSeq doesn't add much benefit if you're using LINQ style syntax.  Since InfiniteSeq is an `IEnumerable`, you'll still see all of the regular LINQ extension methods, which will include all of the methods that should never be called on an infinite sequence.
+
 
 
 #### `NonEmptySeq`
@@ -122,3 +170,4 @@ let nes = NonEmptySeq.create 0 (fseq {1 .. 10})
 ```
 
 NonEmptySeq contains several functions that aren't included in the FiniteSeq module because they could throw, such as `head`, `tail`, `uncons`, and `reduce`.
+

@@ -13,6 +13,7 @@
     <Compile Include="ListSpec.fs" />
     <Compile Include="ArraySpec.fs" />
     <Compile Include="FSeqSpec.fs" />
+    <Compile Include="IEnumerableSpec.fs" />
   </ItemGroup>
 
   <ItemGroup>
