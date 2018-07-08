@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="Lazy.fs" />
     <Compile Include="SeqSpec.fs" />
+    <Compile Include="ListSpec.fs" />
     <Compile Include="FSeqSpec.fs" />
   </ItemGroup>
 

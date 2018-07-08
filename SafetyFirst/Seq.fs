@@ -115,7 +115,7 @@ let itemSafe index xs =
   then 
     if Seq.length xs > index 
     then Ok <| xs.[index]
-    else Error <| indexTooLargeErr index
+    else Error <| lazyIndexTooLargeErr index
   else Error <| indexNegativeErr index
 
 /// Computes the element at the specified index in the collection.
@@ -221,10 +221,14 @@ let inline reduceBack' reduction xs = reduceBackSafe reduction xs
 /// Returns a sequence that skips N elements of the underlying sequence and then yields the
 /// remaining elements of the sequence.
 /// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
-/// NOTE: This is currently not memory safe for use with infinite collections, as it will
-/// cache elements as it produces them
-let skipSafe count xs = 
-  let xs = Seq.cache xs
+/// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
+/// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
+/// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
+/// and a second time to produce the result.  This is necessary because caching the sequence 
+/// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
+/// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
+/// calling this function.
+let skipSafe count (xs:_ seq) =
   if (Seq.length (Seq.truncate count xs) = count) || count < 0
   then Ok <| Seq.skip count xs
   else Error <| lazySkipErr count 
@@ -234,8 +238,11 @@ let skipSafe count xs =
 /// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
 /// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
 /// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
-/// NOTE: This is currently not memory safe for use with infinite collections, as it will
-/// cache elements as it produces them.
+/// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
+/// and a second time to produce the result.  This is necessary because caching the sequence 
+/// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
+/// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
+/// calling this function.
 let inline skip' count xs = skipSafe count xs
 
 /// Splits the input sequence into at most count chunks.

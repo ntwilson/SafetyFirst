@@ -1,7 +1,6 @@
 module SafetyFirst.Specs.SeqSpec
 
 open NUnit.Framework
-open Swensen.Unquote
 open FsCheck
 
 open SafetyFirst
@@ -32,6 +31,18 @@ let errorsWheneverThrows1 (safeVersion : _ list -> _) (unsafeVersion : _ list ->
 let errorsWheneverThrows2 (safeVersion : _ -> _ list -> _) (unsafeVersion : _ -> _ list -> _) = 
   let prop input1 input2 =
     errorsAndThrowsOrNeither (safeVersion input1 input2) (lazy (unsafeVersion input1 input2))
+
+  Check.QuickThrowOnFailure prop
+
+let errorsWheneverThrows3 safeVersion unsafeVersion = 
+  let prop input1 input2 input3 =
+    errorsAndThrowsOrNeither (safeVersion input1 input2 input3) (lazy (unsafeVersion input1 input2 input3))
+
+  Check.QuickThrowOnFailure prop
+
+let errorsWheneverThrows4 safeVersion unsafeVersion = 
+  let prop input1 input2 input3 input4 =
+    errorsAndThrowsOrNeither (safeVersion input1 input2 input3 input4) (lazy (unsafeVersion input1 input2 input3 input4))
 
   Check.QuickThrowOnFailure prop
 
@@ -95,6 +106,18 @@ let alwaysProduceSameOutput1 (safeVersion : _ list -> _) (unsafeVersion : _ list
 let alwaysProduceSameOutput2 (safeVersion : _ -> _ list -> _) (unsafeVersion : _ -> _ list -> _) = 
   let prop input1 input2 =
     safeAndUnsafeVersionProduceSameOutput (safeVersion input1 input2) (lazy (unsafeVersion input1 input2))
+
+  Check.QuickThrowOnFailure prop
+
+let alwaysProduceSameOutput3 safeVersion unsafeVersion =
+  let prop input1 input2 input3 =
+    safeAndUnsafeVersionProduceSameOutput (safeVersion input1 input2 input3) (lazy (unsafeVersion input1 input2 input3))
+
+  Check.QuickThrowOnFailure prop
+
+let alwaysProduceSameOutput4 safeVersion unsafeVersion =
+  let prop input1 input2 input3 input4 =
+    safeAndUnsafeVersionProduceSameOutput (safeVersion input1 input2 input3 input4) (lazy (unsafeVersion input1 input2 input3 input4))
 
   Check.QuickThrowOnFailure prop
 
