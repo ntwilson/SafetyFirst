@@ -4,8 +4,9 @@ open System.Linq
 open NUnit.Framework
 open Swensen.Unquote
 
-open SafetyFirst
+open ResultDotNet
 
+open SafetyFirst
 let throws f = 
   try 
     Lazy.force f |> ignore

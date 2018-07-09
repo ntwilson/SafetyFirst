@@ -6,6 +6,7 @@ open System.Collections.Generic
 open System.Linq
 
 open FSharpx
+open ResultDotNet
 
 open SafetyFirst.ErrorTypes
 
@@ -16,22 +17,26 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member AggregateSafe (xs, f:Func<_,_,_>) = 
     Seq.reduce' (FSharpFunc.FromFunc f) xs
+    |> Result.FromFs
 
   /// Computes the average of a sequence.
   [<Extension>]
   static member AverageSafe (xs:int seq) =
     Seq.averageBy' float xs
+    |> Result.FromFs
 
   /// Computes the average of a sequence.
   [<Extension>]
   static member AverageSafe (xs:float seq) = 
     Seq.average' xs
+    |> Result.FromFs
 
   /// Computes the average of a sequence of Double values that are obtained by invoking 
   /// a transform function on each element of the input sequence.
   [<Extension>]
   static member AverageSafe (xs, transform:Func<_,float>) =
     Seq.averageBy' (FSharpFunc.FromFunc transform) xs  
+    |> Result.FromFs
 
   /// Returns the element at a specified index in a sequence.
   /// O(1) for any IList<T> or IReadOnlyList<T>.  
@@ -54,68 +59,83 @@ type IEnumerableExtensions () =
         | :? IList<_> as xs -> Ok <| xs.[index]  
         | :? IReadOnlyList<_> as xs -> Ok <| xs.[index]
         | _ -> Ok <| Seq.item index xs
-      | None -> Seq.item' index xs
+      | None -> Seq.item' index xs |> Result.FromFs
+
 
   /// Returns the first element of a sequence.
   [<Extension>]
-  static member FirstSafe (xs) = Seq.head' xs 
+  static member FirstSafe (xs) = Seq.head' xs |> Result.FromFs
+
 
   /// Returns the first element in a sequence that satisfies a specified condition.
   [<Extension>]
   static member FirstSafe (xs, predicate:Func<_,_>) = 
     Seq.find' (FSharpFunc.FromFunc predicate) xs
+    |> Result.FromFs
 
   /// Returns the last element of a sequence.
   [<Extension>]
-  static member LastSafe (xs) = Seq.last' xs 
+  static member LastSafe (xs) = Seq.last' xs |> Result.FromFs
+ 
 
   /// Returns the last element in a sequence that satisfies a specified condition.
   [<Extension>]
   static member LastSafe (xs, predicate:Func<_,_>) = 
     Seq.findBack' (FSharpFunc.FromFunc predicate) xs
+    |> Result.FromFs
 
   /// Returns the maximum value in a sequence of values.
   [<Extension>]
-  static member MaxSafe (xs:int seq) = Seq.max' xs
+  static member MaxSafe (xs:int seq) = Seq.max' xs |> Result.FromFs
+
 
   /// Returns the maximum value in a sequence of values.
   [<Extension>]
-  static member MaxSafe (xs:float seq) = Seq.max' xs
+  static member MaxSafe (xs:float seq) = Seq.max' xs |> Result.FromFs
+
 
   /// Invokes a transform function on each element of a sequence and returns the maximum value.
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,float>) =
     Seq.maxBy' (FSharpFunc.FromFunc transform) xs  
+    |> Result.FromFs
 
   /// Invokes a transform function on each element of a sequence and returns the maximum value.
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,int>) =
     Seq.maxBy' (FSharpFunc.FromFunc transform) xs  
+    |> Result.FromFs
 
   /// Returns the minimum value in a sequence of values.
   [<Extension>]
-  static member MinSafe (xs:int seq) = Seq.min' xs
+  static member MinSafe (xs:int seq) = Seq.min' xs |> Result.FromFs
+
 
   /// Returns the minimum value in a sequence of values.
   [<Extension>]
-  static member MinSafe (xs:float seq) = Seq.min' xs
+  static member MinSafe (xs:float seq) = Seq.min' xs |> Result.FromFs
+
 
   /// Invokes a transform function on each element of a sequence and returns the minimum value.
   [<Extension>]
   static member MinSafe (xs, transform:Func<_,float>) =
     Seq.minBy' (FSharpFunc.FromFunc transform) xs  
+    |> Result.FromFs
 
   /// Invokes a transform function on each element of a sequence and returns the minimum value.
   [<Extension>]
   static member MinSafe (xs, transform:Func<_,int>) =
     Seq.minBy' (FSharpFunc.FromFunc transform) xs  
+    |> Result.FromFs
 
   /// Returns the only element of a sequence
   [<Extension>]
-  static member SingleSafe (xs) = Seq.exactlyOne' xs
+  static member SingleSafe (xs) = Seq.exactlyOne' xs |> Result.FromFs
+
 
   /// Returns the only element of a sequence that satisfies a specified condition.
   [<Extension>]
   static member SingleSafe (xs, predicate:Func<_, bool>) = 
     Seq.filter (FSharpFunc.FromFunc predicate) xs
     |> Seq.exactlyOne'
+    |> Result.FromFs
