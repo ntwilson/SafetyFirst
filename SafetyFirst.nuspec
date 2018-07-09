@@ -16,7 +16,7 @@
       <dependency id="FSharp.Core" version="4.1.17" />
       <dependency id="FSharpx.collections" version="1.17.0" />
       <dependency id="ResultDotNet" version="2.0.5" />
-      <dependency id="fsharpx.extras" Version="2.2.1" />
+      <dependency id="fsharpx.extras" version="2.2.1" />
       <dependency id="FSharp.Control.AsyncSeq" version="2.0.21" />
       <dependency id="fsharpx.async" version="1.13.2" />
     </dependencies>
