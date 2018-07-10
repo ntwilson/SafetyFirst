@@ -1,12 +1,35 @@
 namespace SafetyFirst 
 
+open System
+
+open FSharpx
+
 type SeqIsEmpty = SeqIsEmpty of string
 type NotEnoughElements = NotEnoughElements of string
 type NoMatchingElement = NoMatchingElement of string
 type DifferingLengths = DifferingLengths of string
 type NegativeInput = NegativeInput of string
-type WrongNumberOfElements = WrongNumberOfElements of string
 type IndexOutOfRange = IndexOutOfRange of string
+
+type WrongNumberOfElements = 
+  | TooManyElements of string
+  | NotEnoughElements of string
+
+  member this.Message =
+    match this with
+    | TooManyElements s -> s
+    | NotEnoughElements s -> s
+
+  member this.Match (tooManyElements, notEnoughElements) = 
+    match this with
+    | TooManyElements s -> FSharpFunc.FromFunc<string, 'a> tooManyElements s
+    | NotEnoughElements s -> FSharpFunc.FromFunc<string, 'a> notEnoughElements s
+
+  member this.Match (tooManyElements, notEnoughElements) =
+    match this with
+    | TooManyElements s -> FSharpFunc.FromAction<string> tooManyElements s
+    | NotEnoughElements s -> FSharpFunc.FromAction<string> notEnoughElements s
+
 
 module internal ErrorTypes = 
   let private differingLengthsErr fName length1 length2 = 
@@ -17,8 +40,8 @@ module internal ErrorTypes =
 
   let inline avgErr () = SeqIsEmpty "Cannot get the average value of an empty sequence"
   let chunkErr = NegativeInput "Cannot chunkBySize with a negative size"
-  let moreThanOneErr = WrongNumberOfElements "Sequence was expected to have a single element, but has more than one"
-  let lessThanOneErr = WrongNumberOfElements "Sequence was expected to have a single element, but was empty"
+  let moreThanOneErr = TooManyElements "Sequence was expected to have a single element, but has more than one"
+  let lessThanOneErr = NotEnoughElements "Sequence was expected to have a single element, but was empty"
   let findErr = NoMatchingElement "Cannot find an element in the input collection matching the input predicate"
   let fold2Err length1 length2 = differingLengthsErr "fold2" length1 length2
   let headErr = SeqIsEmpty "Cannot get the first element (head) of an empty sequence"

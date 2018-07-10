@@ -3,7 +3,6 @@ namespace SafetyFirst
 open System
 open System.Runtime.CompilerServices
 open System.Collections.Generic
-open System.Linq
 
 open FSharpx
 open ResultDotNet
