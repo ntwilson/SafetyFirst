@@ -23,6 +23,7 @@ let ``Safe Seq functions error whenever unsafe versions throw for all random inp
   errorsWheneverThrows2 Array.findIndexBack'    Array.findIndexBack
   errorsWheneverThrows4 Array.fold2'            Array.fold2
   errorsWheneverThrows4 Array.foldBack2'        Array.foldBack2
+  errorsWheneverThrows3 Array.forall2'          Array.forall2
   errorsWheneverThrows1 Array.head'             Array.head
   errorsWheneverThrows2 Array.item'             Array.item
   errorsWheneverThrows1 Array.last'             Array.last
@@ -59,6 +60,7 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutput2 Array.findIndexBack'   Array.findIndexBack
   alwaysProduceSameOutput4 Array.fold2'           Array.fold2
   alwaysProduceSameOutput4 Array.foldBack2'       Array.foldBack2
+  alwaysProduceSameOutput3 Array.forall2'         Array.forall2
   alwaysProduceSameOutput1 Array.head'            Array.head
   alwaysProduceSameOutput2 Array.item'            Array.item
   alwaysProduceSameOutput1 Array.last'            Array.last

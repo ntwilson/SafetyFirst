@@ -76,6 +76,7 @@ This library will add `<function>Safe` functions to many of the modules in the F
 - `Seq/List/Array.windowed`
 - `List/Array.fold2`
 - `List/Array.foldBack2`
+- `List/Array.forall2`
 - `List/Array.iter2`
 - `List/Array.iteri2`
 - `List/Array.map2`

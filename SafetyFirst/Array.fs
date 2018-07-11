@@ -129,6 +129,17 @@ let foldBack2Safe folder xs ys initialState =
 /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
 let inline foldBack2' folder xs ys initialState = foldBack2Safe folder xs ys initialState
 
+/// Tests if all corresponding elements of the array satisfy the given predicate pairwise.
+/// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+let forall2Safe predicate xs ys = 
+  if Array.length xs = Array.length ys
+  then Ok <| Array.forall2 predicate xs ys
+  else Error <| forall2Err (Array.length xs) (Array.length ys)
+
+/// Tests if all corresponding elements of the array satisfy the given predicate pairwise.
+/// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+let inline forall2' predicate xs ys = forall2Safe predicate xs ys
+
 /// Returns the first element of the array.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 let headSafe xs =

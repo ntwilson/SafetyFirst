@@ -44,6 +44,7 @@ module internal ErrorTypes =
   let lessThanOneErr = NotEnoughElements "Sequence was expected to have a single element, but was empty"
   let findErr = NoMatchingElement "Cannot find an element in the input collection matching the input predicate"
   let fold2Err length1 length2 = differingLengthsErr "fold2" length1 length2
+  let forall2Err length1 length2 = differingLengthsErr "forall2" length1 length2
   let headErr = SeqIsEmpty "Cannot get the first element (head) of an empty sequence"
   let iter2Err length1 length2 = differingLengthsErr "iter2" length1 length2
   let iteri2Err length1 length2 = differingLengthsErr "iteri2" length1 length2

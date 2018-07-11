@@ -23,6 +23,7 @@ let ``Safe Seq functions error whenever unsafe versions throw for all random inp
   errorsWheneverThrows2 List.findIndexBack'     List.findIndexBack
   errorsWheneverThrows4 List.fold2'             List.fold2
   errorsWheneverThrows4 List.foldBack2'         List.foldBack2
+  errorsWheneverThrows3 List.forall2'           List.forall2
   errorsWheneverThrows1 List.head'              List.head
   errorsWheneverThrows2 List.item'              List.item
   errorsWheneverThrows1 List.last'              List.last
@@ -48,36 +49,36 @@ let ``Safe Seq functions error whenever unsafe versions throw for all random inp
 
 [<Test>]
 let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
-  alwaysProduceSameOutput1 averageFloats'          averageFloats
-  alwaysProduceSameOutput2 averageByFloats'        averageByFloats
-  alwaysProduceSameOutput2 List.chunkBySize'       List.chunkBySize
-  alwaysProduceSameOutput1 List.exactlyOne'        List.exactlyOne
-  alwaysProduceSameOutput2 List.find'              List.find
-  alwaysProduceSameOutput2 List.findBack'          List.findBack
-  alwaysProduceSameOutput2 List.findIndex'         List.findIndex
-  alwaysProduceSameOutput2 List.findIndexBack'     List.findIndexBack
-  alwaysProduceSameOutput4 List.fold2'             List.fold2
-  alwaysProduceSameOutput4 List.foldBack2'         List.foldBack2
-  alwaysProduceSameOutput1 List.head'              List.head
-  alwaysProduceSameOutput2 List.item'              List.item
-  alwaysProduceSameOutput1 List.last'              List.last
-  alwaysProduceSameOutput3 List.map2'              List.map2
-  alwaysProduceSameOutput3 List.mapi2'             List.mapi2
-  alwaysProduceSameOutput4 List.map3'              List.map3
-  alwaysProduceSameOutput1 List.max'<int>          List.max<int>
-  alwaysProduceSameOutput2 List.maxBy'<int, int>   List.maxBy<int, int>
-  alwaysProduceSameOutput1 List.min'<int>          List.min<int>
-  alwaysProduceSameOutput2 List.minBy'<int, int>   List.minBy<int, int>
-  alwaysProduceSameOutput2 List.pick'              List.pick
-  alwaysProduceSameOutput2 List.reduce'            List.reduce
-  alwaysProduceSameOutput2 List.reduceBack'        List.reduceBack
-  alwaysProduceSameOutput2 List.skip'              List.skip
-  alwaysProduceSameOutput2 List.splitAt'           List.splitAt
-  alwaysProduceSameOutput2 List.splitInto'         List.splitInto
-  alwaysProduceSameOutput1 List.tail'              List.tail
-  alwaysProduceSameOutput2 List.take'              List.take
-  alwaysProduceSameOutput2 List.windowed'          List.windowed
-  alwaysProduceSameOutput2 List.zip'               List.zip
-  alwaysProduceSameOutput3 List.zip3'              List.zip3
-
+  alwaysProduceSameOutput1 averageFloats'         averageFloats
+  alwaysProduceSameOutput2 averageByFloats'       averageByFloats
+  alwaysProduceSameOutput2 List.chunkBySize'      List.chunkBySize
+  alwaysProduceSameOutput1 List.exactlyOne'       List.exactlyOne
+  alwaysProduceSameOutput2 List.find'             List.find
+  alwaysProduceSameOutput2 List.findBack'         List.findBack
+  alwaysProduceSameOutput2 List.findIndex'        List.findIndex
+  alwaysProduceSameOutput2 List.findIndexBack'    List.findIndexBack
+  alwaysProduceSameOutput4 List.fold2'            List.fold2
+  alwaysProduceSameOutput4 List.foldBack2'        List.foldBack2
+  alwaysProduceSameOutput3 List.forall2'          List.forall2 
+  alwaysProduceSameOutput1 List.head'             List.head
+  alwaysProduceSameOutput2 List.item'             List.item
+  alwaysProduceSameOutput1 List.last'             List.last
+  alwaysProduceSameOutput3 List.map2'             List.map2
+  alwaysProduceSameOutput3 List.mapi2'            List.mapi2
+  alwaysProduceSameOutput4 List.map3'             List.map3
+  alwaysProduceSameOutput1 List.max'<int>         List.max<int>
+  alwaysProduceSameOutput2 List.maxBy'<int, int>  List.maxBy<int, int>
+  alwaysProduceSameOutput1 List.min'<int>         List.min<int>
+  alwaysProduceSameOutput2 List.minBy'<int, int>  List.minBy<int, int>
+  alwaysProduceSameOutput2 List.pick'             List.pick
+  alwaysProduceSameOutput2 List.reduce'           List.reduce
+  alwaysProduceSameOutput2 List.reduceBack'       List.reduceBack
+  alwaysProduceSameOutput2 List.skip'             List.skip
+  alwaysProduceSameOutput2 List.splitAt'          List.splitAt
+  alwaysProduceSameOutput2 List.splitInto'        List.splitInto
+  alwaysProduceSameOutput1 List.tail'             List.tail
+  alwaysProduceSameOutput2 List.take'             List.take
+  alwaysProduceSameOutput2 List.windowed'         List.windowed
+  alwaysProduceSameOutput2 List.zip'              List.zip
+  alwaysProduceSameOutput3 List.zip3'             List.zip3
 

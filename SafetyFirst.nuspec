@@ -2,12 +2,12 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Monadic error handling made convenient for F# and C#</description>
     <summary>Monadic error handling made convenient for F# and C#</summary>
-    <releaseNotes>Further distinguished single' as returning too many or not enough elements in a union</releaseNotes>
+    <releaseNotes>Implements forall2Safe for F# list and array.</releaseNotes>
     <licenseUrl>https://github.com/ntwilson/SafetyFirst/blob/master/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>

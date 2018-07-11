@@ -129,6 +129,24 @@ let foldBack2Safe folder xs ys initialState =
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 let inline foldBack2' folder xs ys initialState = foldBack2Safe folder xs ys initialState
 
+/// Tests if all corresponding elements of the collection satisfy the given predicate pairwise.
+/// Returns a DifferingLengths Error if the input lists have a different number of elements.
+/// Note: if the predicate is proven false before done traversing the lists pairwise, will return 
+/// <c>Ok false</c> even if the lists have different lengths.  This behavior mimics when 
+/// <c>List.forall2</c> will throw.
+let forall2Safe predicate xs ys = 
+  match (Seq.forall2 predicate xs ys, List.length xs = List.length ys) with
+  | (false, _) -> Ok false
+  | (true, true) -> Ok true
+  | (true, false) -> Error <| forall2Err (List.length xs) (List.length ys)
+  
+/// Tests if all corresponding elements of the collection satisfy the given predicate pairwise.
+/// Returns a DifferingLengths Error if the input lists have a different number of elements.
+/// Note: if the predicate is proven false before done traversing the lists pairwise, will return 
+/// <c>Ok false</c> even if the lists have different lengths.  This behavior mimics when 
+/// <c>List.forall2</c> will throw.
+let forall2' predicate xs ys = forall2Safe predicate xs ys
+
 /// Returns the first element of the list.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 let headSafe xs =
