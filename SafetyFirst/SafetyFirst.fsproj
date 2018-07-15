@@ -12,9 +12,9 @@
     <Compile Include="Seq.fs" />
     <Compile Include="List.fs" />
     <Compile Include="Array.fs" />
-    <Compile Include="InfiniteSeq.fs" />
     <Compile Include="FiniteSeq.fs" />
     <Compile Include="NonEmptySeq.fs" />
+    <Compile Include="InfiniteSeq.fs" />
     <Compile Include="IEnumerable.fs" />
   </ItemGroup>
 
