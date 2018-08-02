@@ -176,3 +176,23 @@ type IEnumerableExtensions () =
     Seq.filter (FSharpFunc.FromFunc predicate) xs
     |> Seq.exactlyOne'
     |> Result.FromFs
+
+
+  /// <summary>
+  /// Applies a specified function to the corresponding elements of two sequences, 
+  /// producing a sequence of the results.
+  /// Returns a DifferingLengths Error if the sequences have different lengths.
+  /// Note:
+  ///   This function is not lazy, since it checks the lengths of the two sequences
+  ///   before returning anything.
+  /// </summary>
+  [<Extension>]
+  static member ZipSafe (xs:_ seq, ys:_ seq, resultSelector:Func<_,_,_>) =
+    let cachedXs = ResizeArray xs
+    let cachedYs = ResizeArray ys
+    
+    if cachedXs.Count <> cachedYs.Count
+    then Error <| zipErr cachedXs.Count cachedYs.Count
+    else Ok <| Seq.map2 (FSharpFunc.FromFunc resultSelector) cachedXs cachedYs
+
+

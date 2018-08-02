@@ -97,6 +97,7 @@ This library will add `<function>Safe` functions to many of the modules in the F
 - `Max`
 - `Min`
 - `Single`
+- `Zip`
 
 From F#, there is also an alias using the postfix apostrophe (`<function>'`) for functions that return Results instead of throwing.  So you can use `Seq.head'` as a shorthand for `Seq.headSafe`.   
 

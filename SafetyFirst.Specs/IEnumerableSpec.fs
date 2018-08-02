@@ -1,5 +1,6 @@
 module SafetyFirst.Specs.IEnumerableSpec 
 
+open System
 open System.Linq
 open NUnit.Framework
 open Swensen.Unquote
@@ -7,6 +8,7 @@ open Swensen.Unquote
 open ResultDotNet
 
 open SafetyFirst
+
 let throws f = 
   try 
     Lazy.force f |> ignore
@@ -75,4 +77,33 @@ let ``ElementAtSafe returns the same answer as ElementAt`` () =
       testFor (fun lower upper -> upcast ResizeArray { lower .. upper })
       &&
       testFor (fun lower upper -> upcast System.Collections.Generic.LinkedList { lower .. upper })
+    @>
+
+[<Test>]
+let ``ZipSafe errors whenever lengths mismatch`` () = 
+  let add : Func<_,_,_> = Func<_,_,_> (fun a b -> a + b)
+
+  let expectedErrors = 
+    [ 
+      (seq { 0 .. 4 }).ZipSafe(seq { 0 .. 5 }, add) 
+      Seq.empty.ZipSafe(seq { 0 .. 5 }, add)
+      (seq { 0 .. 4 }).ZipSafe(Seq.empty, add)
+    ]
+
+  test <@ Seq.forall isError expectedErrors @>
+
+let ansFromZip (a:_ seq) (b:_ seq) (f:'a -> 'b -> 'c) = a.Zip(b, Func<_,_,_> f) |> Seq.toList
+let ansFromZipSafe (a:_ seq) (b:_ seq) (f: 'a -> 'b -> 'c) = a.ZipSafe(b, Func<_,_,_> f).Expect() |> Seq.toList
+let sameAns (a, b, f) = 
+  (ansFromZip a b f) = (ansFromZipSafe a b f)
+
+[<Test>]
+let ``ZipSafe returns the same answer as Zip`` () = 
+  test
+    <@
+      sameAns (seq { 0 .. 4}, seq { 0 .. 4 }, (+))
+      &&
+      sameAns (Seq.empty<int>, Seq.empty<int>, (+))
+      &&
+      sameAns (seq [1], seq ["hi"], (fun i s -> s + string i))
     @>
