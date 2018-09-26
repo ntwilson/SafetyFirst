@@ -7,7 +7,7 @@ open FSharpx.Collections
 /// <summary>
 /// A lazily evaluated sequence that is constrained to have at least one element.
 /// </summary>
-type NonEmptySeq<'a when 'a : comparison> = 
+type NonEmptySeq<[<EqualityConditionalOn; ComparisonConditionalOn>]'a> = 
   private
     | NonEmptySeq of FiniteSeq<'a>
 

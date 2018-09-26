@@ -10,6 +10,7 @@ type NoMatchingElement = NoMatchingElement of string
 type DifferingLengths = DifferingLengths of string
 type NegativeInput = NegativeInput of string
 type IndexOutOfRange = IndexOutOfRange of string
+type DuplicateKeys = DuplicateKeys of string
 
 type WrongNumberOfElements = 
   | TooManyElements of string
@@ -40,9 +41,11 @@ module internal ErrorTypes =
 
   let inline avgErr () = SeqIsEmpty "Cannot get the average value of an empty sequence"
   let chunkErr = NegativeInput "Cannot chunkBySize with a negative size"
+  let duplicateKeysErr duplicates = DuplicateKeys (sprintf "Keys for the Map contain duplicate values: %A" duplicates)
   let moreThanOneErr = TooManyElements "Sequence was expected to have a single element, but has more than one"
   let lessThanOneErr = NotEnoughElements "Sequence was expected to have a single element, but was empty"
   let findErr = NoMatchingElement "Cannot find an element in the input collection matching the input predicate"
+  let mapFindErr key = NoMatchingElement (sprintf "Cannot find an element in the input map matching a key of %A" key)
   let fold2Err length1 length2 = differingLengthsErr "fold2" length1 length2
   let forall2Err length1 length2 = differingLengthsErr "forall2" length1 length2
   let headErr = SeqIsEmpty "Cannot get the first element (head) of an empty sequence"

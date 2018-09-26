@@ -2,12 +2,12 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>1.0.6</version>
+    <version>1.0.10</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Monadic error handling made convenient for F# and C#</description>
     <summary>Monadic error handling made convenient for F# and C#</summary>
-    <releaseNotes>Implements ZipSafe for C#.</releaseNotes>
+    <releaseNotes>allows NonEmptySeqs of non-equatable and non-comparable elements.</releaseNotes>
     <licenseUrl>https://github.com/ntwilson/SafetyFirst/blob/master/LICENSE.md</licenseUrl>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
@@ -19,6 +19,7 @@
       <dependency id="fsharpx.extras" version="2.2.1" />
       <dependency id="FSharp.Control.AsyncSeq" version="2.0.21" />
       <dependency id="fsharpx.async" version="1.13.2" />
+      <dependency id="System.ValueTuple" version="4.5.0" />
     </dependencies>
   </metadata>
   <files>

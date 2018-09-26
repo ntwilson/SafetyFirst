@@ -86,6 +86,9 @@ This library will add `<function>Safe` functions to many of the modules in the F
 - `List/Array.zip`
 - `List/Array.zip3`
 - `Array.sub`
+- `Map.ofSeq`
+- `Map.ofList`
+- `Map.ofArray`
 
 #### LINQ Functions
 
@@ -119,9 +122,9 @@ From F#, there is also an alias using the postfix apostrophe (`<function>'`) for
 
 #### `FiniteSeq`
 
-There are three main sequence types in F#: Array, List, and Seq.  There are similarly three main sequence types in C#: Array, List, and IEnumerable (where, somewhat confusingly, when I say "List" from F# and C#, I'm talking about _different_ types, but when I say "Seq" and "IEnumerable", I'm talking about the same type). Working with F# Lists makes any interop with C# intolerable.  Arrays are mutable, eager, and certain operations (like `tail` or `cons`) perform poorly.  C# lists are similarly mutable and eager, and make F# interop difficult.  Of course, we can choose whichever is best suited for our use upon creation, and then use `Seq`/`IEnumerable` everywhere else, but this provides many challenges because of the fact that it _could_ be infinite.  The worst is that it has reference equality instead of structural equality (which means if you include it in any records or union types, those types lose their structural equality as well).  There are also several functions in the `Seq` module and in LINQ that should never be called for an infinite sequence, and you will only discover a violation of this at runtime (like `length`, `fold`, `rev`, etc.).  This library introduces the FiniteSeq type for a lazily evaluated sequence that is constrained to be finite.  It has structural equality, and can be constructed from any other sequence in _O(1)_ time, just like a `seq`/`IEnumerable`.  Even from C#, two `FiniteSeq` instances will be equal if they contain the same elements.  The functions in the FiniteSeq module are safe for use with any FiniteSeq.  It's built on top of the `LazyList` type provided by the [FSharpx.Collections](http://fsprojects.github.io/FSharpx.Collections/) package.  Note that from C#, this is one of the more convenient ways of caching an `IEnumerable` but keeping it lazy.  You can use the `.Finite()` extension method to make any `IEnumerable` into a `FiniteSeq`.
+There are three main sequence types in F#: Array, List, and Seq.  There are similarly three main sequence types in C#: Array, List, and IEnumerable (where, somewhat confusingly, when I say "List" from F# and C#, I'm talking about _different_ types, but when I say "Seq" and "IEnumerable", I'm talking about the same type). Working with F# Lists makes any interop with C# intolerable.  Arrays are mutable, eager, and certain operations (like `tail` or `cons`) perform poorly.  C# lists are similarly mutable and eager, and make F# interop difficult.  Of course, we can choose whichever is best suited for our use upon creation, and then use `Seq`/`IEnumerable` everywhere else, but this provides many challenges because of the fact that it _could_ be infinite.  The worst is that it has reference equality instead of structural equality (which means if you include it in any records or union types, those types lose their structural equality as well).  There are also several functions in the `Seq` module and in LINQ that should never be called for an infinite sequence, and you will only discover a violation of this at runtime (like `length`, `fold`, `rev`, etc.).  This library introduces the `FiniteSeq` type for a lazily evaluated sequence that is constrained to be finite.  It has structural equality, and can be constructed from any other sequence in _O(1)_ time, just like a `seq`/`IEnumerable`.  Even from C#, two `FiniteSeq` instances will be equal if they contain the same elements.  The functions in the `FiniteSeq` module are safe for use with any `FiniteSeq`.  It's built on top of the `LazyList` type provided by the [FSharpx.Collections](http://fsprojects.github.io/FSharpx.Collections/) package.  Note that from C#, this is one of the more convenient ways of caching an `IEnumerable` but keeping it lazy.  You can use the `.Finite()` extension method to make any `IEnumerable` into a `FiniteSeq`.
 
-The FiniteSeq type also uses the alias `fseq` and the FiniteSeq module also uses the alias `FSeq`
+The `FiniteSeq` type also uses the alias `fseq` and the `FiniteSeq` module also uses the alias `FSeq`
 
 For example:
 

@@ -7,12 +7,12 @@ open FSharpx.Collections
 
 open ResultDotNet.FSharp
 
-open SafetyFirst.ErrorTypes
+open SafetyFirst.ErrorTypes  
 
 /// <summary>
 /// A lazy sequence constrained to be finite in length.
 /// </summary>
-type FiniteSeq<'a when 'a : comparison> (xs : LazyList<'a>) = 
+type FiniteSeq<[<EqualityConditionalOn; ComparisonConditionalOn>]'a> (xs : LazyList<'a>) = 
   //this implementation is modeled off of how array hashes are computed, here: 
   //https://github.com/Microsoft/visualfsharp/blob/master/src/fsharp/FSharp.Core/prim-types.fs
   //starting at line 1680
@@ -21,7 +21,7 @@ type FiniteSeq<'a when 'a : comparison> (xs : LazyList<'a>) =
       let inline hashCombine nr x y = (x <<< 1) + y + 631 * nr
 
       let first18 = Seq.truncate 18 (Seq.indexed xs)
-      first18 |> Seq.fold (fun acc (i, x) -> hashCombine i acc (hash x)) 0 
+      first18 |> Seq.fold (fun acc (i, x) -> hashCombine i acc (Unchecked.hash x)) 0 
     )
 
   let length =
@@ -47,7 +47,7 @@ type FiniteSeq<'a when 'a : comparison> (xs : LazyList<'a>) =
 
       let compareElements (ys : FiniteSeq<'a>) = 
         match 
-            Seq.map2 compare xs ys 
+            Seq.map2 Unchecked.compare xs ys 
             |> Seq.tryFind ((<>) 0)
           with
           | Some i -> i
@@ -61,12 +61,18 @@ type FiniteSeq<'a when 'a : comparison> (xs : LazyList<'a>) =
       | _ -> invalidArg "x" (sprintf "Can't compare a %s with a %s" (this.GetType().Name) (x.GetType().Name))
 
   override this.Equals x = 
+    let compareElements (ys : FiniteSeq<'a>) = 
+      Seq.forall2 Unchecked.equals xs ys 
+
+    let compareLengths (ys : FiniteSeq<'a>) =
+      compare (this.Length) (ys.Length)
+
     match x with
     | :? FiniteSeq<'a> as xs ->
       let lengthCompare = 
         if this.HasCalculatedLength && xs.HasCalculatedLength then xs.Length = this.Length else true
       let hashCompare = 
-        if this.HasCalculatedHash && xs.HasCalculatedHash then xs.GetHashCode() = this.GetHashCode() else true
+        if this.HasCalculatedHash && xs.HasCalculatedHash then Unchecked.hash xs = Unchecked.hash this else true
 
       LanguagePrimitives.PhysicalEquality this xs 
       ||
@@ -75,18 +81,20 @@ type FiniteSeq<'a when 'a : comparison> (xs : LazyList<'a>) =
         && 
         hashCompare
         &&
-        compare this xs = 0
+        compareElements xs
+        && 
+        compareLengths xs = 0
       )
     | _ -> false
 
-  interface IEquatable<FiniteSeq<'a>> with
-    member this.Equals x = this.Equals x
+  // interface IEquatable<FiniteSeq<'a>> with
+  //   member this.Equals x = this.Equals x
 
   override this.GetHashCode () = hashCode.Value
 
-type FSeq<'a when 'a : comparison> = FiniteSeq<'a>
+type FSeq<'a> = FiniteSeq<'a>
 
-type fseq<'a when 'a : comparison> = FiniteSeq<'a>
+type fseq<'a> = FiniteSeq<'a>
 
 [<AutoOpen>]
 module FSeqBuilder = 
@@ -107,6 +115,15 @@ module FiniteSeq =
   let inline append (FSeq xs) (FSeq ys) = fseq (LazyList.append xs ys)
 
   /// <summary>
+  /// Applies the given function to each element of the list. Return the list comprised of 
+  /// the results "x" for each element where the function returns Some(x).
+  /// The returned sequence may be passed between threads safely. 
+  /// However, individual IEnumerator values generated from the returned sequence should 
+  /// not be accessed concurrently.
+  /// </summary>
+  let choose chooser source = fseq (Seq.choose chooser source)
+
+  /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
   /// </summary>
   let inline concat (FSeq xs : FiniteSeq<FiniteSeq<'a>>) = fseq (xs |> LazyList.map (|FSeq|) |> LazyList.concat)
@@ -122,6 +139,11 @@ module FiniteSeq =
   /// the input list.
   /// </summary>
   let inline drop n (FSeq xs) = fseq (LazyList.drop n xs)
+
+  /// <summary>
+  /// O(1). Evaluates to the sequence that contains no items
+  /// </summary>
+  let empty<'a when 'a : comparison> = fseq (LazyList.empty<'a>)
 
   /// <summary>
   /// Applies a function to each element of the collection, threading an accumulator argument
@@ -508,6 +530,15 @@ module FSeq =
   let inline append xs ys = FiniteSeq.append xs ys
 
   /// <summary>
+  /// Applies the given function to each element of the list. Return the list comprised of 
+  /// the results "x" for each element where the function returns Some(x).
+  /// The returned sequence may be passed between threads safely. 
+  /// However, individual IEnumerator values generated from the returned sequence should 
+  /// not be accessed concurrently.
+  /// </summary>
+  let inline choose chooser source = FiniteSeq.choose chooser source
+
+  /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
   /// </summary>
   let inline concat xs = FiniteSeq.concat xs
@@ -523,6 +554,11 @@ module FSeq =
   /// the input list.
   /// </summary>
   let inline drop n xs = FiniteSeq.drop n xs
+
+  /// <summary>
+  /// O(1). Evaluates to the sequence that contains no items
+  /// </summary>
+  let empty<'a when 'a : comparison> = FiniteSeq.empty<'a>
 
   /// <summary>
   /// Views the given array as a finite sequence.

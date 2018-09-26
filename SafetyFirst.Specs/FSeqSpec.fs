@@ -91,6 +91,34 @@ module StructuralEquality =
     test <@ initialCompare = finalCompare @>
 
 
+[<NoComparison>]
+type JustEquatable = JustEquatable of int
+
+[<Test>]
+let ``can create an fseq of non-comparable elements, and can still check equality, but can't compare`` () = 
+  let xs = fseq [ JustEquatable 1; JustEquatable 2 ]
+  let ys = fseq [ JustEquatable 1; JustEquatable 2 ]
+  let zs = fseq [ JustEquatable 2; JustEquatable 1 ]
+
+  test 
+    <@
+      xs = ys
+      && 
+      xs <> zs
+      // line below should fail to compile because they aren't comparable
+      // && compare xs ys = 0
+    @>
+
+[<Test>]
+let ``can create an fseq of non-equatable elements, but can't compare or check equality``() = 
+  let xs = fseq [ ((+) 5); ((*) 2) ]
+  let ys = fseq [ ((+) 5); ((*) 2) ]
+  let zs = fseq [ ((*) 2); ((+) 5) ]
+
+  // line below should fail both to equate and compare
+  // test <@ xs = ys && compare xs ys @>
+  ()
+  
 [<Test>]
 let ``wrapping a seq in an fseq is lazy`` () =
   let mutable elementsCalculated = 0;

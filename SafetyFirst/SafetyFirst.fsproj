@@ -4,6 +4,7 @@
     <TargetFramework>net45</TargetFramework>
     <DocumentationFile>bin\$(Configuration)\net45\$(AssemblyName).XML</DocumentationFile>
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+    <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -12,6 +13,7 @@
     <Compile Include="Seq.fs" />
     <Compile Include="List.fs" />
     <Compile Include="Array.fs" />
+    <Compile Include="Map.fs" />
     <Compile Include="FiniteSeq.fs" />
     <Compile Include="NonEmptySeq.fs" />
     <Compile Include="InfiniteSeq.fs" />
@@ -25,6 +27,7 @@
     <PackageReference Include="FSharpX.Collections" Version="1.17.0" />
     <PackageReference Include="fsharpx.extras" Version="2.2.1" />
     <PackageReference Include="ResultDotNet" Version="2.0.5" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
 </Project>

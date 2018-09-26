@@ -5,6 +5,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+    <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,7 @@
     <Compile Include="SeqSpec.fs" />
     <Compile Include="ListSpec.fs" />
     <Compile Include="ArraySpec.fs" />
+    <Compile Include="MapSpec.fs" />
     <Compile Include="FSeqSpec.fs" />
     <Compile Include="SplitSpec.fs" />
     <Compile Include="IEnumerableSpec.fs" />
