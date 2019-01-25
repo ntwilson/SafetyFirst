@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ntwilson/SafetyFirst.svg?branch=master)](https://travis-ci.org/ntwilson/SafetyFirst)
+
 ## SafetyFirst
 
 This is an opinionated library for using monadic error handling from F# (or C#).  
