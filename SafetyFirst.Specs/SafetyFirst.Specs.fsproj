@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -8,6 +8,7 @@
     <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="Lazy.fs" />
     <Compile Include="SeqSpec.fs" />
@@ -18,9 +19,19 @@
     <Compile Include="SplitSpec.fs" />
     <Compile Include="IEnumerableSpec.fs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FsCheck" Version="2.11.0" />
+    <PackageReference Include="fsharp.core" Version="4.5.0" />
+    <PackageReference Include="microsoft.net.test.sdk" Version="15.7.2" />
+    <PackageReference Include="nunit" Version="3.10.1" />
+    <PackageReference Include="nunit3TestAdapter" Version="3.10.0" />
+    <PackageReference Include="unquote" Version="4.0.0" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\SafetyFirst\SafetyFirst.fsproj" />
     <ProjectReference Include="..\SafetyFirstExtensions\SafetyFirstExtensions.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+
 </Project>
