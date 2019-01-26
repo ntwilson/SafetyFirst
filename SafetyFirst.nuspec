@@ -14,19 +14,15 @@
 
     <dependencies>
       <dependency id="FSharp.Core" version="4.1.17" />
-      <dependency id="FSharpx.collections" version="1.17.0" />
       <dependency id="ResultDotNet" version="2.0.5" />
-      <dependency id="fsharpx.extras" version="2.2.1" />
-      <dependency id="FSharp.Control.AsyncSeq" version="2.0.21" />
-      <dependency id="fsharpx.async" version="1.13.2" />
       <dependency id="System.ValueTuple" version="4.5.0" />
     </dependencies>
   </metadata>
   <files>
     <file src="README.md" target="" />
-    <!-- <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.dll" target="lib\netstandard2.0" />
+    <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.dll" target="lib\netstandard2.0" />
     <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.XML" target="lib\netstandard2.0" />
-    <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.pdb" target="lib\netstandard2.0" /> -->
+    <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.pdb" target="lib\netstandard2.0" />
     <file src="SafetyFirst\bin\Release\net45\SafetyFirst.dll" target="lib\net45" />
     <file src="SafetyFirst\bin\Release\net45\SafetyFirst.XML" target="lib\net45" />
     <file src="SafetyFirst\bin\Release\net45\SafetyFirst.pdb" target="lib\net45" />
