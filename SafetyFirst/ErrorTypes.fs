@@ -2,8 +2,6 @@ namespace SafetyFirst
 
 open System
 
-open FSharpx
-
 type SeqIsEmpty = SeqIsEmpty of string
 type NotEnoughElements = NotEnoughElements of string
 type NoMatchingElement = NoMatchingElement of string
@@ -21,15 +19,15 @@ type WrongNumberOfElements =
     | TooManyElements s -> s
     | NotEnoughElements s -> s
 
-  member this.Match (tooManyElements, notEnoughElements) = 
+  member this.Match (tooManyElements:Func<string, 'a>, notEnoughElements:Func<string, 'a>) = 
     match this with
-    | TooManyElements s -> FSharpFunc.FromFunc<string, 'a> tooManyElements s
-    | NotEnoughElements s -> FSharpFunc.FromFunc<string, 'a> notEnoughElements s
+    | TooManyElements s -> tooManyElements.Invoke s
+    | NotEnoughElements s -> notEnoughElements.Invoke s
 
-  member this.Match (tooManyElements, notEnoughElements) =
+  member this.Match (tooManyElements:Action<string>, notEnoughElements:Action<string>) =
     match this with
-    | TooManyElements s -> FSharpFunc.FromAction<string> tooManyElements s
-    | NotEnoughElements s -> FSharpFunc.FromAction<string> notEnoughElements s
+    | TooManyElements s -> tooManyElements.Invoke s
+    | NotEnoughElements s -> notEnoughElements.Invoke s
 
 
 module internal ErrorTypes = 

@@ -3,7 +3,7 @@ namespace SafetyFirst
 open System
 open System.Collections
 open System.Collections.Generic
-open FSharpx.Collections
+open SafetyFirst.FSharpxCopy.Collections
 
 open ResultDotNet.FSharp
 
@@ -281,9 +281,9 @@ module FiniteSeq =
   /// Returns a SeqIsEmpty Error if the sequence is empty
   /// </summary>
   let reduceSafe f (FSeq xs) = 
-    match xs with
-    | LazyList.Cons (head, tail) -> Ok <| LazyList.fold f head tail
-    | LazyList.Nil -> Error reduceErr
+    match LazyList.tryUncons xs with
+    | Some (head, tail) -> Ok <| LazyList.fold f head tail
+    | None -> Error reduceErr
 
   /// <summary>
   /// Applies a function to each element of the sequence, threading an accumulator argument

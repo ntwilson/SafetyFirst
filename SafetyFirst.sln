@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{0DBCABC6-727F-47D3-A55F-BE7A60BB9193}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SafetyFirst", "SafetyFirst\SafetyFirst.fsproj", "{482616B0-3788-4D93-A13D-DAFE3D7677BA}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SafetyFirst.Specs", "SafetyFirst.Specs\SafetyFirst.Specs.fsproj", "{8B6CC694-61CD-4750-B4ED-0A296B7FF037}"

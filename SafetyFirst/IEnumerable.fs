@@ -4,7 +4,6 @@ open System
 open System.Runtime.CompilerServices
 open System.Collections.Generic
 
-open FSharpx
 open ResultDotNet
 
 open SafetyFirst.ErrorTypes
@@ -17,7 +16,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member AggregateSafe (xs, f:Func<_,_,_>) = 
-    Seq.reduce' (FSharpFunc.FromFunc f) xs
+    Seq.reduce' (fun a b -> f.Invoke (a, b)) xs
     |> Result.FromFs
 
   /// <summary>
@@ -42,7 +41,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member AverageSafe (xs, transform:Func<_,float>) =
-    Seq.averageBy' (FSharpFunc.FromFunc transform) xs  
+    Seq.averageBy' (transform.Invoke) xs  
     |> Result.FromFs
 
   /// <summary>
@@ -83,7 +82,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member FirstSafe (xs, predicate:Func<_,_>) = 
-    Seq.find' (FSharpFunc.FromFunc predicate) xs
+    Seq.find' (predicate.Invoke) xs
     |> Result.FromFs
 
   /// <summary>
@@ -98,7 +97,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member LastSafe (xs, predicate:Func<_,_>) = 
-    Seq.findBack' (FSharpFunc.FromFunc predicate) xs
+    Seq.findBack' (predicate.Invoke) xs
     |> Result.FromFs
 
   /// <summary>
@@ -120,7 +119,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,float>) =
-    Seq.maxBy' (FSharpFunc.FromFunc transform) xs  
+    Seq.maxBy' (transform.Invoke) xs  
     |> Result.FromFs
 
   /// <summary>
@@ -128,7 +127,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,int>) =
-    Seq.maxBy' (FSharpFunc.FromFunc transform) xs  
+    Seq.maxBy' (transform.Invoke) xs  
     |> Result.FromFs
 
   /// <summary>
@@ -150,7 +149,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member MinSafe (xs, transform:Func<_,float>) =
-    Seq.minBy' (FSharpFunc.FromFunc transform) xs  
+    Seq.minBy' (transform.Invoke) xs  
     |> Result.FromFs
 
   /// <summary>
@@ -158,7 +157,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member MinSafe (xs, transform:Func<_,int>) =
-    Seq.minBy' (FSharpFunc.FromFunc transform) xs  
+    Seq.minBy' (transform.Invoke) xs  
     |> Result.FromFs
 
   /// <summary>
@@ -173,7 +172,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member SingleSafe (xs, predicate:Func<_, bool>) = 
-    Seq.filter (FSharpFunc.FromFunc predicate) xs
+    Seq.filter (predicate.Invoke) xs
     |> Seq.exactlyOne'
     |> Result.FromFs
 
@@ -193,6 +192,6 @@ type IEnumerableExtensions () =
     
     if cachedXs.Count <> cachedYs.Count
     then Error <| zipErr cachedXs.Count cachedYs.Count
-    else Ok <| Seq.map2 (FSharpFunc.FromFunc resultSelector) cachedXs cachedYs
+    else Ok <| Seq.map2 (fun a b -> resultSelector.Invoke (a, b)) cachedXs cachedYs
 
 
