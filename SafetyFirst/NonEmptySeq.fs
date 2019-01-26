@@ -2,7 +2,7 @@ namespace SafetyFirst
 
 open System.Collections.Generic
 
-open FSharpx.Collections
+open SafetyFirst.FSharpxCopy.Collections
 
 /// <summary>
 /// A lazily evaluated sequence that is constrained to have at least one element.

@@ -9,6 +9,8 @@ open ResultDotNet
 
 open SafetyFirst
 
+let x = ()
+
 let throws f = 
   try 
     Lazy.force f |> ignore

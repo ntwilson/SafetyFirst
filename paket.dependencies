@@ -1,0 +1,10 @@
+source https://api.nuget.org/v3/index.json
+
+nuget FsCheck 2.11.0
+nuget fsharp.core 4.5.0
+nuget microsoft.net.test.sdk 15.7.2
+nuget nunit 3.10.1
+nuget nunit3TestAdapter 3.10.0
+nuget ResultDotNet 2.0.5
+nuget System.ValueTuple 4.5.0
+nuget unquote 4.0.0
