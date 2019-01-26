@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ntwilson/SafetyFirst.svg?branch=master)](https://travis-ci.org/ntwilson/SafetyFirst)
+[![Build Status](https://travis-ci.com/ntwilson/SafetyFirst.svg?branch=master)](https://travis-ci.com/ntwilson/SafetyFirst)
 
 ## SafetyFirst
 
