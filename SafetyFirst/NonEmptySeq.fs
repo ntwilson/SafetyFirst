@@ -46,6 +46,26 @@ module NonEmptySeq =
   let head (NonEmptySeq xs) = Seq.head xs
   
   /// <summary>
+  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
+  /// </summary
+  let min (NonEmptySeq xs) = Seq.min xs
+
+  /// <summary>
+  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
+  /// </summary
+  let max (NonEmptySeq xs) = Seq.max xs
+
+  /// <summary>
+  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c> on the function result.
+  /// </summary>
+  let minBy projection (NonEmptySeq xs) = Seq.minBy projection xs
+
+  /// <summary>
+  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c> on the function result.
+  /// </summary>
+  let maxBy projection (NonEmptySeq xs) = Seq.maxBy projection xs
+
+  /// <summary>
   /// Returns the sequence after removing the first element.
   /// </summary>
   let tail (NonEmptySeq xs) = FiniteSeq.ofSeq (Seq.tail xs)
