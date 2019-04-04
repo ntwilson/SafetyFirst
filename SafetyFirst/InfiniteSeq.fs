@@ -27,6 +27,9 @@ type InfiniteSeq<'a> =
 /// would cause many of the functions to hang indefinitely).
 /// </summary>
 module InfiniteSeq =
+
+  let asNonEmpty (xs:InfiniteSeq<_>) = NonEmpty xs
+
   /// <summary>
   /// Generates a new sequence which, when iterated, will return successive
   /// elements by calling the given function. The results of calling the function
