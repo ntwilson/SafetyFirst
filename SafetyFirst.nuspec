@@ -7,7 +7,7 @@
     <owners>nathan wilson</owners>
     <description>Total functions made convenient for F# and C#</description>
     <summary>Total functions made convenient for F# and C#</summary>
-    <releaseNotes>Breaking changes: the `NonEmptySeq` type renamed to `NonEmptyFSeq`.  The `NonEmptySeq` module renamed to `FSeq.NonEmpty`.</releaseNotes>
+    <releaseNotes>More functions for creating/converting to NonEmpty sequences.</releaseNotes>
     <license type="expression">CC0-1.0</license>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>

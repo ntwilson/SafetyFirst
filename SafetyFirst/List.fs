@@ -739,6 +739,21 @@ module NonEmpty =
 
 
   /// <summary>
+  /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
+  /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
+  /// </summary>
+  let ofListSafe (xs:_ list) : Result<NonEmptyList<_>,_> = 
+    match xs with
+    | Empty -> Error <| SeqIsEmpty "Assertion that a sequence is not empty failed."
+    | NotEmpty ys -> Ok <| ys
+
+  /// <summary>
+  /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
+  /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
+  /// </summary>
+  let inline ofList' xs = ofListSafe xs
+
+  /// <summary>
   /// Returns a sequence of each element in the input sequence and its predecessor, with the
   /// exception of the first element which is only returned as the predecessor of the second element.
   /// </summary>

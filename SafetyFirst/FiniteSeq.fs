@@ -908,7 +908,6 @@ module FSeq =
     /// </summary>
     let dropLenient n (NonEmptyFSeq xs) = FiniteSeq.dropLenient n xs
 
-    type SeqIsEmpty = SeqIsEmpty of string
     /// <summary>
     /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
@@ -922,7 +921,7 @@ module FSeq =
     /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
     /// </summary>
-    let inline ofFSeq' xs : Result<NonEmptyFSeq<_>,_> = ofFSeqSafe xs
+    let inline ofFSeq' xs = ofFSeqSafe xs
 
     /// <summary>
     /// Returns a sequence of each element in the input sequence and its predecessor, with the
@@ -946,9 +945,19 @@ module FSeq =
     let toArray (NonEmptyFSeq xs) = FiniteSeq.toArray xs
 
     /// <summary>
+    /// Builds a NonEmpty array from the given collection.
+    /// </summary>
+    let toNonEmptyArray xs : NonEmptyArray<_> = NonEmpty <| toArray xs
+
+    /// <summary>
     /// Builds a List from the given collection.
     /// </summary>
     let toList (NonEmptyFSeq xs) = FiniteSeq.toList xs
+
+    /// <summary>
+    /// Builds a NonEmpty List from the given collection.
+    /// </summary>
+    let toNonEmptyList xs : NonEmptyList<_> = NonEmpty <| toList xs
 
     /// <summary>
     /// Views the given NonEmpty FSeq as a sequence.
