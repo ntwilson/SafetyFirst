@@ -416,7 +416,7 @@ module NonEmpty =
   /// The tail is constrained to be finite.  If the tail is infinite,
   /// use Seq.NonEmpty.create instead
   /// </summary>
-  let create head tail = NonEmpty (Seq.append [head] tail)
+  let create head tail : NonEmptySeq<_> = NonEmpty (Seq.append [head] tail)
  
   /// <summary>
   /// Returns the first element of the sequence.
@@ -479,14 +479,14 @@ module NonEmpty =
   /// as elements are demanded using the MoveNext method on enumerators retrieved from the
   /// object.
   /// </summary>
-  let map f (NonEmpty xs) = NonEmpty (Seq.map f xs)
+  let map f (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.map f xs)
   
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
   /// to each of the elements of the collection. The integer index passed to the
   /// function indicates the index (from 0) of element being transformed.
   /// </summary>
-  let mapi f (NonEmpty xs) =
+  let mapi f (NonEmpty xs) : NonEmptySeq<_> =
     NonEmpty (Seq.mapi f xs)
   
   /// <summary>
@@ -494,7 +494,7 @@ module NonEmpty =
   /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
   /// </summary>
-  let map2 f (NonEmpty xs) (NonEmpty ys) =
+  let map2 f (NonEmpty xs) (NonEmpty ys) : NonEmptySeq<_> =
     NonEmpty (Seq.map2 f xs ys)
 
   /// <summary>
@@ -506,7 +506,7 @@ module NonEmpty =
   /// <summary>
   /// Wraps the two given enumerations as a single concatenated enumeration.
   /// </summary>
-  let append xs (NonEmpty ys) = NonEmpty (Seq.append xs ys)
+  let append xs (NonEmpty ys) : NonEmptySeq<_> = NonEmpty (Seq.append xs ys)
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -518,7 +518,7 @@ module NonEmpty =
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
   /// </summary>
-  let ofSeqSafe (xs:_ seq) = 
+  let ofSeqSafe (xs:_ seq) : Result<NonEmptySeq<_>,_> = 
     match xs with
     | Empty -> Error <| SeqIsEmpty "Assertion that a sequence is not empty failed."
     | NotEmpty ys -> Ok ys
@@ -538,12 +538,12 @@ module NonEmpty =
   /// <summary>
   /// Returns a new sequence with the elements in reverse order.
   /// </summary>
-  let rev (NonEmpty xs) = NonEmpty (Seq.rev xs)
+  let rev (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.rev xs)
 
   /// <summary>
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
   /// </summary>
-  let scan f initialState (NonEmpty xs) = NonEmpty (Seq.scan f initialState xs)
+  let scan f initialState (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.scan f initialState xs)
 
   /// <summary>
   /// Builds an array from the given collection.
@@ -553,7 +553,7 @@ module NonEmpty =
   /// <summary>
   /// Builds a NonEmpty array from the given collection.
   /// </summary>
-  let toNonEmptyArray xs = NonEmpty <| toArray xs
+  let toNonEmptyArray xs : NonEmptyArray<_> = NonEmpty <| toArray xs
 
   /// <summary>
   /// Builds a List from the given collection.
@@ -563,7 +563,7 @@ module NonEmpty =
   /// <summary>
   /// Builds a NonEmpty List from the given collection.
   /// </summary>
-  let toNonEmptyList xs = NonEmpty <| toList xs
+  let toNonEmptyList xs : NonEmptyList<_> = NonEmpty <| toList xs
 
   /// <summary>
   /// Views the given NonEmptySeq as a sequence.
@@ -593,4 +593,4 @@ module NonEmpty =
   /// when one sequence is exhausted any remaining elements in the other
   /// sequence are ignored.
   /// </summary>
-  let zip (NonEmpty xs) (NonEmpty ys) = NonEmpty (Seq.zip xs ys)
+  let zip (NonEmpty xs) (NonEmpty ys) : NonEmptySeq<_> = NonEmpty (Seq.zip xs ys)
