@@ -27,9 +27,9 @@ module FiniteSeq =
         seq { 
           match input with
           | NotEmpty remainder ->
-            let head, tail = NonEmptySeq.uncons remainder
+            let head, tail = FSeq.NonEmpty.uncons remainder
             let contiguous, restOfInput = singleSplit tail
-            let nextChunk = NonEmptySeq.create head contiguous
+            let nextChunk = FSeq.NonEmpty.create head contiguous
             yield nextChunk
             yield! split' restOfInput
           | Empty -> ()
@@ -70,8 +70,8 @@ module NonEmptySeq =
   /// </summary>
   let splitPairwise splitBetween xs =
     let (headGroup, tailGroups) = 
-      NonEmptySeq.pairwise xs
+      FSeq.NonEmpty.pairwise xs
       |> FSeq.split (uncurry splitBetween) 
-    let firstGroup = NonEmptySeq.create (NonEmptySeq.head xs) (FSeq.map snd headGroup)
-    in NonEmptySeq.create firstGroup (FSeq.map (NonEmptySeq.map snd) tailGroups)
+    let firstGroup = FSeq.NonEmpty.create (FSeq.NonEmpty.head xs) (FSeq.map snd headGroup)
+    in FSeq.NonEmpty.create firstGroup (FSeq.map (FSeq.NonEmpty.map snd) tailGroups)
 

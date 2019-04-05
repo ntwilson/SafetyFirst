@@ -860,14 +860,14 @@ module FSeq =
     /// as elements are demanded using the MoveNext method on enumerators retrieved from the
     /// object.
     /// </summary>
-    let map f (NonEmptyFSeq xs) = NonEmpty (FiniteSeq.map f xs)
+    let map f (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.map f xs)
     
     /// <summary>
     /// Builds a new collection whose elements are the results of applying the given function
     /// to each of the elements of the collection. The integer index passed to the
     /// function indicates the index (from 0) of element being transformed.
     /// </summary>
-    let mapi f (NonEmptyFSeq xs) =
+    let mapi f (NonEmptyFSeq xs) : NonEmptyFSeq<_> =
       NonEmpty (FiniteSeq.mapi f xs)
     
     /// <summary>
@@ -875,7 +875,7 @@ module FSeq =
     /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
     /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
     /// </summary>
-    let map2 f (NonEmptyFSeq xs) (NonEmptyFSeq ys) =
+    let map2 f (NonEmptyFSeq xs) (NonEmptyFSeq ys) : NonEmptyFSeq<_> =
       NonEmpty (FiniteSeq.map2 f xs ys)
 
     /// <summary>
@@ -887,12 +887,12 @@ module FSeq =
     /// <summary>
     /// Wraps the two given enumerations as a single concatenated enumeration.
     /// </summary>
-    let append xs (NonEmptyFSeq ys) = NonEmpty (FiniteSeq.append xs ys)
+    let append xs (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
 
     /// <summary>
     /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
     /// </summary>
-    let concat (NonEmptyFSeq xs : NonEmptyFSeq<NonEmptyFSeq<'a>>) = 
+    let concat (NonEmptyFSeq xs : NonEmptyFSeq<NonEmptyFSeq<'a>>) : NonEmptyFSeq<_> = 
       NonEmpty (xs |> FiniteSeq.map (fun (NonEmptyFSeq x) -> x) |> FiniteSeq.concat)
 
     /// <summary>
@@ -913,7 +913,7 @@ module FSeq =
     /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
     /// </summary>
-    let ofFSeqSafe (xs:_ fseq) = 
+    let ofFSeqSafe (xs:_ fseq) : Result<NonEmptyFSeq<_>,_> = 
       match xs with
       | Empty -> Error <| SeqIsEmpty "Assertion that a sequence is not empty failed."
       | NotEmpty ys -> Ok <| ys
@@ -922,7 +922,7 @@ module FSeq =
     /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
     /// </summary>
-    let inline ofFSeq' xs = ofFSeqSafe xs
+    let inline ofFSeq' xs : Result<NonEmptyFSeq<_>,_> = ofFSeqSafe xs
 
     /// <summary>
     /// Returns a sequence of each element in the input sequence and its predecessor, with the
@@ -933,12 +933,12 @@ module FSeq =
     /// <summary>
     /// Returns a new sequence with the elements in reverse order.
     /// </summary>
-    let rev (NonEmptyFSeq xs) = NonEmpty (FiniteSeq.rev xs)
+    let rev (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.rev xs)
 
     /// <summary>
     /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
     /// </summary>
-    let scan f initialState (NonEmptyFSeq xs) = NonEmpty (FiniteSeq.scan f initialState xs)
+    let scan f initialState (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.scan f initialState xs)
 
     /// <summary>
     /// Builds an array from the given collection.
@@ -977,14 +977,14 @@ module FSeq =
     /// Combines the two sequences into a list of pairs. 
     /// Returns None if the sequences are different lengths
     /// </summary>
-    let tryZip (NonEmptyFSeq xs) (NonEmptyFSeq ys) = Option.map NonEmpty (FiniteSeq.tryZip xs ys)
+    let tryZip (NonEmptyFSeq xs) (NonEmptyFSeq ys) : Option<NonEmptyFSeq<_>> = Option.map NonEmpty (FiniteSeq.tryZip xs ys)
 
     /// <summary>
     /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
     /// when one sequence is exhausted any remaining elements in the other
     /// sequence are ignored.
     /// </summary>
-    let zip (NonEmptyFSeq xs) (NonEmptyFSeq ys) = NonEmpty (FiniteSeq.zip xs ys)
+    let zip (NonEmptyFSeq xs) (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.zip xs ys)
   
 open System.Runtime.CompilerServices
 

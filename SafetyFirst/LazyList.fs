@@ -192,13 +192,13 @@ module  LazyList =
             | CellEmpty -> None
 
     let rec skipc n s =
-      if n = 0 then Some s
+      if n <= 0 then Some s
       else  
         match getCell s with
         | CellCons(_,s) -> match (skipc (n-1) s) with Some x -> Some x | None -> None
         | CellEmpty -> None
 
-    let rec skip (NaturalInt n) s = skipc n s
+    let rec skip n s = skipc n s
 
     let fold f s l =
         let rec loop s l cont =

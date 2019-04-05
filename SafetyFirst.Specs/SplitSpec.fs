@@ -6,7 +6,7 @@ open Swensen.Unquote
 open SafetyFirst
 open ResultDotNet.FSharp
 
-let toNonEmptySeq xs = NonEmptySeq.ofSeq' xs |> Result.expect
+let toNonEmptySeq xs = FSeq.NonEmpty.ofFSeq' (fseq xs) |> Result.expect
 
 let toSplitType (head, tail) = 
   (fseq head, fseq (Seq.map toNonEmptySeq tail))
