@@ -53,6 +53,12 @@ let chunkBySizeSafe size xs =
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
 /// <summary>
+/// Divides the input array into chunks of size at most <c>size</c>.
+/// Same as <c>Array.chunkBySize</c>, but restricts the input to a PositiveInt
+/// </summary>
+let chunksOf (PositiveInt size) xs = Array.chunkBySize size xs
+
+/// <summary>
 /// If the input array has only one element, returns that element.
 /// If the input array has more or less than one element, returns a WrongNumberOfElements Error.  
 /// </summary>
@@ -481,6 +487,12 @@ let splitIntoSafe count xs =
 let inline splitInto' count xs = splitIntoSafe count xs
 
 /// <summary>
+/// Splits the input array into at most count chunks.
+/// Same as <c>Array.splitInto</c>, but restricts the input to a PositiveInt
+/// </summary>
+let splitIntoN (PositiveInt count) xs = Array.splitInto count xs
+
+/// <summary>
 /// Slices an array given a starting index and a count of elements to return.
 /// Returns an IndexOutOfBounds Error if either <c>startIndex</c> or <c>count</c> is negative,
 /// or if there aren't enough elements in the input array.
@@ -554,6 +566,13 @@ let windowedSafe size xs =
 let inline windowed' size xs = windowedSafe size xs
 
 /// <summary>
+/// Returns an array that yields sliding windows containing elements drawn from the input
+/// array. Each window is returned as a fresh array.
+/// Same as <c>Array.windowed</c>, but restricts the input to a PositiveInt
+/// </summary>
+let window (PositiveInt size) xs = Array.windowed size xs
+
+/// <summary>
 /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
 /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
 /// </summary>
@@ -590,8 +609,6 @@ let inline zip3' xs ys zs = zip3Safe xs ys zs
 /// Functions for manipulating NonEmpty Arrays
 /// </summary>
 module NonEmpty =
-
-  type NonEmptyArray<'a> = NonEmpty<'a[], 'a>
 
   /// <summary>
   /// Creates a new NonEmptySeq with the provided head and tail.  
@@ -704,7 +721,7 @@ module NonEmpty =
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
   /// </summary>
   let concat (NonEmpty xs : NonEmptyArray<NonEmptyArray<'a>>) : NonEmptyArray<_> = 
-    NonEmpty (xs |> Array.map (fun (NonEmpty x) -> x) |> Array.concat)
+    NonEmpty (xs |> Array.collect (fun (NonEmpty x) -> x))
 
   /// <summary>
   /// O(n), where n is count. Return the array which will remove at most 'n' elements of
@@ -720,11 +737,11 @@ module NonEmpty =
   /// CAUTION: This function will THROW for negative values of 'n'.
   /// </summary>
   let dropUnsafe n (NonEmpty xs) = 
-    if n < 0 then invalidArg "n" "Can't drop a negative number of values"
-    elif n >= Array.length xs then [||]
-    else xs.[n .. Array.length xs - 1]
-
-  type NegativeLength = NegativeLength
+    match n with 
+    | Natural _ ->
+      if n >= Array.length xs then [||]
+      else xs.[n .. Array.length xs - 1]
+    | neg -> invalidArg "n" "Can't drop a negative number of values"
 
   /// <summary>
   /// O(n), where n is count. Return the array which will remove at most 'n' elements of
@@ -733,8 +750,8 @@ module NonEmpty =
   /// </summary>
   let dropLenient n (NonEmpty xs as arr) = 
     match n with
-    | Nat i -> drop i arr
-    | Neg _ -> xs
+    | Natural i -> drop i arr
+    | neg -> xs
 
   /// <summary>
   /// Returns a sequence of each element in the input sequence and its predecessor, with the

@@ -20,10 +20,10 @@ module NaturalIntMatchers =
   let (|NaturalInt|) (NaturalInt i) = i
   let (|PositiveInt|) (PositiveInt i) = i
   let (|NegativeInt|) (NegativeInt i) = i
-  let (|Nat|Neg|) i = 
+  let (|Natural|NonNatural|) i = 
     if i < 0 
-    then Neg (NegativeInt i)
-    else Nat (NaturalInt i)
+    then NonNatural (NegativeInt i)
+    else Natural (NaturalInt i)
 
   let (|Positive|Negative|Zero|) = function
     | i when i > 0 -> Positive (PositiveInt i)
@@ -31,11 +31,9 @@ module NaturalIntMatchers =
     | _ -> Zero
 
 module NaturalInt = 
-  let test i = i >= 0
-  let verify i = 
-    if test i
-    then Some (NaturalInt i)
-    else None
+  let verify = function 
+    | Natural i -> Some i
+    | NonNatural _ -> None
 
   /// <summary>
   /// Asserts that the integer passed in is a natural int (>= 0).  Will THROW if given a negative value.
@@ -53,16 +51,14 @@ module NaturalInt =
   /// once correct are made invalid, and there would be no protection against such a mistake.  In this case, it's 
   /// recommended to use <c>NaturalInt.create</c> or the <c>(|Natural|Negative|)</c> pattern.
   /// </summary>
-  let assume i = 
-    if not <| test i then invalidArg "i" (sprintf "Assertion failed trying to create a NaturalInt: %i >= 0" i)
-    else NaturalInt i
+  let assume = function
+    | Natural i -> i
+    | i -> invalidArg "i" (sprintf "Assertion failed trying to create a NaturalInt: %i >= 0" i)
 
 module NegativeInt =  
-  let test i = i < 0
-  let verify i = 
-    if test i
-    then Some (NegativeInt i) 
-    else None  
+  let verify = function
+    | Negative i -> Some i
+    | _ -> None  
 
   /// <summary>
   /// Asserts that the integer passed in is negative.  Will THROW if given a non-negative value.
@@ -82,17 +78,16 @@ module NegativeInt =
   /// once correct are made invalid, and there would be no protection against such a mistake.  In this case, it's 
   /// recommended to use <c>NegativeInt.create</c> or the <c>(|Natural|Negative|)</c> pattern.
   /// </summary>
-  let assume i = 
-    if not <| test i then invalidArg "i" (sprintf "Assertion failed trying to create a NegativeInt: %i < 0" i)
-    else NegativeInt i
+  let assume = function 
+    | Negative i -> i
+    | i -> invalidArg "i" (sprintf "Assertion failed trying to create a NegativeInt: %i < 0" i)
 
 module PositiveInt = 
   let private test i = i > 0
 
-  let verify i =
-    if test i
-    then Some (PositiveInt i)
-    else None
+  let verify = function 
+    | Positive i -> Some i
+    | _ -> None
 
   /// <summary>
   /// Asserts that the integer passed in is positive (> 0).  Will THROW if given a zero or negative value.
@@ -110,6 +105,7 @@ module PositiveInt =
   /// once correct are made invalid, and there would be no protection against such a mistake.  In this case, it's 
   /// recommended to use <c>PositiveInt.create</c> or the <c>(|Positive|Negative|Zero|)</c> pattern.
   /// </summary>
-  let assume i = 
-    if not <| test i then invalidArg "i" (sprintf "Assertion failed trying to create a PositiveInt: %i > 0" i)  
-    else PositiveInt i
+  let assume = function
+    | Positive i -> i
+    | i -> invalidArg "i" (sprintf "Assertion failed trying to create a PositiveInt: %i > 0" i)
+    

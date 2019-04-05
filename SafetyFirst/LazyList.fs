@@ -281,10 +281,10 @@ module  LazyList =
 
     let rec drop (NaturalInt n) xs =
         match n - 1 with
-        | Nat nm1 when n > 0 -> //n > 0 is redundant, just clarifies
+        | Natural nm1 when n > 0 -> //n > 0 is redundant, just clarifies
             match xs with
             | Cons(x, xs') -> drop nm1 xs'
             | _ -> EmptyValue<'T>.Value
-        | _ ->
+        | neg ->
             xs
 

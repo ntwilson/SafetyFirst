@@ -53,6 +53,12 @@ let chunkBySizeSafe size xs =
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
 /// <summary>
+/// Divides the input sequence into chunks of size at most <c>size</c>.
+/// Same as <c>List.chunkBySize</c>, but restricts the input to a PositiveInt
+/// </summary>
+let chunksOf (PositiveInt size) xs = List.chunkBySize size xs
+
+/// <summary>
 /// If the input list has only one element, returns that element.
 /// If the input list has more or less than one element, returns a WrongNumberOfElements Error.  
 /// </summary>
@@ -489,6 +495,12 @@ let splitIntoSafe count xs =
 let inline splitInto' count xs = splitIntoSafe count xs
 
 /// <summary>
+/// Splits the input list into at most count chunks.
+/// Same as <c>List.splitInto</c>, but restricts the input to a PositiveInt
+/// </summary>
+let splitIntoN (PositiveInt count) xs = List.splitInto count xs
+
+/// <summary>
 /// Returns a list that skips 1 element of the underlying list and then yields the
 /// remaining elements of the list.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
@@ -522,7 +534,7 @@ let inline take' count xs = takeSafe count xs
 
 /// <summary>
 /// Returns a list that yields sliding windows containing elements drawn from the input
-/// list. Each window is returned as a fresh array.
+/// list. Each window is returned as a fresh list.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
 let windowedSafe size xs = 
@@ -532,10 +544,17 @@ let windowedSafe size xs =
 
 /// <summary>
 /// Returns a list that yields sliding windows containing elements drawn from the input
-/// list. Each window is returned as a fresh array.
+/// list. Each window is returned as a fresh list.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
 let inline windowed' size xs = windowedSafe size xs
+
+/// <summary>
+/// Returns a list that yields sliding windows containing elements drawn from the input
+/// list. Each window is returned as a fresh list.
+/// Same as <c>List.windowed</c>, but restricts the input to a PositiveInt
+/// </summary>
+let window (PositiveInt size) xs = List.windowed size xs
 
 /// <summary>
 /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
@@ -574,8 +593,6 @@ let inline zip3' xs ys zs = zip3Safe xs ys zs
 /// Functions for manipulating NonEmpty Lists
 /// </summary>
 module NonEmpty =
-
-  type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 
   /// <summary>
   /// Creates a new NonEmptySeq with the provided head and tail.  
@@ -704,9 +721,11 @@ module NonEmpty =
   /// CAUTION: This function will THROW for negative values of 'n'.
   /// </summary>
   let dropUnsafe n (NonEmpty xs) = 
-    if n < 0 then invalidArg "n" "Can't drop a negative number of values"
-    elif n >= List.length xs then []
-    else xs.[n .. List.length xs - 1]
+    match n with
+    | Natural i ->
+      if n >= List.length xs then []
+      else xs.[n .. List.length xs - 1]
+    | neg -> invalidArg "n" "Can't drop a negative number of values"
 
   /// <summary>
   /// O(n), where n is count. Return the list which will remove at most 'n' elements of
@@ -715,8 +734,8 @@ module NonEmpty =
   /// </summary>
   let dropLenient n (NonEmpty xs as lst) = 
     match n with
-    | Nat i -> drop i lst
-    | Neg _ -> xs
+    | Natural i -> drop i lst
+    | neg -> xs
 
 
   /// <summary>

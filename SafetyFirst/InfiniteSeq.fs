@@ -1,14 +1,13 @@
 namespace SafetyFirst
 
 open System.Collections.Generic
+open SafetyFirst.Numbers
 
 /// <summary>
 /// An infinite sequence created by <c>InfiniteSeq.init</c>.
 /// The functions in InfiniteSeq are all safe for use with infinite sequences
 /// </summary>
-type InfiniteSeq<'a> = 
-  private 
-    | InfiniteSeq of seq<'a>
+type InfiniteSeq<'a> = private InfiniteSeq of seq<'a> with
 
   interface IEnumerable<'a> with
     member this.GetEnumerator () = 
@@ -38,6 +37,11 @@ module InfiniteSeq =
   /// generated.
   /// </summary>
   let init transform = InfiniteSeq (Seq.initInfinite transform)
+
+  /// <summary>
+  /// Computes the element at the specified index in the collection.
+  /// </summary>
+  let item (NaturalInt i) (InfiniteSeq xs) = Seq.item i xs
 
   /// <summary>
   /// Returns the first N elements of the sequence.
@@ -154,7 +158,7 @@ module InfiniteSeq =
         seq { 
           let head, tail = head remainder, tail remainder
           let contiguous, restOfInput = singleSplit tail
-          let nextChunk = NonEmptySeq.create head contiguous
+          let nextChunk = FSeq.NonEmpty.create head contiguous
           yield nextChunk
           yield! split' restOfInput
         })
@@ -176,5 +180,5 @@ module InfiniteSeq =
     let (headGroup, tailGroups) = 
       pairwise xs
       |> split (uncurry splitBetween) 
-    let firstGroup = NonEmptySeq.create (head xs) (FSeq.map snd headGroup)
-    in InfiniteSeq (Seq.append [firstGroup] (map (NonEmptySeq.map snd) tailGroups))
+    let firstGroup = FSeq.NonEmpty.create (head xs) (FSeq.map snd headGroup)
+    in InfiniteSeq (Seq.append [firstGroup] (map (FSeq.NonEmpty.map snd) tailGroups))

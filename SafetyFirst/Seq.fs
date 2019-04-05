@@ -53,6 +53,12 @@ let chunkBySizeSafe size xs =
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
 /// <summary>
+/// Divides the input sequence into chunks of size at most <c>size</c>.
+/// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
+/// </summary>
+let chunksOf (PositiveInt size) xs = Seq.chunkBySize size xs
+
+/// <summary>
 /// If the input sequence has only one element, returns that element.
 /// If the input sequence has more or less than one element, returns a WrongNumberOfElements Error.  
 /// </summary>
@@ -338,6 +344,12 @@ let splitIntoSafe count xs =
 let inline splitInto' count xs = splitIntoSafe count xs
 
 /// <summary>
+/// Splits the input sequence into at most count chunks.
+/// Same as <c>Seq.splitInto</c>, but restricts the input to a PositiveInt
+/// </summary>
+let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
+
+/// <summary>
 /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
 /// remaining elements of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
@@ -388,11 +400,16 @@ let windowedSafe size xs =
 let inline windowed' size xs = windowedSafe size xs
 
 /// <summary>
+/// Returns a sequence that yields sliding windows containing elements drawn from the input
+/// sequence. Each window is returned as a fresh array.
+/// Same as <c>Seq.windowed</c> but restricts the input to a PositiveInt
+/// </summary>
+let window (PositiveInt size) xs = Seq.windowed size xs
+
+/// <summary>
 /// Functions for manipulating NonEmpty Seqs 
 /// </summary>
 module NonEmpty =
-
-  type NonEmptySeq<'a> = NonEmpty<'a seq, 'a>
 
   /// <summary>
   /// Creates a new NonEmptySeq with the provided head and tail.  
@@ -497,34 +514,6 @@ module NonEmpty =
   let concat (NonEmpty xs : NonEmptySeq<NonEmptySeq<'a>>) = 
     NonEmpty (Seq.concat xs)
 
-  /// <summary>
-  /// O(n), where n is count. Return the seq which on consumption will remove of at most 'n' elements of
-  /// the input seq.
-  /// </summary>
-  let drop n (NonEmpty xs) = 
-    let rec drop' (NaturalInt n) xs = 
-      match (n, n-1) with
-      | (Positive _, Nat nm1) ->
-        if Seq.length xs > 0 
-        then drop' (nm1) (Seq.tail xs)
-        else Seq.empty
-      | _ -> 
-        xs
-
-    drop' n xs        
-
-  /// <summary>
-  /// O(n), where n is count. Return the seq which will remove at most 'n' elements of
-  /// the input seq.
-  /// This function will return the input seq unaltered for negative values of 'n'.
-  /// </summary>
-  let dropLenient n (NonEmpty xs as sq) = 
-    match n with
-    | Nat i -> drop i sq
-    | Neg _ -> xs  
-
-
-  type SeqIsEmpty = SeqIsEmpty of string
   /// <summary>
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.

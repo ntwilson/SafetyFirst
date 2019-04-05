@@ -95,13 +95,13 @@ type FiniteSeq<[<EqualityConditionalOn; ComparisonConditionalOn>]'a> (xs : LazyL
 
 type FSeq<'a> = FiniteSeq<'a>
 
-type fseq<'a> = FiniteSeq<'a>
+type 'a fseq = FiniteSeq<'a>
 
 /// <summary>
-/// A lazily evaluated sequence that is constrained to be finite and to have at least one element.
+/// A seq constrained to be finite and non-empty. 
 /// An alias for <c>NonEmpty<'a fseq, 'a></c>
 /// </summary>
-type NonEmptySeq<'a> = NonEmpty<'a fseq, 'a>
+type NonEmptyFSeq<'a> = NonEmpty<'a fseq, 'a>
 
 [<AutoOpen>]
 module FSeqBuilder = 
@@ -113,7 +113,6 @@ module FSeqBuilder =
   let fseq (xs:_ seq) = FiniteSeq xs
   let (|FiniteSeq|) (xs:_ fseq) = xs.Values
   let (|FSeq|) (xs:_ fseq) = xs.Values
-  let (|NonEmptySeq|) (NonEmpty xs) : _ fseq = xs  
 
 
 module FiniteSeq =
@@ -156,13 +155,13 @@ module FiniteSeq =
   /// </summary>
   let dropLenient n xs = 
     match n with
-    | Nat i -> drop i xs
-    | Neg _ -> xs  
+    | Natural i -> drop i xs
+    | neg -> xs  
 
   /// <summary>
   /// O(1). Evaluates to the sequence that contains no items
   /// </summary>
-  let empty<'a when 'a : comparison> = fseq (LazyList.empty<'a>)
+  let empty<'a> = fseq (LazyList.empty<'a>)
 
   /// <summary>
   /// Applies a function to each element of the collection, threading an accumulator argument
@@ -342,9 +341,9 @@ module FiniteSeq =
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
-  let skipSafe ((NaturalInt i) as n) xs = 
+  let skipSafe n xs = 
     trySkip n xs 
-    |> Result.ofOptionWith (fun () -> skipErr i (length xs))
+    |> Result.ofOptionWith (fun () -> skipErr n (length xs))
     
   /// <summary>
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
@@ -791,8 +790,6 @@ module FSeq =
   /// Functions for manipulating NonEmpty FSeqs 
   /// </summary>
   module NonEmpty =
-
-    type NonEmptyFSeq<'a> = NonEmpty<'a fseq, 'a>
     let (|NonEmptyFSeq|) (NonEmpty xs : NonEmptyFSeq<_>) = xs
 
     /// <summary>
@@ -922,7 +919,7 @@ module FSeq =
       | NotEmpty ys -> Ok <| ys
 
     /// <summary>
-    /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
+    /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
     /// </summary>
     let inline ofFSeq' xs = ofFSeqSafe xs
@@ -931,252 +928,63 @@ module FSeq =
     /// Returns a sequence of each element in the input sequence and its predecessor, with the
     /// exception of the first element which is only returned as the predecessor of the second element.
     /// </summary>
-    let pairwise (NonEmptySeq xs) = FiniteSeq.pairwise xs
+    let pairwise (NonEmptyFSeq xs) = FiniteSeq.pairwise xs
 
     /// <summary>
     /// Returns a new sequence with the elements in reverse order.
     /// </summary>
-    let rev (NonEmptySeq xs) = NonEmpty (FiniteSeq.rev xs)
+    let rev (NonEmptyFSeq xs) = NonEmpty (FiniteSeq.rev xs)
 
     /// <summary>
     /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
     /// </summary>
-    let scan f initialState (NonEmptySeq xs) = NonEmpty (FiniteSeq.scan f initialState xs)
+    let scan f initialState (NonEmptyFSeq xs) = NonEmpty (FiniteSeq.scan f initialState xs)
 
     /// <summary>
     /// Builds an array from the given collection.
     /// </summary>
-    let toArray (NonEmptySeq xs) = FiniteSeq.toArray xs
+    let toArray (NonEmptyFSeq xs) = FiniteSeq.toArray xs
 
     /// <summary>
     /// Builds a List from the given collection.
     /// </summary>
-    let toList (NonEmptySeq xs) = FiniteSeq.toList xs
+    let toList (NonEmptyFSeq xs) = FiniteSeq.toList xs
 
     /// <summary>
-    /// Views the given NonEmptySeq as a sequence.
+    /// Views the given NonEmpty FSeq as a sequence.
     /// </summary>
-    let toSeq (NonEmptySeq xs) : _ seq = upcast xs 
+    let toSeq (NonEmptyFSeq xs) : _ seq = upcast xs 
 
     /// <summary>
     /// Returns the first element for which the given function returns True.
     /// Return None if no such element exists.
     /// </summary>
-    let tryFind predicate (NonEmptySeq xs) = FiniteSeq.tryFind predicate xs
+    let tryFind predicate (NonEmptyFSeq xs) = FiniteSeq.tryFind predicate xs
 
     /// <summary>
     /// O(n), where n is count. Return option the list which skips the first 'n' elements of
     /// the input list.
     /// </summary>
-    let trySkip n (NonEmptySeq xs) = FiniteSeq.trySkip n xs
+    let trySkip n (NonEmptyFSeq xs) = FiniteSeq.trySkip n xs
 
     /// <summary>
     /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
     /// the input list.
     /// </summary>
-    let tryTake n (NonEmptySeq xs) = FiniteSeq.tryTake n xs
+    let tryTake n (NonEmptyFSeq xs) = FiniteSeq.tryTake n xs
 
     /// <summary>
     /// Combines the two sequences into a list of pairs. 
     /// Returns None if the sequences are different lengths
     /// </summary>
-    let tryZip (NonEmptySeq xs) (NonEmptySeq ys) = Option.map NonEmpty (FiniteSeq.tryZip xs ys)
+    let tryZip (NonEmptyFSeq xs) (NonEmptyFSeq ys) = Option.map NonEmpty (FiniteSeq.tryZip xs ys)
 
     /// <summary>
     /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
     /// when one sequence is exhausted any remaining elements in the other
     /// sequence are ignored.
     /// </summary>
-    let zip (NonEmptySeq xs) (NonEmptySeq ys) = NonEmpty (FiniteSeq.zip xs ys)
-
-/// <summary>
-/// Functions for working with the NonEmptySeq type.  This exists for compatibility reasons, but it is
-/// recommended that you use the equivalent module FSeq.NonEmpty, since this follows the same pattern as
-/// other NonEmpty modules, like Seq.NonEmpty and List.NonEmpty
-/// </summary>
-module NonEmptySeq =
-  /// <summary>
-  /// Creates a new NonEmptySeq with the provided head and tail.  
-  /// The tail is constrained to be finite.  If the tail is infinite,
-  /// use Seq.NonEmpty.create instead
-  /// </summary>
-  let create head tail : NonEmptySeq<_> = FSeq.NonEmpty.create head tail
- 
-  /// <summary>
-  /// Returns the first element of the sequence.
-  /// </summary>
-  let head xs = FSeq.NonEmpty.head xs
-  
-  /// <summary>
-  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
-  /// </summary
-  let min xs = FSeq.NonEmpty.min xs
-
-  /// <summary>
-  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
-  /// </summary
-  let max xs = FSeq.NonEmpty.max xs
-
-  /// <summary>
-  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c> on the function result.
-  /// </summary>
-  let minBy projection xs = FSeq.NonEmpty.minBy projection xs
-
-  /// <summary>
-  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c> on the function result.
-  /// </summary>
-  let maxBy projection xs = FSeq.NonEmpty.maxBy projection xs
-
-  /// <summary>
-  /// Returns the sequence after removing the first element.
-  /// </summary>
-  let tail xs = FSeq.NonEmpty.tail xs
-  
-  /// <summary>
-  /// Returns the tuple of the sequence's head and tail
-  /// </summary>
-  let uncons xs = FSeq.NonEmpty.uncons xs
-  
-  /// <summary>
-  /// Applies a function to each element of the sequence, threading an accumulator argument
-  /// through the computation. Begin by applying the function to the first two elements.
-  /// Then feed this result into the function along with the third element and so on.
-  /// Return the final result.
-  /// </summary>
-  let reduce f xs = FSeq.NonEmpty.reduce f xs
-
-  /// <summary>
-  /// Returns the length of the sequence.
-  /// </summary>
-  let length xs = FSeq.NonEmpty.length xs
-  
-  /// <summary>
-  /// Applies a function to each element of the collection, threading an accumulator argument
-  /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
-  /// then computes <c>f (... (f s i0)...) iN</c>
-  /// </summary>
-  let fold f initialState xs = FSeq.NonEmpty.fold f initialState xs
-
-  /// <summary>
-  /// Builds a new collection whose elements are the results of applying the given function
-  /// to each of the elements of the collection. The given function will be applied
-  /// as elements are demanded using the MoveNext method on enumerators retrieved from the
-  /// object.
-  /// </summary>
-  let map f xs = FSeq.NonEmpty.map f xs
-  
-  /// <summary>
-  /// Builds a new collection whose elements are the results of applying the given function
-  /// to each of the elements of the collection. The integer index passed to the
-  /// function indicates the index (from 0) of element being transformed.
-  /// </summary>
-  let mapi f xs =
-    FSeq.NonEmpty.mapi f xs
-  
-  /// <summary>
-  /// O(1). Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
-  /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
-  /// </summary>
-  let map2 f xs ys =
-    FSeq.NonEmpty.map2 f xs ys
-
-  /// <summary>
-  /// Returns a new collection containing only the elements of the collection
-  /// for which the given predicate returns "true". This is a synonym for Seq.where.
-  /// </summary>
-  let filter f xs = FSeq.NonEmpty.filter f xs
-
-  /// <summary>
-  /// Wraps the two given enumerations as a single concatenated enumeration.
-  /// </summary>
-  let append xs ys = FSeq.NonEmpty.append xs ys
-
-  /// <summary>
-  /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
-  /// </summary>
-  let concat xs = 
-    FSeq.NonEmpty.concat xs
-
-  /// <summary>
-  /// O(n), where n is count. Return the list which on consumption will remove of at most 'n' elements of
-  /// the input list.
-  /// </summary>
-  let drop n xs = FSeq.NonEmpty.drop n xs
-
-  /// <summary>
-  /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
-  /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
-  /// </summary>
-  let ofSeqSafe xs = FSeq.NonEmpty.ofFSeq' <| fseq xs
-
-  /// <summary>
-  /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
-  /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
-  /// </summary>
-  let inline ofSeq' xs = FSeq.NonEmpty.ofFSeq' <| fseq xs
-
-  /// <summary>
-  /// Returns a sequence of each element in the input sequence and its predecessor, with the
-  /// exception of the first element which is only returned as the predecessor of the second element.
-  /// </summary>
-  let pairwise xs = FSeq.NonEmpty.pairwise xs
-
-  /// <summary>
-  /// Returns a new sequence with the elements in reverse order.
-  /// </summary>
-  let rev xs = FSeq.NonEmpty.rev xs
-
-  /// <summary>
-  /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
-  /// </summary>
-  let scan f initialState xs = FSeq.NonEmpty.scan f initialState xs
-
-  /// <summary>
-  /// Builds an array from the given collection.
-  /// </summary>
-  let toArray xs = FSeq.NonEmpty.toArray xs
-
-  /// <summary>
-  /// Builds a List from the given collection.
-  /// </summary>
-  let toList xs = FSeq.NonEmpty.toList xs
-
-  /// <summary>
-  /// Views the given NonEmptySeq as a sequence.
-  /// </summary>
-  let toSeq xs = FSeq.NonEmpty.toSeq xs 
-
-  /// <summary>
-  /// Returns the first element for which the given function returns True.
-  /// Return None if no such element exists.
-  /// </summary>
-  let tryFind predicate xs = FSeq.NonEmpty.tryFind predicate xs
-
-  /// <summary>
-  /// O(n), where n is count. Return option the list which skips the first 'n' elements of
-  /// the input list.
-  /// </summary>
-  let trySkip n xs = FSeq.NonEmpty.trySkip n xs
-
-  /// <summary>
-  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
-  /// the input list.
-  /// </summary>
-  let tryTake n xs = FSeq.NonEmpty.tryTake n xs
-
-  /// <summary>
-  /// Combines the two sequences into a list of pairs. 
-  /// Returns None if the sequences are different lengths
-  /// </summary>
-  let tryZip xs ys = FSeq.NonEmpty.tryZip xs ys
-
-  /// <summary>
-  /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
-  /// when one sequence is exhausted any remaining elements in the other
-  /// sequence are ignored.
-  /// </summary>
-  let zip xs ys = FSeq.NonEmpty.zip xs ys
+    let zip (NonEmptyFSeq xs) (NonEmptyFSeq ys) = NonEmpty (FiniteSeq.zip xs ys)
   
 open System.Runtime.CompilerServices
 
