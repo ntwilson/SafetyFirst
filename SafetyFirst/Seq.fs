@@ -3,6 +3,7 @@ module SafetyFirst.Seq
 open ResultDotNet.FSharp
 
 open SafetyFirst.ErrorTypes
+open SafetyFirst.Numbers
 
 /// <summary>
 /// Returns the average of the elements in the sequence.
@@ -50,6 +51,12 @@ let chunkBySizeSafe size xs =
 /// Returns a NegativeInput Error if the <c>size</c> is less than zero.
 /// </summary>
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
+
+/// <summary>
+/// Divides the input sequence into chunks of size at most <c>size</c>.
+/// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
+/// </summary>
+let chunksOf (PositiveInt size) xs = Seq.chunkBySize size xs
 
 /// <summary>
 /// If the input sequence has only one element, returns that element.
@@ -337,6 +344,12 @@ let splitIntoSafe count xs =
 let inline splitInto' count xs = splitIntoSafe count xs
 
 /// <summary>
+/// Splits the input sequence into at most count chunks.
+/// Same as <c>Seq.splitInto</c>, but restricts the input to a PositiveInt
+/// </summary>
+let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
+
+/// <summary>
 /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
 /// remaining elements of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
@@ -386,3 +399,198 @@ let windowedSafe size xs =
 /// </summary>
 let inline windowed' size xs = windowedSafe size xs
 
+/// <summary>
+/// Returns a sequence that yields sliding windows containing elements drawn from the input
+/// sequence. Each window is returned as a fresh array.
+/// Same as <c>Seq.windowed</c> but restricts the input to a PositiveInt
+/// </summary>
+let window (PositiveInt size) xs = Seq.windowed size xs
+
+/// <summary>
+/// Functions for manipulating NonEmpty Seqs 
+/// </summary>
+module NonEmpty =
+
+  /// <summary>
+  /// Creates a new NonEmptySeq with the provided head and tail.  
+  /// The tail is constrained to be finite.  If the tail is infinite,
+  /// use Seq.NonEmpty.create instead
+  /// </summary>
+  let create head tail = NonEmpty (Seq.append [head] tail)
+ 
+  /// <summary>
+  /// Returns the first element of the sequence.
+  /// </summary>
+  let head (NonEmpty xs) = Seq.head xs
+  
+  /// <summary>
+  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
+  /// </summary
+  let min (NonEmpty xs) = Seq.min xs
+
+  /// <summary>
+  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
+  /// </summary
+  let max (NonEmpty xs) = Seq.max xs
+
+  /// <summary>
+  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c> on the function result.
+  /// </summary>
+  let minBy projection (NonEmpty xs) = Seq.minBy projection xs
+
+  /// <summary>
+  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c> on the function result.
+  /// </summary>
+  let maxBy projection (NonEmpty xs) = Seq.maxBy projection xs
+
+  /// <summary>
+  /// Returns the sequence after removing the first element.
+  /// </summary>
+  let tail (NonEmpty xs) = Seq.tail xs
+  
+  /// <summary>
+  /// Returns the tuple of the sequence's head and tail
+  /// </summary>
+  let uncons xs = (head xs, tail xs)
+  
+  /// <summary>
+  /// Applies a function to each element of the sequence, threading an accumulator argument
+  /// through the computation. Begin by applying the function to the first two elements.
+  /// Then feed this result into the function along with the third element and so on.
+  /// Return the final result.
+  /// </summary>
+  let reduce f (NonEmpty xs) = Seq.reduce f xs
+
+  /// <summary>
+  /// O(n). Returns the length of the sequence.
+  /// </summary>
+  let length (NonEmpty xs) = Seq.length xs
+  
+  /// <summary>
+  /// Applies a function to each element of the collection, threading an accumulator argument
+  /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
+  /// then computes <c>f (... (f s i0)...) iN</c>
+  /// </summary>
+  let fold f initialState (NonEmpty xs) = Seq.fold f initialState xs
+
+  /// <summary>
+  /// Builds a new collection whose elements are the results of applying the given function
+  /// to each of the elements of the collection. The given function will be applied
+  /// as elements are demanded using the MoveNext method on enumerators retrieved from the
+  /// object.
+  /// </summary>
+  let map f (NonEmpty xs) = NonEmpty (Seq.map f xs)
+  
+  /// <summary>
+  /// Builds a new collection whose elements are the results of applying the given function
+  /// to each of the elements of the collection. The integer index passed to the
+  /// function indicates the index (from 0) of element being transformed.
+  /// </summary>
+  let mapi f (NonEmpty xs) =
+    NonEmpty (Seq.mapi f xs)
+  
+  /// <summary>
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
+  /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
+  /// </summary>
+  let map2 f (NonEmpty xs) (NonEmpty ys) =
+    NonEmpty (Seq.map2 f xs ys)
+
+  /// <summary>
+  /// Returns a new collection containing only the elements of the collection
+  /// for which the given predicate returns "true". This is a synonym for Seq.where.
+  /// </summary>
+  let filter f (NonEmpty xs) = Seq.filter f xs
+
+  /// <summary>
+  /// Wraps the two given enumerations as a single concatenated enumeration.
+  /// </summary>
+  let append xs (NonEmpty ys) = NonEmpty (Seq.append xs ys)
+
+  /// <summary>
+  /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
+  /// </summary>
+  let concat (NonEmpty xs : NonEmptySeq<NonEmptySeq<'a>>) = 
+    NonEmpty (Seq.concat xs)
+
+  /// <summary>
+  /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
+  /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
+  /// </summary>
+  let ofSeqSafe (xs:_ seq) = 
+    match xs with
+    | Empty -> Error <| SeqIsEmpty "Assertion that a sequence is not empty failed."
+    | NotEmpty ys -> Ok ys
+
+  /// <summary>
+  /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
+  /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
+  /// </summary>
+  let inline ofSeq' xs = ofSeqSafe xs
+
+  /// <summary>
+  /// Returns a sequence of each element in the input sequence and its predecessor, with the
+  /// exception of the first element which is only returned as the predecessor of the second element.
+  /// </summary>
+  let pairwise (NonEmpty xs) = Seq.pairwise xs
+
+  /// <summary>
+  /// Returns a new sequence with the elements in reverse order.
+  /// </summary>
+  let rev (NonEmpty xs) = NonEmpty (Seq.rev xs)
+
+  /// <summary>
+  /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
+  /// </summary>
+  let scan f initialState (NonEmpty xs) = NonEmpty (Seq.scan f initialState xs)
+
+  /// <summary>
+  /// Builds an array from the given collection.
+  /// </summary>
+  let toArray (NonEmpty xs) = Seq.toArray xs
+
+  /// <summary>
+  /// Builds a NonEmpty array from the given collection.
+  /// </summary>
+  let toNonEmptyArray xs = NonEmpty <| toArray xs
+
+  /// <summary>
+  /// Builds a List from the given collection.
+  /// </summary>
+  let toList (NonEmpty xs) = Seq.toList xs
+
+  /// <summary>
+  /// Builds a NonEmpty List from the given collection.
+  /// </summary>
+  let toNonEmptyList xs = NonEmpty <| toList xs
+
+  /// <summary>
+  /// Views the given NonEmptySeq as a sequence.
+  /// </summary>
+  let toSeq (NonEmpty xs) : _ seq = upcast xs 
+
+  /// <summary>
+  /// Returns the first element for which the given function returns True.
+  /// Return None if no such element exists.
+  /// </summary>
+  let tryFind predicate (NonEmpty xs) = Seq.tryFind predicate xs
+
+  /// <summary>
+  /// O(n), where n is count. Return option the list which skips the first 'n' elements of
+  /// the input list.
+  /// </summary>
+  let trySkip n (NonEmpty xs) = Result.toOption <| skip' n xs 
+
+  /// <summary>
+  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
+  /// the input list.
+  /// </summary>
+  let tryTake n (NonEmpty xs) = Result.toOption <| take' n xs
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
+  /// when one sequence is exhausted any remaining elements in the other
+  /// sequence are ignored.
+  /// </summary>
+  let zip (NonEmpty xs) (NonEmpty ys) = NonEmpty (Seq.zip xs ys)

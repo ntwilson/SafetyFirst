@@ -6,6 +6,7 @@ namespace SafetyFirst.FSharpxCopy.Collections
 
 open System
 open System.Collections.Generic
+open SafetyFirst.Numbers
 
 #nowarn "21" // recursive initialization
 #nowarn "40" // recursive initialization
@@ -41,11 +42,6 @@ type  LazyList<'T> =
       match LazyList.getCell this with
       | CellCons _ -> false
       | CellEmpty -> true
-
-    member this.Head = 
-      match LazyList.getCell this with
-      | CellCons(a,_) -> a
-      | CellEmpty -> invalidArg "s" "the list is empty"
       
     member this.TryHead = 
       match LazyList.getCell this with
@@ -60,20 +56,10 @@ type  LazyList<'T> =
 
         lengthAux 0 this
 
-    member this.Tail = 
-      match LazyList.getCell this with
-      | CellCons(_,b) -> b
-      | CellEmpty -> invalidArg "s" "the list is empty"
-
     member this.TryTail = 
       match LazyList.getCell this with
       | CellCons(_,b) -> Some b
       | CellEmpty -> None
-
-    member this.Uncons = 
-        match LazyList.force this with 
-        | CellCons (a,b) -> a,b
-        | CellEmpty -> invalidArg "x" "the list does not contain head and tail"
 
     member this.TryUncons = match LazyList.force this with CellCons (a,b) -> Some(a,b) | CellEmpty -> None
 
@@ -125,9 +111,7 @@ module  LazyList =
     let cons x l = lzy(fun () -> (consc x l))
     let consDelayed x l = lzy(fun () -> (consc x (lzy(fun () ->  (force (l()))))))
 
-    let uncons (s : LazyList<'T>) = s.Uncons
-
-    let tryUncons (s : LazyList<'T>) = s.TryUncons
+    let uncons (s : LazyList<'T>) = s.TryUncons
 
     let rec unfold f z = 
       lzy(fun () -> 
@@ -193,55 +177,28 @@ module  LazyList =
         | CellCons(a,b) -> let acc' = f acc a in consc acc (scan f acc' b)
         | CellEmpty -> consc acc empty)
 
-    let head (s : LazyList<'T>) = s.Head
+    let head (s : LazyList<'T>) = s.TryHead
 
-    let tryHead (s : LazyList<'T>) = s.TryHead 
-
-    let tail (s : LazyList<'T>) = s.Tail
-
-    let tryTail (s : LazyList<'T>) = s.TryTail
+    let tail (s : LazyList<'T>) = s.TryTail
 
     let isEmpty (s : LazyList<'T>) = s.IsEmpty
 
     let rec take n s = 
-      lzy(fun () -> 
-        if n < 0 then invalidArg "n" "the number must not be negative"
-        elif n = 0 then CellEmpty 
-        else
-          match getCell s with
-          | CellCons(a,s) -> consc a (take (n-1) s)
-          | CellEmpty -> invalidArg "n" "not enough items in the list" )
-
-    let rec tryTake n s = 
         if n < 0 then None
         elif n = 0 then Some empty
         else
             match getCell s with
-            | CellCons(a,s) -> Some (consDelayed a ( fun () -> match (tryTake (n-1) s) with Some x -> x | None -> empty ) )
+            | CellCons(a,s) -> Some (consDelayed a ( fun () -> match (take (n-1) s) with Some x -> x | None -> empty ) )
             | CellEmpty -> None
 
     let rec skipc n s =
-      if n = 0 then force s 
+      if n <= 0 then Some s
       else  
         match getCell s with
-        | CellCons(_,s) -> skipc (n-1) s
-        | CellEmpty -> invalidArg "n" "not enough items in the list"
-
-    let rec skip n s = 
-      lzy(fun () -> 
-        if n < 0 then invalidArg "n" "the value must not be negative"
-        else skipc n s)
-
-    let rec skipcOpt n s =
-      if n = 0 then Some s
-      else  
-        match getCell s with
-        | CellCons(_,s) -> match (skipcOpt (n-1) s) with Some x -> Some x | None -> None
+        | CellCons(_,s) -> match (skipc (n-1) s) with Some x -> Some x | None -> None
         | CellEmpty -> None
 
-    let rec trySkip n s = 
-        if n < 0 then None
-        else skipcOpt n s
+    let rec skip n s = skipc n s
 
     let fold f s l =
         let rec loop s l cont =
@@ -322,18 +279,12 @@ module  LazyList =
     let rev r =
         revAux r empty
 
-    let rec drop n xs =
-        if n < 0 then invalidArg "n" "n was negative"
-        elif n > 0 then
+    let rec drop (NaturalInt n) xs =
+        match n - 1 with
+        | Natural nm1 when n > 0 -> //n > 0 is redundant, just clarifies
             match xs with
-            | Cons(x, xs') -> drop (n-1) xs'
+            | Cons(x, xs') -> drop nm1 xs'
             | _ -> EmptyValue<'T>.Value
-        else
+        | neg ->
             xs
 
-    let split (ll:LazyList<'T>) n  =
-        let rec loop z (leftL:'T list) (ll':LazyList<'T>) = 
-            match z with
-            | 0 -> leftL, (ll'.Tail)
-            | _ -> loop (z - 1)  ((ll'.Head)::leftL) (ll'.Tail)
-        loop n [] ll

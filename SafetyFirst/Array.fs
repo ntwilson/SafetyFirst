@@ -3,6 +3,7 @@ module SafetyFirst.Array
 open ResultDotNet.FSharp
 
 open SafetyFirst.ErrorTypes
+open SafetyFirst.Numbers
 
 /// <summary>
 /// Returns the average of the elements in the array.
@@ -50,6 +51,12 @@ let chunkBySizeSafe size xs =
 /// Returns a NegativeInput Error if the <c>size</c> is less than zero.
 /// </summary>
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
+
+/// <summary>
+/// Divides the input array into chunks of size at most <c>size</c>.
+/// Same as <c>Array.chunkBySize</c>, but restricts the input to a PositiveInt
+/// </summary>
+let chunksOf (PositiveInt size) xs = Array.chunkBySize size xs
 
 /// <summary>
 /// If the input array has only one element, returns that element.
@@ -480,6 +487,12 @@ let splitIntoSafe count xs =
 let inline splitInto' count xs = splitIntoSafe count xs
 
 /// <summary>
+/// Splits the input array into at most count chunks.
+/// Same as <c>Array.splitInto</c>, but restricts the input to a PositiveInt
+/// </summary>
+let splitIntoN (PositiveInt count) xs = Array.splitInto count xs
+
+/// <summary>
 /// Slices an array given a starting index and a count of elements to return.
 /// Returns an IndexOutOfBounds Error if either <c>startIndex</c> or <c>count</c> is negative,
 /// or if there aren't enough elements in the input array.
@@ -553,6 +566,13 @@ let windowedSafe size xs =
 let inline windowed' size xs = windowedSafe size xs
 
 /// <summary>
+/// Returns an array that yields sliding windows containing elements drawn from the input
+/// array. Each window is returned as a fresh array.
+/// Same as <c>Array.windowed</c>, but restricts the input to a PositiveInt
+/// </summary>
+let window (PositiveInt size) xs = Array.windowed size xs
+
+/// <summary>
 /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
 /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
 /// </summary>
@@ -583,3 +603,214 @@ let zip3Safe xs ys zs =
 let inline zip3' xs ys zs = zip3Safe xs ys zs
 
 //TODO: transpose, split once we use a newer FSharp.Core
+
+
+/// <summary>
+/// Functions for manipulating NonEmpty Arrays
+/// </summary>
+module NonEmpty =
+
+  /// <summary>
+  /// Creates a new NonEmptySeq with the provided head and tail.  
+  /// The tail is constrained to be finite.  If the tail is infinite,
+  /// use Seq.NonEmpty.create instead
+  /// </summary>
+  let create head tail : NonEmptyArray<_> = NonEmpty (Array.append [|head|] tail)
+ 
+  /// <summary>
+  /// Returns the first element of the sequence.
+  /// </summary>
+  let head (NonEmpty xs) = Array.head xs
+  
+  /// <summary>
+  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
+  /// </summary
+  let min (NonEmpty xs) = Array.min xs
+
+  /// <summary>
+  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
+  /// </summary
+  let max (NonEmpty xs) = Array.max xs
+
+  /// <summary>
+  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c> on the function result.
+  /// </summary>
+  let minBy projection (NonEmpty xs) = Array.minBy projection xs
+
+  /// <summary>
+  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c> on the function result.
+  /// </summary>
+  let maxBy projection (NonEmpty xs) = Array.maxBy projection xs
+
+  /// <summary>
+  /// Returns the sequence after removing the first element.
+  /// </summary>
+  let tail (NonEmpty xs) = Array.tail xs
+  
+  /// <summary>
+  /// Returns the tuple of the sequence's head and tail
+  /// </summary>
+  let uncons xs = (head xs, tail xs)
+  
+  /// <summary>
+  /// Applies a function to each element of the sequence, threading an accumulator argument
+  /// through the computation. Begin by applying the function to the first two elements.
+  /// Then feed this result into the function along with the third element and so on.
+  /// Return the final result.
+  /// </summary>
+  let reduce f (NonEmpty xs) = Array.reduce f xs
+
+  /// <summary>
+  /// O(n). Returns the length of the sequence.
+  /// </summary>
+  let length (NonEmpty xs) = Array.length xs
+  
+  /// <summary>
+  /// Applies a function to each element of the collection, threading an accumulator argument
+  /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
+  /// then computes <c>f (... (f s i0)...) iN</c>
+  /// </summary>
+  let fold f initialState (NonEmpty xs) = Array.fold f initialState xs
+
+  /// <summary>
+  /// Builds a new collection whose elements are the results of applying the given function
+  /// to each of the elements of the collection. The given function will be applied
+  /// as elements are demanded using the MoveNext method on enumerators retrieved from the
+  /// object.
+  /// </summary>
+  let map f (NonEmpty xs) : NonEmptyArray<_> = NonEmpty (Array.map f xs)
+  
+  /// <summary>
+  /// Builds a new collection whose elements are the results of applying the given function
+  /// to each of the elements of the collection. The integer index passed to the
+  /// function indicates the index (from 0) of element being transformed.
+  /// </summary>
+  let mapi f (NonEmpty xs) : NonEmptyArray<_> =
+    NonEmpty (Array.mapi f xs)
+  
+  let private (<!>) f x = Result.map f x
+
+  /// <summary>
+  /// Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
+  /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
+  /// </summary>
+  let map2Safe f (NonEmpty xs) (NonEmpty ys) : Result<NonEmptyArray<_>,_> =
+    NonEmpty <!> map2' f xs ys
+
+  /// <summary>
+  /// Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
+  /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
+  /// </summary>
+  let map2' f (NonEmpty xs) (NonEmpty ys) : Result<NonEmptyArray<_>,_> = 
+    NonEmpty <!> map2' f xs ys
+
+  /// <summary>
+  /// Returns a new collection containing only the elements of the collection
+  /// for which the given predicate returns "true". This is a synonym for Seq.where.
+  /// </summary>
+  let filter f (NonEmpty xs) = Array.filter f xs
+
+  /// <summary>
+  /// Wraps the two given enumerations as a single concatenated enumeration.
+  /// </summary>
+  let append xs (NonEmpty ys) : NonEmptyArray<_> = NonEmpty (Array.append xs ys)
+
+  /// <summary>
+  /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
+  /// </summary>
+  let concat (NonEmpty xs : NonEmptyArray<NonEmptyArray<'a>>) : NonEmptyArray<_> = 
+    NonEmpty (xs |> Array.collect (fun (NonEmpty x) -> x))
+
+  /// <summary>
+  /// O(n), where n is count. Return the array which will remove at most 'n' elements of
+  /// the input array.
+  /// </summary>
+  let drop (NaturalInt n) (NonEmpty xs) = 
+    if n >= Array.length xs then [||]
+    else xs.[n .. Array.length xs - 1]
+
+  /// <summary>
+  /// O(n), where n is count. Return the array which will remove at most 'n' elements of
+  /// the input array.
+  /// CAUTION: This function will THROW for negative values of 'n'.
+  /// </summary>
+  let dropUnsafe n (NonEmpty xs) = 
+    match n with 
+    | Natural _ ->
+      if n >= Array.length xs then [||]
+      else xs.[n .. Array.length xs - 1]
+    | neg -> invalidArg "n" "Can't drop a negative number of values"
+
+  /// <summary>
+  /// O(n), where n is count. Return the array which will remove at most 'n' elements of
+  /// the input array.
+  /// This function will return the input array unaltered for negative values of 'n'.
+  /// </summary>
+  let dropLenient n (NonEmpty xs as arr) = 
+    match n with
+    | Natural i -> drop i arr
+    | neg -> xs
+
+  /// <summary>
+  /// Returns a sequence of each element in the input sequence and its predecessor, with the
+  /// exception of the first element which is only returned as the predecessor of the second element.
+  /// </summary>
+  let pairwise (NonEmpty xs) = Array.pairwise xs
+
+  /// <summary>
+  /// Returns a new sequence with the elements in reverse order.
+  /// </summary>
+  let rev (NonEmpty xs) : NonEmptyArray<_> = NonEmpty (Array.rev xs)
+
+  /// <summary>
+  /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
+  /// </summary>
+  let scan f initialState (NonEmpty xs) : NonEmptyArray<_> = NonEmpty (Array.scan f initialState xs)
+
+  /// <summary>
+  /// Builds an array from the given collection.
+  /// </summary>
+  let toArray (NonEmpty xs) = xs
+
+  /// <summary>
+  /// Builds a List from the given collection.
+  /// </summary>
+  let toList (NonEmpty xs) = Array.toList xs
+
+  /// <summary>
+  /// Builds a NonEmpty List from the given collection.
+  /// </summary>
+  let toNonEmptyList xs = NonEmpty <| toList xs
+
+  /// <summary>
+  /// Views the given NonEmptySeq as a sequence.
+  /// </summary>
+  let toSeq (NonEmpty xs : NonEmptyArray<_>) : _ seq = upcast xs 
+
+  /// <summary>
+  /// Returns the first element for which the given function returns True.
+  /// Return None if no such element exists.
+  /// </summary>
+  let tryFind predicate (NonEmpty xs) = Array.tryFind predicate xs
+
+  /// <summary>
+  /// O(n), where n is count. Return option the list which skips the first 'n' elements of
+  /// the input list.
+  /// </summary>
+  let trySkip n (NonEmpty xs) = Result.toOption <| skip' n xs 
+
+  /// <summary>
+  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
+  /// the input list.
+  /// </summary>
+  let tryTake n (NonEmpty xs) = Result.toOption <| take' n xs
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
+  /// when one sequence is exhausted any remaining elements in the other
+  /// sequence are ignored.
+  /// </summary>
+  let zip' (NonEmpty xs) (NonEmpty ys) : Result<NonEmptyArray<_>,_> = 
+    NonEmpty <!> zip' xs ys

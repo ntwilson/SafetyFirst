@@ -2,13 +2,13 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>1.0.10</version>
+    <version>2.0.0</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
-    <description>Monadic error handling made convenient for F# and C#</description>
-    <summary>Monadic error handling made convenient for F# and C#</summary>
-    <releaseNotes>allows NonEmptySeqs of non-equatable and non-comparable elements.</releaseNotes>
-    <licenseUrl>https://github.com/ntwilson/SafetyFirst/blob/master/LICENSE.md</licenseUrl>
+    <description>Total functions made convenient for F# and C#</description>
+    <summary>Total functions made convenient for F# and C#</summary>
+    <releaseNotes>Breaking changes: the `NonEmptySeq` type renamed to `NonEmptyFSeq`.  The `NonEmptySeq` module renamed to `FSeq.NonEmpty`.</releaseNotes>
+    <license type="expression">CC0-1.0</license>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
 
