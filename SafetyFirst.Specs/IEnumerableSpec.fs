@@ -9,8 +9,6 @@ open ResultDotNet
 
 open SafetyFirst
 
-let x = ()
-
 let throws f = 
   try 
     Lazy.force f |> ignore
@@ -109,3 +107,6 @@ let ``ZipSafe returns the same answer as Zip`` () =
       &&
       sameAns (seq [1], seq ["hi"], (fun i s -> s + string i))
     @>
+
+[<EntryPoint>]
+let main argv = 0
