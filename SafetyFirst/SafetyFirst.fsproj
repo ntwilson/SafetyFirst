@@ -14,10 +14,12 @@
     <Compile Include="List.fs" />
     <Compile Include="Array.fs" />
     <Compile Include="Map.fs" />
+    <Compile Include="Dictionary.fs" />
     <Compile Include="LazyList.fs" />
     <Compile Include="FiniteSeq.fs" />
     <Compile Include="InfiniteSeq.fs" />
     <Compile Include="IEnumerable.fs" />
+    <Compile Include="IDictionaryExtensions.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.1.17" />
