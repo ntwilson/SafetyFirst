@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Compile Include="Lazy.fs" />
+    <Compile Include="MatchSpec.fs" />
     <Compile Include="SeqSpec.fs" />
     <Compile Include="ListSpec.fs" />
     <Compile Include="ArraySpec.fs" />
