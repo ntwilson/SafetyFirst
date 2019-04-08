@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net45;netcoreapp2.0;netstandard2.0</TargetFrameworks>
     <DocumentationFile>bin\$(Configuration)\net45\$(AssemblyName).XML</DocumentationFile>
@@ -9,6 +9,7 @@
   <ItemGroup>
     <Compile Include="Numbers.fs" />
     <Compile Include="ErrorTypes.fs" />
+    <Compile Include="Match.fs" />
     <Compile Include="NonEmpty.fs" />
     <Compile Include="Seq.fs" />
     <Compile Include="LazyList.fs" />
@@ -18,6 +19,7 @@
     <Compile Include="Map.fs" />
     <Compile Include="Dictionary.fs" />
     <Compile Include="InfiniteSeq.fs" />
+    <Compile Include="String.fs" />
     <Compile Include="IEnumerable.fs" />
     <Compile Include="IDictionaryExtensions.fs" />
   </ItemGroup>

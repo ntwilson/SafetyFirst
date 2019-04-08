@@ -644,14 +644,13 @@ module NonEmpty =
       let rec takeGroup' input =  
         seq { 
           match input with
-          | Empty -> ()
-          | NotEmpty input ->
-            let head, tail = uncons input
+          | SeqOneOrMore (head, tail) ->
             if splitAfter head 
             then yield head
             else 
               yield head
               yield! takeGroup' tail
+          | _ -> ()
         }
 
       let head, tail = uncons input
@@ -688,13 +687,12 @@ module NonEmpty =
       let rec takeGroup' previousElement input =  
         seq { 
           match input with
-          | Empty -> ()
-          | NotEmpty input ->
-            let head, tail = uncons input
+          | SeqOneOrMore (head, tail) ->
             if not <| splitBetween previousElement head 
             then 
               yield head
               yield! takeGroup' head tail
+          | _ -> ()
         }
 
       let head, tail = uncons input
