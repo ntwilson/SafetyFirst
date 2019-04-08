@@ -26,10 +26,6 @@
     <file src="SafetyFirst\bin\Release\net45\SafetyFirst.dll" target="lib\net45" />
     <file src="SafetyFirst\bin\Release\net45\SafetyFirst.XML" target="lib\net45" />
     <file src="SafetyFirst\bin\Release\net45\SafetyFirst.pdb" target="lib\net45" />
-    <file src="SafetyFirstExtensions\bin\Release\net45\SafetyFirstExtensions.dll" target="lib\net45" />
-    <file src="SafetyFirstExtensions\bin\Release\net45\SafetyFirstExtensions.XML" target="lib\net45" />
-    <file src="SafetyFirstExtensions\bin\Release\net45\SafetyFirstExtensions.pdb" target="lib\net45" />
     <file src="SafetyFirst\**\*.fs" target="src\SafetyFirst" />
-    <file src="SafetyFirstExtensions\**\*.fs" target="src\SafetyFirstExtensions" />
   </files>
 </package>
