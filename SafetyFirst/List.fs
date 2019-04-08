@@ -460,6 +460,15 @@ let skipSafe count xs =
 let inline skip' count xs = skipSafe count xs
 
 /// <summary>
+/// Returns a list that skips at least N elements of the underlying list and then yields the
+/// remaining elements of the list.
+/// Returns an empty list if <c>count</c> exceeds the length of <c>xs</c> 
+/// </summary>
+let skipLenient count xs = 
+  skip' count xs
+  |> Result.defaultValue []
+
+/// <summary>
 /// Splits a list into two lists, at the given index.
 /// Returns an IndexOutOfBounds Error when split index exceeds 
 /// the number of elements in the list.
@@ -600,6 +609,11 @@ module NonEmpty =
   /// use Seq.NonEmpty.create instead
   /// </summary>
   let create head tail : NonEmptyList<_> = NonEmpty (head :: tail)
+
+  /// <summary>
+  /// Returns a NonEmpty array that contains one item only.
+  /// </summary>
+  let singleton x : NonEmptyList<_> = NonEmpty [x]
  
   /// <summary>
   /// Returns the first element of the sequence.
@@ -655,6 +669,11 @@ module NonEmpty =
   /// then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
   let fold f initialState (NonEmpty xs) = List.fold f initialState xs
+
+  /// <summary>
+  /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
+  /// </summary>
+  let indexed (NonEmpty xs) : NonEmptyList<_> = NonEmpty (List.indexed xs)
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
@@ -777,7 +796,7 @@ module NonEmpty =
   /// <summary>
   /// Builds a NonEmpty array from the given collection.
   /// </summary>
-  let toNonEmptyArray xs = NonEmpty <| toArray xs
+  let toNonEmptyArray xs : NonEmptyArray<_>= NonEmpty <| toArray xs
 
   /// <summary>
   /// Builds a List from the given collection.
@@ -788,6 +807,22 @@ module NonEmpty =
   /// Views the given NonEmptySeq as a sequence.
   /// </summary>
   let toSeq (NonEmpty xs : NonEmptyList<_>) : _ seq = upcast xs 
+
+  /// <summary>
+  /// Views the given NonEmpty List as a NonEmpty Seq.
+  /// </summary>
+  let toNonEmptySeq xs : NonEmptySeq<_> = NonEmpty <| toSeq xs
+
+  /// <summary>
+  /// Views the given NonEmpty List as a NonEmpty FSeq.
+  /// </summary>
+  let toNonEmptyFSeq xs : NonEmptyFSeq<_> = NonEmpty <| fseq xs
+
+  /// <summary>
+  /// Returns a NonEmpty Array that when enumerated returns at most n elements.
+  /// </summary>
+  let truncate (PositiveInt n) (NonEmpty xs) : NonEmptyList<_> = 
+    NonEmpty (List.truncate n xs)
 
   /// <summary>
   /// Returns the first element for which the given function returns True.
@@ -814,3 +849,32 @@ module NonEmpty =
   /// </summary>
   let zip' (NonEmpty xs) (NonEmpty ys) : Result<NonEmptyList<_>,_> = 
     NonEmpty <!> zip' xs ys
+
+  /// <summary>
+  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+  /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+  /// the sequence preceeding the split.
+  /// For example:
+  /// <code>
+  /// split ((=) 100) (FSeq.NonEmpty.create 1[2;3;100;100;4;100;5;6])
+  ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
+  /// </code>
+  /// </summary>
+  let split splitAfter xs = 
+    FSeq.NonEmpty.split splitAfter (toNonEmptyFSeq xs)
+    |> Seq.NonEmpty.map Seq.NonEmpty.toNonEmptyList
+    |> Seq.NonEmpty.toNonEmptyList
+
+  /// <summary>
+  /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+  /// For example:
+  /// <code>
+  /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
+  ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+  /// </code>
+  /// </summary>
+  let splitPairwise splitBetween xs =
+    FSeq.NonEmpty.splitPairwise splitBetween (toNonEmptyFSeq xs)
+    |> FSeq.NonEmpty.map FSeq.NonEmpty.toNonEmptyList
+    |> FSeq.NonEmpty.toNonEmptyList

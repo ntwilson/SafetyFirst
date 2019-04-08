@@ -211,6 +211,11 @@ module FiniteSeq =
   let inline head' xs = headSafe xs
 
   /// <summary>
+  /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
+  /// </summary>
+  let indexed xs = fseq (Seq.indexed xs)
+
+  /// <summary>
   /// Returns true if the sequence contains no elements, false otherwise.
   /// </summary>
   let inline isEmpty (FSeq xs) = LazyList.isEmpty xs
@@ -351,6 +356,15 @@ module FiniteSeq =
   /// </summary>
   let inline skip' n xs = skipSafe n xs  
 
+  /// <summary>
+  /// Returns a sequence that skips at least N elements of the underlying sequence and then yields the
+  /// remaining elements of the sequence.
+  /// Returns an empty sequence if <c>count</c> exceeds the length of <c>xs</c> 
+  /// </summary>
+  let skipLenient count xs = 
+    skip' count xs 
+    |> Result.defaultValue (fseq [])
+  
   /// <summary>
   /// Returns a sequence that, when iterated, skips elements of the underlying sequence while the
   /// given predicate returns True, and then yields the remaining elements of the sequence.
@@ -660,6 +674,11 @@ module FSeq =
   let inline head' xs = FiniteSeq.head' xs
 
   /// <summary>
+  /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
+  /// </summary>
+  let inline indexed xs = FiniteSeq.indexed xs
+
+  /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// Returns None if the sequences are different lengths
@@ -798,6 +817,11 @@ module FSeq =
     /// use Seq.NonEmpty.create instead
     /// </summary>
     let create head tail : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.cons head tail)
+
+    /// <summary>
+    /// Returns a sequence that yields one item only.
+    /// </summary>
+    let singleton x : NonEmptyFSeq<_> = NonEmpty (fseq [x])
    
     /// <summary>
     /// Returns the first element of the sequence.
@@ -909,6 +933,11 @@ module FSeq =
     let dropLenient n (NonEmptyFSeq xs) = FiniteSeq.dropLenient n xs
 
     /// <summary>
+    /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
+    /// </summary>
+    let indexed (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (indexed xs)
+
+    /// <summary>
     /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
     /// </summary>
@@ -965,6 +994,27 @@ module FSeq =
     let toSeq (NonEmptyFSeq xs) : _ seq = upcast xs 
 
     /// <summary>
+    /// Builds a NonEmpty FSeq from the given NonEmpty Seq
+    /// </summary>
+    let ofNonEmptySeq (NonEmpty xs) : NonEmptyFSeq<_> = NonEmpty (fseq xs)
+
+    /// <summary>
+    /// Views the given NonEmpty FSeq as a NonEmpty Seq
+    /// </summary>
+    let toNonEmptySeq xs : NonEmptySeq<_> = NonEmpty <| toSeq xs
+
+    /// <summary>
+    /// Views the given NonEmpty FSeq as an FSeq.
+    /// </summary>
+    let toFSeq (NonEmptyFSeq xs) = xs
+
+    /// <summary>
+    /// Returns a sequence that when enumerated returns at most n elements.
+    /// </summary>
+    let truncate (PositiveInt n) (NonEmpty xs) : NonEmptyFSeq<_> = 
+      NonEmpty (truncate n xs)
+
+    /// <summary>
     /// Returns the first element for which the given function returns True.
     /// Return None if no such element exists.
     /// </summary>
@@ -994,7 +1044,74 @@ module FSeq =
     /// sequence are ignored.
     /// </summary>
     let zip (NonEmptyFSeq xs) (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.zip xs ys)
-  
+
+    /// <summary>
+    /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+    /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+    /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+    /// the sequence preceeding the split.
+    /// For example:
+    /// <code>
+    /// split ((=) 100) (FSeq.NonEmpty.create 1[2;3;100;100;4;100;5;6])
+    ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
+    /// </code>
+    /// </summary>
+    // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
+    // so this should be the default used for any finite sequence (inculding lists and arrays) 
+    let split splitAfter xs = 
+      let addToEnd xs x = append xs (singleton x)
+      let (++) = addToEnd
+
+      let rec split' (input:'a fseq) startNewGroup (currentGroup:NonEmptyFSeq<'a>) (completedGroups:fseq<NonEmptyFSeq<'a>>) =
+        match input with
+        | NotEmpty input ->
+          let (head, tail) = uncons input
+
+          let newCurrentGroup, newCompletedGroups = 
+            if not startNewGroup
+            then (fseq currentGroup ++ head, completedGroups)
+            else (singleton head, fseq (completedGroups ++ currentGroup))
+
+          split' tail (splitAfter head) newCurrentGroup newCompletedGroups
+
+        | Empty ->
+          completedGroups ++ currentGroup
+
+      let (head, tail) = uncons xs
+      split' tail (splitAfter head) (singleton head) (fseq [])
+
+    /// <summary>
+    /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+    /// For example:
+    /// <code>
+    /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
+    ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+    /// </code>
+    /// </summary>
+    // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
+    // so this should be the default used for any finite sequence (inculding lists and arrays) 
+    let splitPairwise splitBetween xs : NonEmptyFSeq<NonEmptyFSeq<_>> =
+      let (++) = append
+
+      let rec split' (input:'a fseq) (previousElement:'a) (currentGroup:NonEmptyFSeq<'a>) (completedGroups:fseq<NonEmptyFSeq<'a>>) =
+        match input with
+        | Empty -> completedGroups ++ singleton currentGroup
+        | NotEmpty input -> 
+          let (head, tail) = uncons input
+          let newInput = tail
+          let newPrev = head
+          if splitBetween previousElement head
+          then 
+            let newGroup = (singleton head)
+            let newCompletedGroups = (completedGroups ++ singleton currentGroup) 
+            split' newInput newPrev newGroup (fseq newCompletedGroups)
+          else 
+            let expandedGroup = (fseq currentGroup) ++ singleton head
+            split' newInput newPrev expandedGroup completedGroups
+
+      let (head, tail) = uncons xs
+      split' tail head (singleton head) (fseq [])
+
 open System.Runtime.CompilerServices
 
 [<Extension>]

@@ -2,6 +2,7 @@ module SafetyFirst.Specs.FSeqSpec
 
 open NUnit.Framework
 open Swensen.Unquote
+open ResultDotNet.FSharp
 
 open SafetyFirst
 
@@ -234,6 +235,62 @@ let ``doesn't allow comparison or equality with other types`` () =
   test <@ not ((FSeq.ofList [1 .. 3]).Equals("hello")) @>
 
   raises <@ ((FSeq.ofList [1 .. 3]) :> IComparable).CompareTo("hello") @>
+
+module Splitting = 
+  let ofNonEmpty (xs:NonEmptyFSeq<NonEmptyFSeq<int>>) = 
+    FSeq.NonEmpty.toList <| FSeq.NonEmpty.map FSeq.NonEmpty.toList xs
+
+  let toNonEmpty xs = 
+    FSeq.NonEmpty.ofFSeq' (fseq xs) |> Result.expect
+
+  [<Test>]
+  let ``returns what the documentation says`` () =
+
+    test 
+      <@
+        (FSeq.NonEmpty.split ((=) 100) (toNonEmpty [1;2;3;100;100;4;100;5;6]) |> ofNonEmpty)
+          = [[1;2;3;100];[100];[4;100];[5;6]]
+
+        &&
+
+        (FSeq.NonEmpty.splitPairwise (=) (toNonEmpty [0;1;1;2;3;4;4;4;5]) |> ofNonEmpty)
+          = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
+  
+  [<Test>]
+  let ``splits properly for multiple types of inputs`` () = 
+    test 
+      <@
+        (FSeq.NonEmpty.split ((=) 5) (toNonEmpty [0]) |> ofNonEmpty) = [[0]]
+        &&
+        (FSeq.NonEmpty.split ((=) 5) (toNonEmpty [5]) |> ofNonEmpty) = [[5]]
+        &&
+        (FSeq.NonEmpty.split ((=) 5) (toNonEmpty [0;5]) |> ofNonEmpty) = [[0; 5]]
+        &&
+        (FSeq.NonEmpty.split ((=) 5) (toNonEmpty [5;5]) |> ofNonEmpty) = [[5]; [5]]
+        &&
+        (FSeq.NonEmpty.split ((=) 5) (toNonEmpty [5;0]) |> ofNonEmpty) = [[5]; [0]]
+        &&
+        (FSeq.NonEmpty.split ((=) 5) (toNonEmpty [5;0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
+      @>
+
+  [<Test>]
+  let ``splits pairwise properly for multiple types of inputs`` () = 
+    let bigDiff i j = abs (i - j) > 5
+    test 
+      <@
+        (FSeq.NonEmpty.splitPairwise (=) (toNonEmpty [0]) |> ofNonEmpty) = [[0]]
+        &&
+        (FSeq.NonEmpty.splitPairwise (=) (toNonEmpty [0;1]) |> ofNonEmpty) = [[0;1]]
+        &&
+        (FSeq.NonEmpty.splitPairwise (=) (toNonEmpty [0;0]) |> ofNonEmpty) = [[0]; [0]]
+        &&
+        (FSeq.NonEmpty.splitPairwise (bigDiff) (toNonEmpty [1;2;12;13;23;24]) |> ofNonEmpty)
+          = [[1;2]; [12;13]; [23;24]]
+        &&
+        (FSeq.NonEmpty.splitPairwise (bigDiff) (toNonEmpty [1;2;12;13;23]) |> ofNonEmpty)
+          = [[1;2]; [12;13]; [23]]
+      @>
 
 
 

@@ -2,8 +2,10 @@ module SafetyFirst.Specs.SeqSpec
 
 open NUnit.Framework
 open FsCheck
+open Swensen.Unquote
 
 open SafetyFirst
+open SafetyFirst.Numbers
 
 let errorsAndThrowsOrNeither safeVersion unsafeVersion = 
   let throws = 
@@ -164,4 +166,80 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutputForSeq2 Seq.take'            Seq.take
   alwaysProduceSameOutputForSeq2 Seq.windowed'        Seq.windowed
 
+module Splitting = 
+  let ofNonEmpty (xs:seq<#seq<_>>) = 
+    Seq.toList <| Seq.map Seq.toList xs
+
+  [<Test>]
+  let ``returns what the documentation says`` () =
+
+    test 
+      <@
+        (Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1[2;3;100;100;4;100;5;6]) |> ofNonEmpty)
+          = [[1;2;3;100];[100];[4;100];[5;6]]
+
+        &&
+
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5]) |> ofNonEmpty)
+          = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
+  
+  [<Test>]
+  let ``splits properly for multiple types of inputs`` () = 
+    test 
+      <@
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 0) |> ofNonEmpty) = [[0]]
+        &&
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 5) |> ofNonEmpty) = [[5]]
+        &&
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 0[5]) |> ofNonEmpty) = [[0; 5]]
+        &&
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5[5]) |> ofNonEmpty) = [[5]; [5]]
+        &&
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5[0]) |> ofNonEmpty) = [[5]; [0]]
+        &&
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5[0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
+      @>
+
+  [<Test>]
+  let ``splits pairwise properly for multiple types of inputs`` () = 
+    let bigDiff i j = abs (i - j) > 5
+    test 
+      <@
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.singleton 0) |> ofNonEmpty) = [[0]]
+        &&
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0[1]) |> ofNonEmpty) = [[0;1]]
+        &&
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0[0]) |> ofNonEmpty) = [[0]; [0]]
+        &&
+        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1[2;12;13;23;24]) |> ofNonEmpty)
+          = [[1;2]; [12;13]; [23;24]]
+        &&
+        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1[2;12;13;23]) |> ofNonEmpty)
+          = [[1;2]; [12;13]; [23]]
+      @>
+
+  [<Test>]
+  let ``splits infinite sequences without hanging`` () = 
+    let alwaysFalse (_:int) = false
+    test 
+      <@
+        InfiniteSeq.split (fun i -> i % 20 = 0) (InfiniteSeq.init id) |> InfiniteSeq.take 3 |> ofNonEmpty
+          = [[0]; [1 .. 20]; [21 .. 40]]
+
+        &&
+
+        InfiniteSeq.splitPairwise (fun left right -> left % 20 = 0) (InfiniteSeq.init id) |> InfiniteSeq.take 3 |> ofNonEmpty
+          = [[0]; [1 .. 20]; [21 .. 40]]
+
+        &&
+
+        InfiniteSeq.split alwaysFalse (InfiniteSeq.init id) |> InfiniteSeq.head |> InfiniteSeq.take 40 |> FSeq.toList
+          = [0 .. 39]
+
+        &&
+
+        InfiniteSeq.splitPairwise (fun left right -> false) (InfiniteSeq.init id) |> InfiniteSeq.head |> InfiniteSeq.take 40 |> FSeq.toList 
+          = [0 .. 39]        
+      @>
 
