@@ -44,6 +44,19 @@ module InfiniteSeq =
   let item (NaturalInt i) (InfiniteSeq xs) = Seq.item i xs
 
   /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt.
+  /// CAUTION: This function will THROW for a chunkSize <= 0
+  /// </summary>
+  let chunkBySizeUnsafe chunkSize xs = InfiniteSeq <| Seq.chunkBySize chunkSize xs
+
+  /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
+  /// </summary>
+  let chunksOf chunkSize (InfiniteSeq xs) = InfiniteSeq <| Seq.chunksOf chunkSize xs
+
+  /// <summary>
   /// Returns the first N elements of the sequence.
   /// </summary>
   let take n (InfiniteSeq xs) = fseq (Seq.take n xs)
@@ -134,37 +147,19 @@ module InfiniteSeq =
   let zip xs (InfiniteSeq ys) = Seq.zip xs ys
 
   /// <summary>
-  /// Splits a sequence at every occurrence of an element satisfying <c>isSplitElement</c>.
-  /// The split occurs immediately before each element that satisfies <c>isSplitElement</c>,
-  /// and the element satisfying <c>isSplitElement</c> will be included as the first element of 
-  /// the sequence following the split.
-  /// This function returns a tuple of the head element - the values leading up to the first split,
-  /// and the tail - all of the sequences after the first split.  This is because the head element
-  /// may or may not be empty, while all of the sequences after the first split are guaranteed
-  /// to be non-empty.
+  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+  /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+  /// the sequence preceeding the split.
   /// For example:
   /// <code>
   /// IniniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
-  ///   //returns ([1;2;3], seq {[100];[100;4];[100;5;6];...})
+  ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
   /// </code>
   /// </summary>
-  let split isSplitElement xs = 
-    let notSplitElement = not << isSplitElement
-    let singleSplit input = 
-      (takeWhile notSplitElement input, skipWhile notSplitElement input)
-
-    let rec split' remainder =
-      InfiniteSeq (
-        seq { 
-          let head, tail = head remainder, tail remainder
-          let contiguous, restOfInput = singleSplit tail
-          let nextChunk = FSeq.NonEmpty.create head contiguous
-          yield nextChunk
-          yield! split' restOfInput
-        })
-
-    let upToFirstSplit, remainder = singleSplit xs
-    in (upToFirstSplit, split' remainder)
+  let split splitAfter xs = 
+    InfiniteSeq (Seq.NonEmpty.split splitAfter (asNonEmpty xs))
+    |> map (InfiniteSeq << seq)
 
   let private uncurry f (a, b) = f a b
 
@@ -177,8 +172,5 @@ module InfiniteSeq =
   /// </code>
   /// </summary>
   let splitPairwise splitBetween xs =
-    let (headGroup, tailGroups) = 
-      pairwise xs
-      |> split (uncurry splitBetween) 
-    let firstGroup = FSeq.NonEmpty.create (head xs) (FSeq.map snd headGroup)
-    in InfiniteSeq (Seq.append [firstGroup] (map (FSeq.NonEmpty.map snd) tailGroups))
+    InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween (asNonEmpty xs))
+    |> map (InfiniteSeq << seq)

@@ -329,6 +329,22 @@ let skipSafe count (xs:_ seq) =
 let inline skip' count xs = skipSafe count xs
 
 /// <summary>
+/// Returns a sequence that skips at least N elements of the underlying sequence and then yields the
+/// remaining elements of the sequence.
+/// Returns an empty sequence if <c>count</c> exceeds the length of <c>xs</c> 
+/// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
+/// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
+/// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
+/// and a second time to produce the result.  This is necessary because caching the sequence 
+/// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
+/// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
+/// calling this function.
+/// </summary>
+let skipLenient count xs = 
+  skip' count xs
+  |> Result.defaultValue Seq.empty
+
+/// <summary>
 /// Splits the input sequence into at most count chunks.
 /// Returns a NegativeInput Error if <c>count</c> is not positive.
 /// </summary>
@@ -417,12 +433,17 @@ module NonEmpty =
   /// use Seq.NonEmpty.create instead
   /// </summary>
   let create head tail : NonEmptySeq<_> = NonEmpty (Seq.append [head] tail)
- 
+
+  /// <summary>
+  /// Returns a sequence that yields one item only.
+  /// </summary>
+  let singleton head : NonEmptySeq<_> = NonEmpty (Seq.singleton head)
+
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
   let head (NonEmpty xs) = Seq.head xs
-  
+
   /// <summary>
   /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
   /// </summary
@@ -472,6 +493,11 @@ module NonEmpty =
   /// then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
   let fold f initialState (NonEmpty xs) = Seq.fold f initialState xs
+
+  /// <summary>
+  /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
+  /// </summary>
+  let indexed (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.indexed xs)
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
@@ -571,6 +597,11 @@ module NonEmpty =
   let toSeq (NonEmpty xs) : _ seq = upcast xs 
 
   /// <summary>
+  /// Returns a sequence that when enumerated returns at most n elements.
+  /// </summary>
+  let truncate (PositiveInt n) (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.truncate n xs)
+
+  /// <summary>
   /// Returns the first element for which the given function returns True.
   /// Return None if no such element exists.
   /// </summary>
@@ -594,3 +625,100 @@ module NonEmpty =
   /// sequence are ignored.
   /// </summary>
   let zip (NonEmpty xs) (NonEmpty ys) : NonEmptySeq<_> = NonEmpty (Seq.zip xs ys)
+
+  /// <summary>
+  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+  /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+  /// the sequence preceeding the split.
+  /// For example:
+  /// <code>
+  /// split ((=) 100) (Seq.NonEmpty.create 1[2;3;100;100;4;100;5;6])
+  ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
+  /// </code>
+  /// </summary>
+  let split splitAfter xs : NonEmptySeq<_> = 
+    let (++) (NonEmpty xs) ys = NonEmpty <| Seq.append xs ys
+  
+    let takeGroup input : NonEmptySeq<_> =
+      let rec takeGroup' input =  
+        seq { 
+          match input with
+          | Empty -> ()
+          | NotEmpty input ->
+            let head, tail = uncons input
+            if splitAfter head 
+            then yield head
+            else 
+              yield head
+              yield! takeGroup' tail
+        }
+
+      let head, tail = uncons input
+      if splitAfter head 
+      then singleton head
+      else singleton head ++ takeGroup' tail
+
+    let rec split' (xs:NonEmptySeq<_>) = 
+      NonEmpty (
+        seq { 
+          yield takeGroup xs
+
+          let subsequentElements = Seq.skipWhile (not << splitAfter) xs |> skipLenient 1
+          match subsequentElements with
+          | Empty -> ()
+          | NotEmpty elements -> yield! split' elements
+        }
+      )
+
+    split' (NonEmpty <| toSeq xs)
+
+  /// <summary>
+  /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+  /// For example:
+  /// <code>
+  /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
+  ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+  /// </code>
+  /// </summary>
+  let rec splitPairwise splitBetween xs : NonEmptySeq<_> =
+    let (++) (NonEmpty xs) ys = NonEmpty <| Seq.append xs ys
+
+    let takeGroup input : NonEmptySeq<_> =
+      let rec takeGroup' previousElement input =  
+        seq { 
+          match input with
+          | Empty -> ()
+          | NotEmpty input ->
+            let head, tail = uncons input
+            if not <| splitBetween previousElement head 
+            then 
+              yield head
+              yield! takeGroup' head tail
+        }
+
+      let head, tail = uncons input
+      singleton head ++ takeGroup' head tail 
+
+    let rec skipGroup input =
+      let firstElement, tail = uncons input
+      match tail with
+      | Empty -> Seq.empty
+      | NotEmpty tail ->
+        let secondElement = head tail
+        if splitBetween firstElement secondElement 
+        then seq tail
+        else skipGroup tail
+
+    let rec splitPairwise' xs = 
+      NonEmpty (
+        seq { 
+          yield takeGroup xs
+
+          match skipGroup xs with
+          | Empty -> ()
+          | NotEmpty elements -> yield! splitPairwise' elements
+        }
+      )
+
+    splitPairwise' (NonEmpty <| toSeq xs)    
