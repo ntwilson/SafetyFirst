@@ -2,7 +2,7 @@
 
 ## SafetyFirst
 
-This is an opinionated library for avoiding partial functions primarily for F# (also for C#).  
+This is an opinionated library for avoiding partial functions primarily for F# (also for C#).  This library aims to provide alternative options for using partial functions, but doesn't prevent the use of partial functions.  If you want compiler help to disallow partial functions from F#, you might be interested in the add-on package, [SafetyFirst.Strict](https://www.nuget.org/packages/SafetyFirst.Strict/).
 
 ### Overview
 
