@@ -74,7 +74,7 @@ let vip (salesReps:NonEmptySeq<SalesRep>) : SalesRep =
 let salesRepsFromDB = DBContext.SalesReps |> Seq.map SalesRep.fromEF |> Seq.toArray
 let salesReps : NonEmptyArray<SalesRep> = 
   match salesRepsFromDB with
-  | NonEmpty x -> x
+  | NotEmpty x -> x
   | Empty -> failwith "The database contains no sales reps.  At least one sales rep is needed."
 ```
 (or even) 
