@@ -440,6 +440,13 @@ module NonEmpty =
   let singleton head : NonEmptySeq<_> = NonEmpty (Seq.singleton head)
 
   /// <summary>
+  /// Returns the average of the elements in the sequence.
+  /// The elements are averaged using the <c>+</c> operator, 
+  /// <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
+  /// </summary>
+  let inline average (NonEmpty xs) = Seq.average xs
+ 
+  /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
   let head (NonEmpty xs) = Seq.head xs
