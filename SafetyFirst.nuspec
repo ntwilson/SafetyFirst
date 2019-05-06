@@ -2,12 +2,12 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>2.1.1</version>
+    <version>2.1.2</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Total functions made convenient for F# and C#</description>
     <summary>Total functions made convenient for F# and C#</summary>
-    <releaseNotes>New functions: String.split, String.splitNoEmptyEntries, SeqOneOrMore ... SeqFiveOrMore matchers.</releaseNotes>
+    <releaseNotes>Adds an `average` function for each of the NonEmpty modules.</releaseNotes>
     <license type="expression">CC0-1.0</license>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
