@@ -44,6 +44,14 @@ module InfiniteSeq =
   let item (NaturalInt i) (InfiniteSeq xs) = Seq.item i xs
 
   /// <summary>
+  /// Applies the given function to each element of the seq. Return the seq comprised of the results <c>x</c> 
+  /// for each element where the function returns <c>Some(x)</c>.
+  /// The returned sequence may be passed between threads safely. However, individual IEnumerator 
+  /// values generated from the returned sequence should not be accessed concurrently.
+  /// </summary>
+  let choose chooser (InfiniteSeq xs) = InfiniteSeq (Seq.choose chooser xs)
+
+  /// <summary>
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt.
   /// CAUTION: This function will THROW for a chunkSize <= 0
