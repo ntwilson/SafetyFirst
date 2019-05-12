@@ -429,8 +429,6 @@ module NonEmpty =
 
   /// <summary>
   /// Creates a new NonEmptySeq with the provided head and tail.  
-  /// The tail is constrained to be finite.  If the tail is infinite,
-  /// use Seq.NonEmpty.create instead
   /// </summary>
   let create head tail : NonEmptySeq<_> = NonEmpty (Seq.append [head] tail)
 
@@ -544,8 +542,15 @@ module NonEmpty =
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
   /// </summary>
-  let concat (NonEmpty xs : NonEmptySeq<NonEmptySeq<'a>>) = 
+  let concat (NonEmpty xs : NonEmptySeq<NonEmptySeq<'a>>) : NonEmptySeq<_>= 
     NonEmpty (Seq.concat xs)
+
+  /// <summary>
+  /// Applies the given function to each element of the sequence and concatenates all the results.
+  /// Returned sequence is lazy, effects are delayed until it is enumerated.
+  /// </summary>
+  let collect (f : 'a -> NonEmptySeq<'b>) (NonEmpty xs : NonEmptySeq<'a>) : NonEmptySeq<'b> = 
+    NonEmpty (Seq.collect f xs)
 
   /// <summary>
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.

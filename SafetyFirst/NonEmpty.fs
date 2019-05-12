@@ -21,21 +21,34 @@ type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with
 
 /// <summary>
 /// A seq constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a seq, 'a></c>
+/// An alias for <c>NonEmpty<'a seq, 'a></c>.
 /// </summary>
 type NonEmptySeq<'a> = NonEmpty<'a seq, 'a>
 
 /// <summary>
 /// An array constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a[], 'a></c>
+/// An alias for <c>NonEmpty<'a[], 'a></c>.
 /// </summary>
 type NonEmptyArray<'a> = NonEmpty<'a[], 'a>
 
 /// <summary>
 /// A list constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a list, 'a></c>
+/// An alias for <c>NonEmpty<'a list, 'a></c>.
 /// </summary>
 type NonEmptyList<'a> = NonEmpty<'a list, 'a>
+
+/// <summary>
+/// A set constrained to be non-empty. 
+/// An alias for <c>NonEmpty<Set<'a>, 'a></c>.
+/// </summary>
+type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
+
+/// <summary>
+/// A Map constrained to be non-empty.
+/// An alias for <c>NonEmpty<Map<'key, 'value>, KeyValuePair<'key, 'value>></c>.
+/// </summary>
+type NonEmptyMap<'key, 'value when 'key : comparison> = 
+  NonEmpty<Map<'key, 'value>, KeyValuePair<'key, 'value>>
 
 [<AutoOpen>]
 module NonEmptySeqMatcher = 
@@ -47,8 +60,20 @@ module NonEmptySeqMatcher =
   let (|NonEmpty|) (NonEmpty xs) = xs
 
 module NonEmpty = 
+  /// <summary>
+  /// Attempt to convert the given sequence to a NonEmpty sequence.  Returns None if the 
+  /// given sequence is empty. 
+  /// </summary>
   let verify (xs:#seq<_>) =
     match xs with
     | Empty -> None
     | NotEmpty result -> Some result 
 
+  /// <summary>
+  /// Attempt to convert the given sequence to a NonEmpty sequence.  Throws if the 
+  /// given sequence is empty. 
+  /// </summary>
+  let assume (xs:#seq<_>) = 
+    match xs with
+    | Empty -> failwith "Expecting a sequence containing one or more values, but got an empty sequence"
+    | NotEmpty result -> result

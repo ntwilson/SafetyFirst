@@ -137,6 +137,13 @@ module FiniteSeq =
   let inline concat (FSeq xs : FiniteSeq<FiniteSeq<'a>>) = fseq (xs |> LazyList.map (|FSeq|) |> LazyList.concat)
 
   /// <summary>
+  /// Applies the given function to each element of the sequence and concatenates all the results.
+  /// Returned sequence is lazy, effects are delayed until it is enumerated.
+  /// </summary>
+  let inline collect (f : 'a -> FiniteSeq<'b>) (FSeq xs : FiniteSeq<'a>) = 
+    fseq (xs |> LazyList.map f |> LazyList.map (|FSeq|) |> LazyList.concat)
+
+  /// <summary>
   /// O(1). Return a new list which contains the given item followed by the
   /// given list.
   /// </summary>
@@ -576,6 +583,12 @@ module FSeq =
   let inline concat xs = FiniteSeq.concat xs
 
   /// <summary>
+  /// Applies the given function to each element of the sequence and concatenates all the results.
+  /// Returned sequence is lazy, effects are delayed until it is enumerated.
+  /// </summary>
+  let inline collect xs = FiniteSeq.collect xs
+
+  /// <summary>
   /// O(1). Return a new list which contains the given item followed by the
   /// given list.
   /// </summary>
@@ -925,6 +938,14 @@ module FSeq =
     /// </summary>
     let concat (NonEmptyFSeq xs : NonEmptyFSeq<NonEmptyFSeq<'a>>) : NonEmptyFSeq<_> = 
       NonEmpty (xs |> FiniteSeq.map (fun (NonEmptyFSeq x) -> x) |> FiniteSeq.concat)
+
+    /// <summary>
+    /// Applies the given function to each element of the sequence and concatenates all the results.
+    /// Returned sequence is lazy, effects are delayed until it is enumerated.
+    /// </summary>
+    let collect (f : 'a -> NonEmptyFSeq<'b>) (NonEmptyFSeq xs : NonEmptyFSeq<'a>) : NonEmptyFSeq<'b> = 
+      let g = f >> (|NonEmpty|)
+      NonEmpty (collect g xs)
 
     /// <summary>
     /// O(n), where n is count. Return the list which on consumption will remove of at most 'n' elements of
