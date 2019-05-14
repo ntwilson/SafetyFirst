@@ -734,6 +734,13 @@ module NonEmpty =
     NonEmpty (xs |> List.map (fun (NonEmpty x) -> x) |> List.concat)
 
   /// <summary>
+  /// Applies the given function to each element of the sequence and concatenates all the results.
+  /// </summary>
+  let collect (f : 'a -> NonEmptyList<'b>) (NonEmpty xs : NonEmptyList<'a>) : NonEmptyList<'b> = 
+    let g = f >> (|NonEmpty|)
+    NonEmpty (List.collect g xs)
+
+  /// <summary>
   /// O(n), where n is count. Return the list which will remove at most 'n' elements of
   /// the input list.
   /// </summary>
