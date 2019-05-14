@@ -141,7 +141,8 @@ module FiniteSeq =
   /// Returned sequence is lazy, effects are delayed until it is enumerated.
   /// </summary>
   let inline collect (f : 'a -> FiniteSeq<'b>) (FSeq xs : FiniteSeq<'a>) = 
-    fseq (xs |> LazyList.map f |> LazyList.map (|FSeq|) |> LazyList.concat)
+    let g = f >> (|FSeq|)
+    fseq (xs |> LazyList.map g |> LazyList.concat)
 
   /// <summary>
   /// O(1). Return a new list which contains the given item followed by the

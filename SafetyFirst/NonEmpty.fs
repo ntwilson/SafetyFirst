@@ -43,13 +43,6 @@ type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 /// </summary>
 type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
 
-/// <summary>
-/// A Map constrained to be non-empty.
-/// An alias for <c>NonEmpty<Map<'key, 'value>, KeyValuePair<'key, 'value>></c>.
-/// </summary>
-type NonEmptyMap<'key, 'value when 'key : comparison> = 
-  NonEmpty<Map<'key, 'value>, KeyValuePair<'key, 'value>>
-
 [<AutoOpen>]
 module NonEmptySeqMatcher = 
   let (|Empty|NotEmpty|) (xs:#seq<'a>) = 

@@ -7,7 +7,7 @@ module NonEmpty =
   /// The tail is constrained to be finite.  If the tail is infinite,
   /// use Seq.NonEmpty.create instead.
   /// </summary>
-  let create head tail : NonEmptySet<_> = NonEmpty (set (Seq.append [head] tail)) 
+  let create head tail : NonEmptySet<_> = NonEmpty (Set.add head (set tail))
 
   /// <summary>
   /// Returns a set that contains one item only.
@@ -59,12 +59,14 @@ module NonEmpty =
   let filter predicate (NonEmpty xs : NonEmptySet<_>) = Set.filter predicate xs
 
   /// <summary>
-  /// Applies the given accumulating function to all the elements of the set.
+  /// Applies a function to each element of the collection, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
   let fold folder initialState (NonEmpty xs : NonEmptySet<_>) = Set.fold folder initialState xs
 
   /// <summary>
-  /// Applies the given accumulating function to all the elements of the set.
+  /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
   /// </summary>
   let foldBack folder (NonEmpty xs : NonEmptySet<_>) initialState = Set.foldBack folder xs initialState 
 
@@ -81,8 +83,8 @@ module NonEmpty =
   /// <summary>
   /// Computes the intersection of a sequence of sets. The sequence must be non-empty.
   /// </summary>
-  let intersectMany (NonEmpty xs : NonEmpty<#seq<NonEmptySet<_>>, _>) : NonEmptySet<_> = 
-    NonEmpty (Set.intersectMany (Seq.map (|NonEmpty|) xs))
+  let intersectMany (NonEmpty xs : NonEmpty<#seq<NonEmptySet<_>>, _>) = 
+    Set.intersectMany (Seq.map (|NonEmpty|) xs)
 
   // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
   // let isProperSubset xs ys 
@@ -209,7 +211,7 @@ module NonEmpty =
   /// <summary>
   /// Builds a NonEmptySeq that contains the elements of the set in order.
   /// </summary>
-  let toNonEmptySeq (NonEmpty xs : NonEmptySet<_>) : NonEmptySeq<_> = NonEmpty (Set.toSeq xs)
+  let toNonEmptySeq (NonEmpty xs : NonEmptySet<_>) : NonEmptySeq<_> = NonEmpty (upcast xs)
 
   // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
   // let union xs ys
