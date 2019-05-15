@@ -932,7 +932,17 @@ module FSeq =
     /// <summary>
     /// Wraps the two given enumerations as a single concatenated enumeration.
     /// </summary>
-    let append xs (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
+    let append (NonEmptyFSeq xs) (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
+
+    /// <summary>
+    /// Wraps the two given enumerations as a single concatenated enumeration.
+    /// </summary>
+    let appendL (NonEmptyFSeq xs) ys : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
+
+    /// <summary>
+    /// Wraps the two given enumerations as a single concatenated enumeration.
+    /// </summary>
+    let appendR xs (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
 
     /// <summary>
     /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -1088,7 +1098,7 @@ module FSeq =
     // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
     // so this should be the default used for any finite sequence (inculding lists and arrays) 
     let split splitAfter xs = 
-      let addToEnd xs x = append xs (singleton x)
+      let addToEnd xs x = appendR xs (singleton x)
       let (++) = addToEnd
 
       let rec split' (input:'a fseq) startNewGroup (currentGroup:NonEmptyFSeq<'a>) (completedGroups:fseq<NonEmptyFSeq<'a>>) =
@@ -1120,7 +1130,7 @@ module FSeq =
     // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
     // so this should be the default used for any finite sequence (inculding lists and arrays) 
     let splitPairwise splitBetween xs : NonEmptyFSeq<NonEmptyFSeq<_>> =
-      let (++) = append
+      let (++) = appendR
 
       let rec split' (input:'a fseq) (previousElement:'a) (currentGroup:NonEmptyFSeq<'a>) (completedGroups:fseq<NonEmptyFSeq<'a>>) =
         match input with

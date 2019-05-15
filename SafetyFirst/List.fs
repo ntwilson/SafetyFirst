@@ -725,7 +725,20 @@ module NonEmpty =
   /// <summary>
   /// Wraps the two given enumerations as a single concatenated enumeration.
   /// </summary>
-  let append xs (NonEmpty ys) : NonEmptyList<_> = NonEmpty (List.append xs ys)
+  let append (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) : NonEmptyList<_> = 
+    NonEmpty (List.append xs ys)
+
+  /// <summary>
+  /// Wraps the two given enumerations as a single concatenated enumeration.
+  /// </summary>
+  let appendL (NonEmpty xs : NonEmptyList<_>) ys : NonEmptyList<_> = 
+    NonEmpty (List.append xs ys)
+
+  /// <summary>
+  /// Wraps the two given enumerations as a single concatenated enumeration.
+  /// </summary>
+  let appendR xs (NonEmpty ys : NonEmptyList<_>) : NonEmptyList<_> = 
+    NonEmpty (List.append xs ys)
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
