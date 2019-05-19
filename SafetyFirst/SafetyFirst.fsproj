@@ -7,6 +7,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Conversions.fs" />
     <Compile Include="Numbers.fs" />
     <Compile Include="ErrorTypes.fs" />
     <Compile Include="Match.fs" />
