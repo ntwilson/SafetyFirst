@@ -4,6 +4,21 @@ open System
 
 [<AutoOpen>]
 module Conversions =
+  let rec private isVOptionOrListContainingVOptions (t:System.Type) = 
+    if t.IsGenericType then
+      let td = t.GetGenericTypeDefinition ()
+      if td = typedefof<_ voption> then true
+      elif td = typedefof<_ list> then
+        let elementType = Array.head (t.GetGenericArguments ())
+        isVOptionOrListContainingVOptions elementType 
+      else false
+    else false
+
+  let inline str x = 
+    let t = x.GetType ()
+    if isVOptionOrListContainingVOptions t then sprintf "%A" x
+    else string x
+
   type Byte with
     /// <summary>
     /// Converts an Int16 to a byte.  Will overflow if given a value outside of the range
