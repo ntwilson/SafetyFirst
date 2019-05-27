@@ -66,3 +66,23 @@ let ``converts int32 to int16 by throwing overflowing or returning an option`` (
 [<Test>]
 let ``converts byte to int16 with no coersion needed`` () = 
   test <@ Int16.ofByte 12uy = 12s @>
+
+[<Test>]
+let ``safely converts voption values to strings`` () = 
+  test 
+    <@
+      str ValueNone = "ValueNone"
+      &&
+      str [ValueSome 5.0; ValueNone] = "[ValueSome 5.0; ValueNone]"
+    @>
+
+[<Test>]
+let ``safely converts all other values to strings like normal`` () = 
+  test 
+    <@
+      str None = string None
+      &&
+      str (Some [ Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None ]) = string (Some [ Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None ])
+      &&
+      str [| Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None |] = string [| Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None |]
+    @>

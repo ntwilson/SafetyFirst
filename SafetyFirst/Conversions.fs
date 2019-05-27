@@ -2,8 +2,41 @@ namespace SafetyFirst
 
 open System
 
+module StringConversionHelpers = 
+  let rec isVOptionOrListContainingVOptions (t:System.Type) = 
+    if t.IsGenericType then
+      let td = t.GetGenericTypeDefinition ()
+      if td = typedefof<int voption> then true
+      elif td = typedefof<int list> then
+        let elementType = Array.head (t.GetGenericArguments ())
+        isVOptionOrListContainingVOptions elementType 
+      else false
+    else false
+
+
 [<AutoOpen>]
 module Conversions =
+
+  /// <summary>
+  /// Functions very similarly to the regular <c>string</c> function, but safely handles ValueNone,
+  /// or lists containing ValueNone.  Since the <c>string</c> function can 
+  /// raise an exception when given a ValueOption or a list containing a ValueOption.
+  /// </summary>
+  let inline str x = 
+    if isNull (box x) then string x
+    else
+      let t = x.GetType ()
+      if StringConversionHelpers.isVOptionOrListContainingVOptions t then sprintf "%A" x
+      else string x
+
+  /// <summary>
+  /// An alias for the regular <c>string</c> function.  Since the <c>string</c> function can 
+  /// raise an exception when given a ValueOption or a list containing a ValueOption, it is 
+  /// marked Unsafe.  Use the safe <c>str</c> function to safely convert any value to a string.
+  /// </summary>
+  let inline stringUnsafe x = string x
+
+
   type Byte with
     /// <summary>
     /// Converts an Int16 to a byte.  Will overflow if given a value outside of the range
