@@ -595,8 +595,24 @@ let zip3Safe xs ys zs =
 /// </summary>
 let inline zip3' xs ys zs = zip3Safe xs ys zs
 
-//TODO: transpose, split once we use a newer FSharp.Core
+/// <summary>
+/// Returns the transpose of the given sequence of lists.  Returns a DifferingLengths Error if
+/// the input lists differ in length. 
+/// </summary>
+let transposeSafe xs = 
+  match xs with 
+  | SeqOneOrMore (head, tail) -> 
+    let headLength = List.length head
+    if Seq.forall (List.length >> (=) headLength) tail
+    then Ok <| List.transpose xs
+    else Error transposeErr
+  | _ -> Ok []
 
+/// <summary>
+/// Returns the transpose of the given sequence of lists.  Returns a DifferingLengths Error if
+/// the input lists differ in length. 
+/// </summary>
+let inline transpose' xs = transposeSafe xs
 
 /// <summary>
 /// Functions for manipulating NonEmpty Lists
@@ -605,8 +621,6 @@ module NonEmpty =
 
   /// <summary>
   /// Creates a new NonEmptySeq with the provided head and tail.  
-  /// The tail is constrained to be finite.  If the tail is infinite,
-  /// use Seq.NonEmpty.create instead
   /// </summary>
   let create head tail : NonEmptyList<_> = NonEmpty (head :: tail)
 
@@ -844,6 +858,22 @@ module NonEmpty =
   /// Views the given NonEmpty List as a NonEmpty FSeq.
   /// </summary>
   let toNonEmptyFSeq xs : NonEmptyFSeq<_> = NonEmpty <| fseq xs
+
+  /// <summary>
+  /// Returns the transpose of the given sequence of lists. Returns a DifferingLengths Error if
+  /// the input lists differ in length. 
+  /// </summary>
+  let transposeSafe (xs : NonEmptySeq<NonEmptyList<'a>>) : Result< NonEmptyList<NonEmptyList<'a>> , DifferingLengths> = 
+    let headLength = length (Seq.NonEmpty.head xs)
+    if Seq.forall (length >> (=) headLength) (Seq.NonEmpty.tail xs)
+    then Ok (List.transpose (Seq.map (|NonEmpty|) xs) |> List.map NonEmpty |> NonEmpty)
+    else Error transposeErr
+
+  /// <summary>
+  /// Returns the transpose of the given sequence of lists. Returns a DifferingLengths Error if
+  /// the input lists differ in length. 
+  /// </summary>
+  let inline transpose' xs = transposeSafe xs
 
   /// <summary>
   /// Returns a NonEmpty Array that when enumerated returns at most n elements.

@@ -558,6 +558,19 @@ let takeSafe count xs =
 let inline take' count xs = takeSafe count xs
 
 /// <summary>
+/// Returns the transpose of the given sequence of arrays.  Returns a DifferingLengths Error if
+/// the input arrays differ in length. 
+/// </summary>
+let transposeSafe xs = 
+  match xs with 
+  | SeqOneOrMore (head, tail) -> 
+    let headLength = Array.length head
+    if Seq.forall (Array.length >> (=) headLength) tail
+    then Ok <| Array.transpose xs
+    else Error transposeErr
+  | _ -> Ok [||]
+
+/// <summary>
 /// Returns an array that yields sliding windows containing elements drawn from the input
 /// array. Each window is returned as a fresh array.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
@@ -859,6 +872,22 @@ module NonEmpty =
   /// Views the given NonEmpty Array as a NonEmpty FSeq
   /// </summary>
   let toNonEmptyFSeq xs : NonEmptyFSeq<_> = NonEmpty <| fseq xs
+
+  /// <summary>
+  /// Returns the transpose of the given sequence of arrays. Returns a DifferingLengths Error if
+  /// the input arrays differ in length. 
+  /// </summary>
+  let transposeSafe (xs : NonEmptySeq<NonEmptyArray<'a>>) : Result< NonEmptyArray<NonEmptyArray<'a>> , DifferingLengths> = 
+    let headLength = length (Seq.NonEmpty.head xs)
+    if Seq.forall (length >> (=) headLength) (Seq.NonEmpty.tail xs)
+    then Ok (Array.transpose (Seq.map (|NonEmpty|) xs) |> Array.map NonEmpty |> NonEmpty)
+    else Error transposeErr
+
+  /// <summary>
+  /// Returns the transpose of the given sequence of arrays. Returns a DifferingLengths Error if
+  /// the input arrays differ in length. 
+  /// </summary>
+  let inline transpose' xs = transposeSafe 
 
   /// <summary>
   /// Returns a NonEmpty Array that when enumerated returns at most n elements.

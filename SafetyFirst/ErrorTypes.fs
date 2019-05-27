@@ -67,6 +67,7 @@ module internal ErrorTypes =
   let subErr startIndex count length = IndexOutOfRange <| sprintf "The input array does not have sufficient elements for the bounds specified when slicing.  StartIndex: %i; Count: %i; Array length: %i" startIndex count length
   let tailErr = SeqIsEmpty "Cannot get the tail (all but the first element) of an empty sequence"
   let takeErr n length = NotEnoughElements <| sprintf "Cannot take %i elements of the input collection, since it only contains %i elements" n length
+  let transposeErr = DifferingLengths "Cannot transpose input collection, since not every sublist has the same length"
   let lazyTakeErr n = NotEnoughElements <| sprintf "Cannot take %i elements of the input collection, since it does not contain enough elements" n
   let unconsErr = SeqIsEmpty "Cannot uncons (separate the first element) of an empty sequence"
   let windowedErr n = NegativeInput <| sprintf "Cannot split collection into windows of size %i; the size must be positive" n

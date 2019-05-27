@@ -441,6 +441,25 @@ module FiniteSeq =
   let inline toSeq (FSeq xs) : _ seq = upcast xs
 
   /// <summary>
+  /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
+  /// the input sequences differ in length. 
+  /// </summary>
+  let transposeSafe xs = 
+    match xs with 
+    | SeqOneOrMore (head, tail) -> 
+      let headLength = length head
+      if Seq.forall (length >> (=) headLength) tail
+      then Ok (Seq.transpose xs |> Seq.map fseq |> fseq)
+      else Error transposeErr
+    | _ -> Ok empty
+
+  /// <summary>
+  /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
+  /// the input sequences differ in length. 
+  /// </summary>
+  let inline transpose' xs = transposeSafe xs
+
+  /// <summary>
   /// Returns a sequence that when enumerated returns at most N elements.
   /// </summary>
   let truncate n (FSeq xs) = fseq (LazyList.ofSeq (Seq.truncate n xs))  
@@ -780,6 +799,18 @@ module FSeq =
   let inline take' n xs = FiniteSeq.take' n xs
 
   /// <summary>
+  /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
+  /// the input sequences differ in length. 
+  /// </summary>
+  let inline transposeSafe xs = FiniteSeq.transposeSafe xs
+
+  /// <summary>
+  /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
+  /// the input sequences differ in length. 
+  /// </summary>
+  let inline transpose' xs = FiniteSeq.transpose' xs
+
+  /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
   let inline tryUncons xs = FiniteSeq.tryUncons xs
@@ -1046,6 +1077,22 @@ module FSeq =
     /// Views the given NonEmpty FSeq as an FSeq.
     /// </summary>
     let toFSeq (NonEmptyFSeq xs) = xs
+
+    /// <summary>
+    /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
+    /// the input sequences differ in length. 
+    /// </summary>
+    let transposeSafe (xs : NonEmptySeq<NonEmptyFSeq<'a>>) : Result< NonEmptyFSeq<NonEmptyFSeq<'a>> , DifferingLengths> = 
+      let headLength = length (Seq.NonEmpty.head xs)
+      if Seq.forall (length >> (=) headLength) (Seq.NonEmpty.tail xs)
+      then Ok (NonEmpty (Seq.transpose xs |> Seq.map (fseq >> NonEmpty) |> fseq))
+      else Error transposeErr
+
+    /// <summary>
+    /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
+    /// the input sequences differ in length. 
+    /// </summary>
+    let inline transpose' xs = transposeSafe xs    
 
     /// <summary>
     /// Returns a sequence that when enumerated returns at most n elements.
