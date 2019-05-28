@@ -4,8 +4,6 @@ open System
 open System.Collections
 open System.Collections.Generic
 
-open ResultDotNet.FSharp
-
 open SafetyFirst.FSharpxCopy.Collections
 open SafetyFirst.ErrorTypes  
 open SafetyFirst.Numbers

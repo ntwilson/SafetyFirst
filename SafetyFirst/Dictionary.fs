@@ -1,7 +1,6 @@
 module SafetyFirst.Dictionary
 
 open System.Collections.Generic
-open ResultDotNet.FSharp
 
 open SafetyFirst.ErrorTypes
 

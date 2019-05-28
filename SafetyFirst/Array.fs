@@ -1,9 +1,8 @@
 module SafetyFirst.Array
 
-open ResultDotNet.FSharp
-
 open SafetyFirst.ErrorTypes
 open SafetyFirst.Numbers
+open SafetyFirst
 
 /// <summary>
 /// Returns the average of the elements in the array.

@@ -2,7 +2,6 @@ module SafetyFirst.Specs.FSeqSpec
 
 open NUnit.Framework
 open Swensen.Unquote
-open ResultDotNet.FSharp
 
 open SafetyFirst
 

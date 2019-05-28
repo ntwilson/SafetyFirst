@@ -3,9 +3,9 @@ module SafetyFirst.Specs.ConversionsSpec
 open System
 open NUnit.Framework
 open Swensen.Unquote
-open ResultDotNet
 
 open SafetyFirst
+open SafetyFirst.CSharp
 
 [<Test>]
 let ``converts int16 to byte by throwing overflowing or returning an option`` () = 

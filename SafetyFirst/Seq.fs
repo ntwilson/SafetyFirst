@@ -1,7 +1,5 @@
 module SafetyFirst.Seq
 
-open ResultDotNet.FSharp
-
 open SafetyFirst.ErrorTypes
 open SafetyFirst.Numbers
 

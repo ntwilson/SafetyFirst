@@ -307,7 +307,8 @@ module Conversions =
 // explicit conversions. 
 
 open System.Runtime.CompilerServices
-open ResultDotNet
+
+open SafetyFirst.CSharp
 
 [<AutoOpen>]
 [<Extension>]

@@ -4,7 +4,7 @@ open System
 open System.Runtime.CompilerServices
 open System.Collections.Generic
 
-open ResultDotNet
+open SafetyFirst.CSharp
 
 open SafetyFirst.ErrorTypes
 
@@ -17,7 +17,7 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member AggregateSafe (xs, f:Func<_,_,_>) = 
     Seq.reduce' (fun a b -> f.Invoke (a, b)) xs
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Computes the average of a sequence.
@@ -25,7 +25,7 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member AverageSafe (xs:int seq) =
     Seq.averageBy' float xs
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Computes the average of a sequence.
@@ -33,7 +33,7 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member AverageSafe (xs:float seq) = 
     Seq.average' xs
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Computes the average of a sequence of Double values that are obtained by invoking 
@@ -42,7 +42,7 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member AverageSafe (xs, transform:Func<_,float>) =
     Seq.averageBy' (transform.Invoke) xs  
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Returns the element at a specified index in a sequence.
@@ -67,14 +67,14 @@ type IEnumerableExtensions () =
         | :? IList<_> as xs -> Ok <| xs.[index]  
         | :? IReadOnlyList<_> as xs -> Ok <| xs.[index]
         | _ -> Ok <| Seq.item index xs
-      | None -> Seq.item' index xs |> Result.FromFs
+      | None -> Seq.item' index xs |> Result.toCs
 
 
   /// <summary>
   /// Returns the first element of a sequence.
   /// </summary>
   [<Extension>]
-  static member FirstSafe (xs) = Seq.head' xs |> Result.FromFs
+  static member FirstSafe (xs) = Seq.head' xs |> Result.toCs
 
 
   /// <summary>
@@ -83,13 +83,13 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member FirstSafe (xs, predicate:Func<_,_>) = 
     Seq.find' (predicate.Invoke) xs
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Returns the last element of a sequence.
   /// </summary>
   [<Extension>]
-  static member LastSafe (xs) = Seq.last' xs |> Result.FromFs
+  static member LastSafe (xs) = Seq.last' xs |> Result.toCs
  
 
   /// <summary>
@@ -98,20 +98,20 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member LastSafe (xs, predicate:Func<_,_>) = 
     Seq.findBack' (predicate.Invoke) xs
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Returns the maximum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MaxSafe (xs:int seq) = Seq.max' xs |> Result.FromFs
+  static member MaxSafe (xs:int seq) = Seq.max' xs |> Result.toCs
 
 
   /// <summary>
   /// Returns the maximum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MaxSafe (xs:float seq) = Seq.max' xs |> Result.FromFs
+  static member MaxSafe (xs:float seq) = Seq.max' xs |> Result.toCs
 
 
   /// <summary>
@@ -120,7 +120,7 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,float>) =
     Seq.maxBy' (transform.Invoke) xs  
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Invokes a transform function on each element of a sequence and returns the maximum value.
@@ -128,20 +128,20 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,int>) =
     Seq.maxBy' (transform.Invoke) xs  
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Returns the minimum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MinSafe (xs:int seq) = Seq.min' xs |> Result.FromFs
+  static member MinSafe (xs:int seq) = Seq.min' xs |> Result.toCs
 
 
   /// <summary>
   /// Returns the minimum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MinSafe (xs:float seq) = Seq.min' xs |> Result.FromFs
+  static member MinSafe (xs:float seq) = Seq.min' xs |> Result.toCs
 
 
   /// <summary>
@@ -150,7 +150,7 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member MinSafe (xs, transform:Func<_,float>) =
     Seq.minBy' (transform.Invoke) xs  
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Invokes a transform function on each element of a sequence and returns the minimum value.
@@ -158,13 +158,13 @@ type IEnumerableExtensions () =
   [<Extension>]
   static member MinSafe (xs, transform:Func<_,int>) =
     Seq.minBy' (transform.Invoke) xs  
-    |> Result.FromFs
+    |> Result.toCs
 
   /// <summary>
   /// Returns the only element of a sequence
   /// </summary>
   [<Extension>]
-  static member SingleSafe (xs) = Seq.exactlyOne' xs |> Result.FromFs
+  static member SingleSafe (xs) = Seq.exactlyOne' xs |> Result.toCs
 
 
   /// <summary>
@@ -174,7 +174,7 @@ type IEnumerableExtensions () =
   static member SingleSafe (xs, predicate:Func<_, bool>) = 
     Seq.filter (predicate.Invoke) xs
     |> Seq.exactlyOne'
-    |> Result.FromFs
+    |> Result.toCs
 
 
   /// <summary>
