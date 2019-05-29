@@ -26,23 +26,24 @@ module ResultExpression =
 module Result =
   open System
 
-  [<CompiledName("$notForC#_createContext")>]
+  /// <summary>
+  /// Creates a new error context for the result.  This context can be repeatedly
+  /// expanded upon through the <c>addContext</c> function.
+  /// </summary>
+  [<CompiledName("$notForC#_createContext")>] // since the compiled name isn't valid from C#, it effectively makes it visible only from F#
   let createContext errContext result = 
     result
     |> Result.mapError (fun e -> 
       { Error = e; Context = [errContext] })
 
+  /// <summary>
+  /// Expands on the error context created by the <c>createContext</c> function.
+  /// </summary>
   [<CompiledName("$notForC#_addContext")>]
   let addContext newContext result = 
     result
     |> Result.mapError (fun ({ Context = context } as error) -> 
       { error with Context = newContext :: context })
-
-  /// <summary>
-  /// Create a computation expression for Results 
-  /// </summary>
-  [<CompiledName("$notForC#_expr")>]
-  let expr = new ResultExpression ()
 
   /// <summary>
   /// If all the Results are ok, "unwraps" the ok values and passes them
@@ -51,7 +52,7 @@ module Result =
   /// </summary>
   [<CompiledName("$notForC#_bind2")>]
   let bind2 onOk result1 result2 =
-    expr {
+    result {
       let! r1 = result1
       let! r2 = result2
       return! onOk r1 r2
@@ -64,7 +65,7 @@ module Result =
   /// </summary>
   [<CompiledName("$notForC#_bind3")>]
   let bind3 onOk result1 result2 result3 =
-    expr {
+    result {
       let! r1 = result1
       let! r2 = result2
       let! r3 = result3
@@ -78,7 +79,7 @@ module Result =
   /// </summary>
   [<CompiledName("$notForC#_bind4")>]
   let bind4 onOk result1 result2 result3 result4 =
-    expr {
+    result {
       let! r1 = result1
       let! r2 = result2
       let! r3 = result3
@@ -134,7 +135,7 @@ module Result =
   /// </summary>
   [<CompiledName("$notForC#_map2")>]
   let map2 onOk result1 result2 = 
-    expr {
+    result {
       let! r1 = result1
       let! r2 = result2
       return onOk r1 r2
@@ -147,7 +148,7 @@ module Result =
   /// </summary>
   [<CompiledName("$notForC#_map3")>]
   let map3 onOk result1 result2 result3 = 
-    expr {
+    result {
       let! r1 = result1
       let! r2 = result2
       let! r3 = result3
@@ -161,7 +162,7 @@ module Result =
   /// </summary>
   [<CompiledName("$notForC#_map4")>]
   let map4 onOk result1 result2 result3 result4 =
-    expr {
+    result {
       let! r1 = result1
       let! r2 = result2
       let! r3 = result3

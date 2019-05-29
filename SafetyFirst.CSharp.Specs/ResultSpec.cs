@@ -6,7 +6,7 @@ using static SafetyFirst.Result;
 using SafetyFirst;
 using Microsoft.FSharp.Core;
 
-namespace ResultDotNet.CSharp.Specs {
+namespace SafetyFirst.CSharp.Specs {
   [TestClass]
   public class ResultSpec {
 
@@ -182,8 +182,8 @@ namespace ResultDotNet.CSharp.Specs {
     [TestMethod]
     public void IsEasyToAddContextToResultErrors() {
       Result<int, PretendError> x = Error<int, PretendError>(new PretendError());
-      Result<int, ErrorWithContext<PretendError>> y = x.AddContext("this error is totally pretend");
-      Result<int, ErrorWithContext<PretendError>> z = y.AddContext("really, really pretend");
+      Result<int, ErrorWithContext<PretendError>> y = x.WithContext("this error is totally pretend");
+      Result<int, ErrorWithContext<PretendError>> z = y.WithContext("really, really pretend");
 
       z.Match(
         error: e => e.Context.ShouldSatisfy(xs => xs[0] == "really, really pretend" && xs[1] == "this error is totally pretend"),

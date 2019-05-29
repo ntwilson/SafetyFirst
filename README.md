@@ -10,15 +10,19 @@ Partial functions are functions that are undefined for only _some_ of their inpu
 an exception for invalid inputs.  Making a partial function total involves one of 
 two strategies.  You can either adjust the output to account for an error condition (by returning an `Option<_>` or `Result<_,_>`), or you can restrict the inputs to only the valid ones.  This library aims to aid with both strategies.
 
-The main advantage of using total functions is that the compiler can guarantee the absense of runtime errors for your program _logic_.  (This only applies here to logic as pure functions.  It doesn't apply to IO or other impure functions. This library holds the same opinion as the [F# style guide](https://docs.microsoft.com/en-us/dotnet/fsharp/style-guide/conventions#do-not-use-monadic-error-handling-to-replace-exceptions) that Exceptions are the best mechanism for handling errors when interacting with the outside world).  Languages such as [Elm](https://elm-lang.org/) boast the ability to create programs that never suffer a runtime exception using this technique.  This is because the compiler lets the programmer know about every possible error so that they can be dealt with properly with no surprises.
+The main advantage of using total functions is that the compiler can guarantee the absense of runtime errors for your program _logic_.  (This only applies here to logic as pure functions.  It doesn't apply to IO or other impure functions. This library holds the same opinion as the [F# style guide](https://docs.microsoft.com/en-us/dotnet/fsharp/style-guide/conventions#do-not-use-monadic-error-handling-to-replace-exceptions) that Exceptions are the best mechanism for handling errors when interacting with the outside world, though nothing prevents you from using this library to implement your own total IO functions).  Languages such as [Elm](https://elm-lang.org/) boast the ability to create programs that never suffer a runtime exception using this technique.  This is because the compiler lets the programmer know about every possible error so that they can be dealt with properly with no surprises.
 
-F# is a pragmatic language, however, and this library holds the opinion that to be effective, back doors must be available, so we prioritize making it simple to get back to an Exception.  Total functions (same as checked exceptions) can get a bad name because they can be so inconvenient when a bad input simply can't be handled (except to crash, log the problem, and inform the developer or user).
+C# and F# are both pragmatic languages, however, and this library holds the opinion that to be effective, back doors must be available, so we prioritize making it simple to get back to an Exception.  Total functions (same as checked exceptions) can get a bad name because they can be so inconvenient when a bad input simply can't be handled (except to crash, log the problem, and inform the developer or user).
 
 Let's look at an example.  `Seq.maxBy` is a partial function because it's only defined for sequences that aren't empty.  It will throw for an empty list.  So let's consider the following unsafe code:
 
 ```F#
 let vip (salesReps:SalesRep seq) : SalesRep = 
   salesReps |> Seq.maxBy (fun rep -> rep.TotalSales)
+```
+```C#
+SalesRep VIP(IEnumerable<SalesRep> salesReps) =>
+  salesReps.OrderByDescending(rep => rep.TotalSales).First();
 ```
 
 If an empty seq is passed in, it would throw the quite unhelpful:
@@ -36,27 +40,40 @@ One way to make this total would be to adjust the output to reflect the possibil
 let vip (salesReps:SalesRep seq) : Result<SalesRep, SeqIsEmpty> = 
   salesReps |> Seq.maxBy' (fun rep -> rep.TotalSales)
 ```
+```C#
+Result<SalesRep, SeqIsEmpty> VIP(IEnumerable<SalesRep> salesReps) =>
+  salesReps.OrderByDescending(rep => rep.TotalSales).FirstSafe();
+```
 
 By convention, this library uses an apostrophe after a function name for a function that returns a `Result<_,_>`.  We try to make the name match any existing functions that would otherwise throw.  (We also provide the equivalent functions with the `Safe` suffix instead of an apostrophe, e.g., `Seq.maxBySafe`.  This is the only function available for use from C#, where apostrophes are not allowed in function names).
 
-Of course the normal approach when calling the `vip` function would be to pattern match on the output and provide an execution path for what to do with an `Error` (in this case from an empty seq).  But it may be that your application just doesn't allow for an empty seq of sales reps at all.  This is a case where getting back to Exceptions is helpful, since we don't want to handle the possibility of an empty seq, we want to just crash and inform the user or developer that you need to provide at least one sales rep.  In fact, if we can't handle the problem, and the only thing to do is crash the application or subsystem, the _preferred_ approach is to switch to an Exception instead of propagating `Result<_,_>`s all the way up.
+Of course the normal approach when calling the `vip` function would be to branch on the output and provide an execution path for what to do with an `Error` (in this case from an empty seq).  But it may be that your application just doesn't allow for an empty seq of sales reps at all.  This is a case where getting back to Exceptions is helpful, since we don't want to handle the possibility of an empty seq, we want to just crash and inform the user or developer that you need to provide at least one sales rep.  In fact, if we can't handle the problem, and the only thing to do is crash the application or subsystem, the _preferred_ approach is to switch to an Exception instead of propagating `Result<_,_>`s all the way up.
 
-This library pulls from [ResultDotNet](https://www.nuget.org/packages/ResultDotNet) and [OptionExt](https://www.nuget.org/packages/OptionExt) to add a few helper functions to make it easy to work with the Result type and the Option type.  For both types, the `unless` function let's you "extract" the value assuming everything worked, provided a message that explains the problem.  Here we could do 
+This library adds a few helper functions to make it easy to work with the Result type and the Option type.  For both types, the `unless` function lets you "extract" the value assuming everything worked, provided a message that explains the problem.  Here we could do 
 
 ```F#
 let vip (salesReps:SalesRep seq) : SalesRep = 
   salesReps 
-  |> Seq.maxBy' (fun cust -> cust.TotalSales)
+  |> Seq.maxBy' (fun rep -> rep.TotalSales)
   |> Result.unless "No sales reps have been loaded into the system.  You must provide at least one sales rep"
 ```
+```C#
+SalesRep VIP(IEnumerable<SalesRep> salesReps) =>
+  salesReps.OrderByDescending(rep => rep.TotalSales).FirstSafe()
+    .Unless("No sales reps have been loaded into the system.  You must provide at least one sales rep");
+```
 
-This has a higher development cost than using the partial `maxBy` function, but if the exception is thrown, it provides a better error message because we now know a lot more about the context of the problem than we would from inside the maxBy function.  We know that specifically our seq of SalesReps is empty, and can reflect that in the error message.  Also this provides a lot more information to the reader of the `vip` function because it's obvious what the assumptions this function makes are (in this case, that the input includes at least one sales rep).
+This has a higher development cost than using the partial `maxBy` function or `First` method, but if the exception is thrown, it provides a better error message because we now know a lot more about the context of the problem than we would from inside the maxBy function.  We know that specifically our seq of SalesReps is empty, and can reflect that in the error message.  Also this provides a lot more information to the reader of the `vip` function because it's obvious what the assumptions this function makes are (in this case, that the input includes at least one sales rep).
 
 Since the Result type already contains error information in it, the Result type also has an `expect` function that functions just like `unless` but doesn't require an additional message.  So you could do:
 
 ```F#
 let vip (salesReps:SalesRep seq) : SalesRep = 
   salesReps |> Seq.maxBySafe (fun cust -> cust.TotalSales) |> Result.expect
+```
+```C#
+SalesRep VIP(IEnumerable<SalesRep> salesReps) =>
+  salesReps.OrderByDescending(rep => rep.TotalSales).FirstSafe().Expect();
 ```
 
 which has almost no cost compared to the partial `maxBy` function, but informs the programmer (and the reader) that `maxBy` could error, and that we're just assuming that it will work.  If an Exception does occur though, this will end up throwing an equally unhelpful exception as `maxBy`.
@@ -87,9 +104,73 @@ let salesReps : NonEmptyArray<SalesRep> =
 
 Now we have one failure spot for an empty set of sales reps that occurs just where it's read in from the database, and from then on, the compiler keeps track of the fact that it isn't empty.  This is analogous to checking for null when first loading the data, instead of including null checks in every function (now possible in C# too with the new nullable reference types).
 
-Below is the set of partial functions in FSharp.Core that this library provides total versions of by returning a `Result<_,_>` instead of throwing. 
+#### Monadic error handling
+
+##### F# types
+
+This library adds computation expressions for `Option<_>` and `Result<_,_>` types.  For example:
+```F#
+option {
+  let! x = Some 5
+  let! y = Some 10
+  return x + y      
+} // returns Some 15
+
+option {
+  let! x = None
+  let! y = Some 10
+  return x + y
+} // returns None
+
+result {
+  let! x = Ok 5
+  let! y = Ok 10
+  return x + y 
+} // returns Ok 15
+
+result {
+  let! x = Ok 5
+  let! y = Error "no y value available"
+  return x + y
+} // returns Error "no y value available"
+```
+
+(note that for `Result<_,_>` expressions, the Error type must be the same for all results used in the expression).
+
+##### C# types
+
+This library adds the `Result<_,_>` type for C#, and even includes LINQ extensions so that the Result type can be used from a LINQ expression.  When using LINQ, you can think of a Result a bit like a collection of length 1 if it contains an "Ok" value, or like a collection of length 0 if it contains an "Error" value.  It's easiest to understand by seeing it in action:
+
+```C#
+using SafetyFirst.CSharp;
+using static SafetyFirst.Result;
+...
+class DivisionByZero { }
+Result<double, DivisionByZero> divideSafe(double numerator, double denominator) =>
+  (denominator == 0)
+    ? Error<double, DivisionByZero>(new DivisionByZero())
+    : Ok<double, DivisionByZero>(numerator / denominator);
+
+Result<double, DivisionByZero> pricePerUnit(Invoice invoice) => 
+  divideSafe(invoice.Total, invoice.NumberOfUnits);
+
+Result<(double PricePerUnit, double SavingsPerUnit), DivisionByZero> savingsPerUnit(Invoice invoice, double dollarsOff) =>
+  from ppu in pricePerUnit(invoice) 
+  from spu in divideSafe(dollarsOff, invoice.NumberOfUnits)
+  select (PricePerUnit: ppu, SavingsPerUnit: spu);
+
+string pricePerUnitForDisplay(Invoice invoice) =>
+  pricePerUnit(invoice).Match(
+    ok: ppu => ppu.ToString(),
+    error: err => "N/A");
+```
+
+(note that for `Result<_,_>` expressions, the Error type must be the same for all results used in the expression).
+You may also want to take a look at the `Option<_>` type introduced by [LanguageExt](https://github.com/louthy/language-ext#null-reference-problem) which is similar to the `Result<_,_>` type, but doesn't carry with it any error information.
 
 #### F# Functions
+
+Below is the set of partial F# functions in FSharp.Core that this library provides total versions of by returning a `Result<_,_>` instead of throwing. 
 
 - `Seq/List/Array.average`
 - `Seq/List/Array.averageBy`
@@ -130,9 +211,9 @@ Below is the set of partial functions in FSharp.Core that this library provides 
 - `Map.ofList`
 - `Map.ofArray`
 
-Below is the set of C# LINQ partial functions that this library provides total versions of by returning a `Result<_,_>` instead of throwing.
-
 #### LINQ Functions
+
+Below is the set of C# LINQ partial functions that this library provides total versions of by returning a `Result<_,_>` instead of throwing.
 
 - `Aggregate`
 - `Average`

@@ -42,23 +42,23 @@ module ReadmeSpec =
   let logger = new Logger ()
   let sql = ""
 
-  let result:Result<DataTable, string> = executeDatabaseQuery sql
-  result |> Result.ifError (logger.Log);
+  let rslt:Result<DataTable, string> = executeDatabaseQuery sql
+  rslt |> Result.ifError (logger.Log);
 
   let savingsPerUnit2 invoice dollarsOff =
-    Result.expr {
+    result {
       let! ppu = pricePerUnit invoice
       return! divide dollarsOff ppu
     }
 
   let pricePerUnitWithDiscount2 invoice dollarsOffPerUnit =
-    Result.expr {
+    result {
       let! ppu = pricePerUnit invoice
       return ppu - dollarsOffPerUnit
     }
 
   let createInvoice3 (total:Result<double, string>) (numberOfUnits:Result<double, string>) =
-    Result.expr {
+    result {
       let! t = total
       let! n = numberOfUnits
       return newInvoice t n

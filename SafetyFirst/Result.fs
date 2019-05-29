@@ -193,10 +193,17 @@ open System.Runtime.CompilerServices
 [<Extension>]
 type ResultExtensions private () = 
 
+  /// <summary>
+  /// Creates a new error context for the result.  This context can be repeatedly
+  /// expanded upon through repeat calls to the <c>WithContext</c> method.
+  /// </summary>
   [<Extension>]
-  static member AddContext (result:Result<'a, ErrorWithContext<'b>>, contextStr) = 
+  static member WithContext (result:Result<'a, ErrorWithContext<'b>>, contextStr) = 
     result.MapError(fun ({Context = context} as error) -> { error with Context = contextStr :: context })
 
+  /// <summary>
+  /// Expands on the error context created earlier by the <c>WithContext</c> function.
+  /// </summary>
   [<Extension>]
-  static member AddContext (result:Result<'a, 'b>, contextStr) = 
+  static member WithContext (result:Result<'a, 'b>, contextStr) = 
     result.MapError(fun e -> { Error = e; Context = [contextStr] })
