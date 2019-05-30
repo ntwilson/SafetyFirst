@@ -291,7 +291,64 @@ module Splitting =
           = [[1;2]; [12;13]; [23]]
       @>
 
+module SafeFunctions = 
+  open SeqSpec
 
+  let averageFloats' (xs:float fseq) = FSeq.average' xs
+  let averageFloats (xs:float seq) = Seq.average xs
+  let averageByFloats' (projection:_ -> float) xs = FSeq.averageBy' projection xs
+  let averageByFloats (projection:_ -> float) xs = Seq.averageBy projection xs
+
+  let errorsWheneverThrowsForFSeq1 safeVersion unsafeVersion = 
+    errorsWheneverThrows1 (fseq >> safeVersion) (List.toSeq >> unsafeVersion)
+
+  let errorsWheneverThrowsForFSeq2 safeVersion unsafeVersion = 
+    errorsWheneverThrows2 
+      (fun a xs -> safeVersion a (fseq xs))
+      (fun a xs -> unsafeVersion a (List.toSeq xs))
+
+  [<Test>]
+  let ``Safe FSeq functions error whenever unsafe versions throw for all random inputs`` () =
+    errorsWheneverThrowsForFSeq1 averageFloats'          averageFloats
+    errorsWheneverThrowsForFSeq2 averageByFloats'        averageByFloats
+    errorsWheneverThrowsForFSeq2 FSeq.findBack'          Seq.findBack
+    errorsWheneverThrowsForFSeq2 FSeq.findIndexBack'     Seq.findIndexBack
+    errorsWheneverThrowsForFSeq1 FSeq.last'              Seq.last
+    errorsWheneverThrowsForFSeq1 FSeq.max'<int>          Seq.max<int>
+    errorsWheneverThrowsForFSeq2 FSeq.maxBy'<int, int>   Seq.maxBy<int, int>
+    errorsWheneverThrowsForFSeq1 FSeq.min'<int>          Seq.min<int>
+    errorsWheneverThrowsForFSeq2 FSeq.minBy'<int, int>   Seq.minBy<int, int>
+    errorsWheneverThrowsForFSeq2 FSeq.reduce'            Seq.reduce
+    errorsWheneverThrowsForFSeq2 FSeq.reduceBack'        Seq.reduceBack
+    errorsWheneverThrowsForFSeq2 FSeq.splitInto'         Seq.splitInto
+
+
+  let alwaysProduceSameOutputForFSeq1 safeVersion unsafeVersion = 
+    alwaysProduceSameOutput1 (fseq >> safeVersion) (List.toSeq >> unsafeVersion)
+
+  let alwaysProduceSameOutputForFSeq2 safeVersion unsafeVersion = 
+    alwaysProduceSameOutput2 
+      (fun a xs -> safeVersion a (fseq xs))
+      (fun a xs -> unsafeVersion a (List.toSeq xs))
+
+  let fseqSplitIntoComparable n xs = 
+    FSeq.splitInto' n xs
+    |> Result.map (FSeq.map FSeq.toArray >> FSeq.toSeq)
+    
+  [<Test>]
+  let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
+    alwaysProduceSameOutputForFSeq1 averageFloats'          averageFloats
+    alwaysProduceSameOutputForFSeq2 averageByFloats'        averageByFloats
+    alwaysProduceSameOutputForFSeq2 FSeq.findBack'          Seq.findBack
+    alwaysProduceSameOutputForFSeq2 FSeq.findIndexBack'     Seq.findIndexBack
+    alwaysProduceSameOutputForFSeq1 FSeq.last'              Seq.last
+    alwaysProduceSameOutputForFSeq1 FSeq.max'<int>          Seq.max
+    alwaysProduceSameOutputForFSeq2 FSeq.maxBy'<int, int>   Seq.maxBy
+    alwaysProduceSameOutputForFSeq1 FSeq.min'<int>          Seq.min
+    alwaysProduceSameOutputForFSeq2 FSeq.minBy'<int, int>   Seq.minBy
+    alwaysProduceSameOutputForFSeq2 FSeq.reduce'            Seq.reduce
+    alwaysProduceSameOutputForFSeq2 FSeq.reduceBack'        Seq.reduceBack
+    alwaysProduceSameOutputForFSeq2 fseqSplitIntoComparable Seq.splitInto
 
 
 

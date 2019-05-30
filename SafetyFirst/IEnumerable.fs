@@ -15,8 +15,8 @@ type IEnumerableExtensions () =
   /// Applies an accumulator function over a sequence.
   /// </summary>
   [<Extension>]
-  static member AggregateSafe (xs, f:Func<_,_,_>) = 
-    Seq.reduce' (fun a b -> f.Invoke (a, b)) xs
+  static member AggregateSafe (xs, f:Func<'a,'a,'a>) = 
+    FSeq.reduce' (fun a b -> f.Invoke (a, b)) (fseq xs)
     |> Result.toCs
 
   /// <summary>
@@ -24,7 +24,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member AverageSafe (xs:int seq) =
-    Seq.averageBy' float xs
+    FSeq.averageBy' float (fseq xs)
     |> Result.toCs
 
   /// <summary>
@@ -32,7 +32,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member AverageSafe (xs:float seq) = 
-    Seq.average' xs
+    FSeq.average' (fseq xs)
     |> Result.toCs
 
   /// <summary>
@@ -41,7 +41,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member AverageSafe (xs, transform:Func<_,float>) =
-    Seq.averageBy' (transform.Invoke) xs  
+    FSeq.averageBy' (transform.Invoke) (fseq xs)  
     |> Result.toCs
 
   /// <summary>
@@ -89,7 +89,7 @@ type IEnumerableExtensions () =
   /// Returns the last element of a sequence.
   /// </summary>
   [<Extension>]
-  static member LastSafe (xs) = Seq.last' xs |> Result.toCs
+  static member LastSafe (xs) = FSeq.last' (fseq xs) |> Result.toCs
  
 
   /// <summary>
@@ -97,21 +97,21 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member LastSafe (xs, predicate:Func<_,_>) = 
-    Seq.findBack' (predicate.Invoke) xs
+    FSeq.findBack' (predicate.Invoke) (fseq xs)
     |> Result.toCs
 
   /// <summary>
   /// Returns the maximum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MaxSafe (xs:int seq) = Seq.max' xs |> Result.toCs
+  static member MaxSafe (xs:int seq) = FSeq.max' (fseq xs) |> Result.toCs
 
 
   /// <summary>
   /// Returns the maximum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MaxSafe (xs:float seq) = Seq.max' xs |> Result.toCs
+  static member MaxSafe (xs:float seq) = FSeq.max' (fseq xs) |> Result.toCs
 
 
   /// <summary>
@@ -119,7 +119,7 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,float>) =
-    Seq.maxBy' (transform.Invoke) xs  
+    FSeq.maxBy' (transform.Invoke) (fseq xs)  
     |> Result.toCs
 
   /// <summary>
@@ -127,37 +127,37 @@ type IEnumerableExtensions () =
   /// </summary>
   [<Extension>]
   static member MaxSafe (xs, transform:Func<_,int>) =
-    Seq.maxBy' (transform.Invoke) xs  
+    FSeq.maxBy' (transform.Invoke) (fseq xs)  
     |> Result.toCs
 
   /// <summary>
   /// Returns the minimum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MinSafe (xs:int seq) = Seq.min' xs |> Result.toCs
+  static member MinSafe (xs:int seq) = FSeq.min' (fseq xs) |> Result.toCs
 
 
   /// <summary>
   /// Returns the minimum value in a sequence of values.
   /// </summary>
   [<Extension>]
-  static member MinSafe (xs:float seq) = Seq.min' xs |> Result.toCs
+  static member MinSafe (xs:float seq) = FSeq.min' (fseq xs) |> Result.toCs
 
 
   /// <summary>
   /// Invokes a transform function on each element of a sequence and returns the minimum value.
   /// </summary>
   [<Extension>]
-  static member MinSafe (xs, transform:Func<_,float>) =
-    Seq.minBy' (transform.Invoke) xs  
+  static member MinSafe (xs, transform:Func<'a,float>) =
+    FSeq.minBy' (transform.Invoke) (fseq xs)  
     |> Result.toCs
 
   /// <summary>
   /// Invokes a transform function on each element of a sequence and returns the minimum value.
   /// </summary>
   [<Extension>]
-  static member MinSafe (xs, transform:Func<_,int>) =
-    Seq.minBy' (transform.Invoke) xs  
+  static member MinSafe (xs, transform:Func<'a,int>) =
+    FSeq.minBy' (transform.Invoke) (fseq xs)  
     |> Result.toCs
 
   /// <summary>
