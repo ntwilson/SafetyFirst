@@ -370,6 +370,11 @@ module NonEmpty =
   let toSeq (NonEmpty xs) : _ seq = upcast xs 
 
   /// <summary>
+  /// Views the given NonEmptySeq as a NonEmpty FSeq.
+  /// </summary>
+  let toNonEmptyFSeq (NonEmpty xs) : NonEmptyFSeq<_> = NonEmpty <| fseq xs
+
+  /// <summary>
   /// Returns a sequence that when enumerated returns at most n elements.
   /// </summary>
   let truncate (PositiveInt n) (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.truncate n xs)

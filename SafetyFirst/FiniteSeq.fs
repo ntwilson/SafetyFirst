@@ -1432,8 +1432,8 @@ module FSeq =
     /// the input sequences differ in length. 
     /// </summary>
     let transposeSafe (xs : NonEmptySeq<NonEmptyFSeq<'a>>) : Result< NonEmptyFSeq<NonEmptyFSeq<'a>> , DifferingLengths> = 
-      let headLength = length (Seq.NonEmpty.head xs)
-      if Seq.forall (length >> (=) headLength) (Seq.NonEmpty.tail xs)
+      let headLength = length (Seq.head xs)
+      if Seq.forall (length >> (=) headLength) (Seq.tail xs)
       then Ok (NonEmpty (Seq.transpose xs |> Seq.map (fseq >> NonEmpty) |> fseq))
       else Error transposeErr
 

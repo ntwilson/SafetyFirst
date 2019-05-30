@@ -11,13 +11,13 @@ let unless msg maybe =
   | None -> raise (OptionExpectedException msg)
 
 let collect maybes = 
-  Seq.fold 
-    (fun state element -> 
-      match state, element with
-      | (Some xs, Some x) -> Some (Seq.append xs [x])
-      | _ -> None)
-    (Some (upcast []))
-    maybes
+  let rec collect' state xs =
+    match xs with
+    | None :: _ -> None
+    | Some element :: tail -> collect' (element :: state) tail
+    | [] -> Some <| List.rev state
+
+  in collect' [] (Seq.toList maybes)
 
 let ofFloat (x:float) = 
   if Double.IsNaN x 

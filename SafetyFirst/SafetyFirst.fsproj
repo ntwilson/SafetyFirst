@@ -18,9 +18,9 @@
     <Compile Include="ErrorTypes.fs" />
     <Compile Include="Match.fs" />
     <Compile Include="NonEmpty.fs" />
-    <Compile Include="Seq.fs" />
     <Compile Include="LazyList.fs" />
     <Compile Include="FiniteSeq.fs" />
+    <Compile Include="Seq.fs" />
     <Compile Include="List.fs" />
     <Compile Include="Array.fs" />
     <Compile Include="Set.fs" />

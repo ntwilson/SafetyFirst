@@ -20,7 +20,7 @@ let ``Converts NaNs to Nones, but any other float to Some`` () =
 let ``Collects multiple Options such that any None will make the whole thing None`` () =
   test
     <@
-      Option.collect [ Some 1; Some 2; Some 3; Some 4 ] |> Option.map Seq.toList = Some [1 .. 4]
+      Option.collect [ Some 1; Some 2; Some 3; Some 4 ] = Some [1 .. 4]
       &&
       Option.collect [ None; Some 2; Some 3; Some 4 ] = None
       &&
