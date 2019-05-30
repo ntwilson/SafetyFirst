@@ -82,7 +82,7 @@ let ``safely converts all other values to strings like normal`` () =
     <@
       str None = string None
       &&
-      str (Some [ Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None ]) = string (Some [ Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None ])
+      str (Some [ Some ("hi", None, {1 .. 10}); None ]) = string (Some [ Some ("hi", None, {1 .. 10}); None ])
       &&
-      str [| Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None |] = string [| Some {| X = "hi"; Y = None; Z = {1 .. 10} |}; None |]
+      str [| Some ("hi", None, {1 .. 10}); None |] = string [| Some ("hi", None, {1 .. 10}); None |]
     @>
