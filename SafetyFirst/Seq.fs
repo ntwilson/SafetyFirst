@@ -239,38 +239,11 @@ module NonEmpty =
   /// Returns a sequence that yields one item only.
   /// </summary>
   let singleton head : NonEmptySeq<_> = NonEmpty (Seq.singleton head)
-
-  /// <summary>
-  /// Returns the average of the elements in the sequence.
-  /// The elements are averaged using the <c>+</c> operator, 
-  /// <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
-  /// </summary>
-  let inline average (NonEmpty xs) = Seq.average xs
  
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
   let head (NonEmpty xs) = Seq.head xs
-
-  /// <summary>
-  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
-  /// </summary
-  let min (NonEmpty xs) = Seq.min xs
-
-  /// <summary>
-  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
-  /// </summary
-  let max (NonEmpty xs) = Seq.max xs
-
-  /// <summary>
-  /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c> on the function result.
-  /// </summary>
-  let minBy projection (NonEmpty xs) = Seq.minBy projection xs
-
-  /// <summary>
-  /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c> on the function result.
-  /// </summary>
-  let maxBy projection (NonEmpty xs) = Seq.maxBy projection xs
 
   /// <summary>
   /// Returns the sequence after removing the first element.
@@ -282,26 +255,6 @@ module NonEmpty =
   /// </summary>
   let uncons xs = (head xs, tail xs)
   
-  /// <summary>
-  /// Applies a function to each element of the sequence, threading an accumulator argument
-  /// through the computation. Begin by applying the function to the first two elements.
-  /// Then feed this result into the function along with the third element and so on.
-  /// Return the final result.
-  /// </summary>
-  let reduce f (NonEmpty xs) = Seq.reduce f xs
-
-  /// <summary>
-  /// O(n). Returns the length of the sequence.
-  /// </summary>
-  let length (NonEmpty xs) = Seq.length xs
-  
-  /// <summary>
-  /// Applies a function to each element of the collection, threading an accumulator argument
-  /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
-  /// then computes <c>f (... (f s i0)...) iN</c>
-  /// </summary>
-  let fold f initialState (NonEmpty xs) = Seq.fold f initialState xs
-
   /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
@@ -385,11 +338,6 @@ module NonEmpty =
   /// exception of the first element which is only returned as the predecessor of the second element.
   /// </summary>
   let pairwise (NonEmpty xs) = Seq.pairwise xs
-
-  /// <summary>
-  /// Returns a new sequence with the elements in reverse order.
-  /// </summary>
-  let rev (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.rev xs)
 
   /// <summary>
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
