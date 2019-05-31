@@ -730,6 +730,23 @@ module NonEmpty =
   let fold f initialState (NonEmpty xs : NonEmptyArray<_>) = Array.fold f initialState xs
 
   /// <summary>
+  /// Applies a function to each element of the array, starting from the end, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
+  /// </summary>
+  let inline foldBack f (NonEmpty xs : NonEmptyArray<_>) initialState = Array.foldBack f xs initialState
+
+  /// <summary>
+  /// Tests if all elements of the array satisfy the given predicate.
+  /// The predicate is applied to the elements of the input array. If any application returns false then the overall result is false and no further elements are tested. Otherwise, true is returned.
+  /// </summary>
+  let inline forall predicate (NonEmpty xs : NonEmptyArray<_>) = Array.forall predicate xs 
+
+  /// <summary>
+  /// Applies a key-generating function to each element of an array and yields an array of unique keys. Each unique key contains an array of all elements that match to this key.
+  /// </summary>
+  let inline groupBy projection (NonEmpty xs : NonEmptyArray<_>) = Array.groupBy projection xs
+
+  /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
   let indexed (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.indexed xs)
@@ -806,6 +823,16 @@ module NonEmpty =
     NonEmpty (Array.collect g xs)
 
   /// <summary>
+  /// Tests if the array contains the specified element.
+  /// </summary>
+  let inline contains element (NonEmpty xs : NonEmptyArray<_>) = Array.contains element xs  
+
+  /// <summary>
+  /// Applies a key-generating function to each element of an array and returns an array yielding unique keys and their number of occurrences in the original array.
+  /// </summary>
+  let inline countBy projection (NonEmpty xs : NonEmptyArray<_>) = Array.countBy projection xs
+
+  /// <summary>
   /// O(n), where n is count. Return the array which will remove at most 'n' elements of
   /// the input array.
   /// </summary>
@@ -834,6 +861,52 @@ module NonEmpty =
     match n with
     | Natural i -> drop i arr
     | neg -> xs
+
+  /// <summary>
+  /// Tests if any element of the array satisfies the given predicate.
+  /// The predicate is applied to the elements of the input array. If any application returns true then the overall result is true and no further elements are tested. Otherwise, false is returned.
+  /// </summary>
+  let inline exists predicate (NonEmpty xs : NonEmptyArray<_>) = Array.exists predicate xs
+
+  /// <summary>
+  /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
+  /// </summary>
+  let inline findSafe predicate (NonEmpty xs : NonEmptyArray<_>) = findSafe predicate xs
+
+  /// <summary>
+  /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
+  /// </summary>
+  let inline find' predicate xs = findSafe predicate xs
+
+  /// <summary>
+  /// Returns the last element for which the given function returns True. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findBackSafe predicate (NonEmpty xs : NonEmptyArray<_>) = findBackSafe predicate xs
+
+  /// <summary>
+  /// Returns the last element for which the given function returns True. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findBack' predicate xs = findBackSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the array that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndexSafe predicate (NonEmpty xs : NonEmptyArray<_>) = findIndexSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the array that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndex' predicate xs = findIndexSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the array that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndexBackSafe predicate (NonEmpty xs : NonEmptyArray<_>) = findIndexBackSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the array that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
   /// <summary>
   /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
@@ -865,6 +938,30 @@ module NonEmpty =
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
   /// </summary>
   let scan f initialState (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.scan f initialState xs)
+
+  /// <summary>
+  /// Sorts the elements of an array, returning a new array. Elements are compared using Operators.compare.
+  /// This is not a stable sort, i.e. the original order of equal elements is not necessarily preserved. For a stable sort, consider using FSeq.sort.
+  /// </summary>
+  let sort (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.sort xs)
+
+  /// <summary>
+  /// Sorts the elements of an array, using the given projection for the keys and returning a new array. Elements are compared using Operators.compare.
+  /// This is not a stable sort, i.e. the original order of equal elements is not necessarily preserved. For a stable sort, consider using FSeq.sort.
+  /// </summary>
+  let sortBy projection (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.sortBy projection xs)
+
+  /// <summary>
+  /// Sorts the elements of an array, in descending order, returning a new array. Elements are compared using Operators.compare.
+  /// This is not a stable sort, i.e. the original order of equal elements is not necessarily preserved. For a stable sort, consider using FSeq.sort.
+  /// </summary>
+  let sortDescending (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.sortDescending xs)
+
+  /// <summary>
+  /// Sorts the elements of an array, in descending order, using the given projection for the keys and returning a new array. Elements are compared using Operators.compare.
+  /// This is not a stable sort, i.e. the original order of equal elements is not necessarily preserved. For a stable sort, consider using FSeq.sort.
+  /// </summary>
+  let sortByDescending projection (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.sortByDescending projection xs)
 
   /// <summary>
   /// Builds an array from the given collection.
@@ -921,6 +1018,21 @@ module NonEmpty =
   /// Return None if no such element exists.
   /// </summary>
   let tryFind predicate (NonEmpty xs : NonEmptyArray<_>) = Array.tryFind predicate xs
+
+  /// <summary>
+  /// Returns the last element for which the given function returns True. Return None if no such element exists.
+  /// </summary>
+  let tryFindBack predicate (NonEmpty xs : NonEmptyArray<_>) = Array.tryFindBack predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the array that satisfies the given predicate.
+  /// </summary>
+  let tryFindIndex predicate (NonEmpty xs : NonEmptyArray<_>) = Array.tryFindIndex predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the array that satisfies the given predicate.
+  /// </summary>
+  let tryFindIndexBack predicate (NonEmpty xs : NonEmptyArray<_>) = Array.tryFindIndexBack predicate xs
 
   /// <summary>
   /// O(n), where n is count. Return option the list which skips the first 'n' elements of
