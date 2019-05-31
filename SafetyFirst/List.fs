@@ -600,13 +600,11 @@ let inline zip3' xs ys zs = zip3Safe xs ys zs
 /// the input lists differ in length. 
 /// </summary>
 let transposeSafe xs = 
-  let cons h t = Seq.append [h] t
   match xs with 
   | SeqOneOrMore (head, tail) -> 
-    let nonEmptyTails = Seq.filter (not << List.isEmpty) tail
     let headLength = List.length head
-    if Seq.forall (List.length >> (=) headLength) nonEmptyTails
-    then Seq.transpose (cons head nonEmptyTails) |> Seq.map Seq.toList |> Seq.toList |> Ok
+    if Seq.forall (List.length >> (=) headLength) tail
+    then Seq.transpose xs |> Seq.map Seq.toList |> Seq.toList |> Ok
     else Error transposeErr
   | _ -> Ok []
 
