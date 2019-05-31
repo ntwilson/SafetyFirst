@@ -710,6 +710,23 @@ module NonEmpty =
   let fold f initialState (NonEmpty xs : NonEmptyList<_>) = List.fold f initialState xs
 
   /// <summary>
+  /// Applies a function to each element of the list, starting from the end, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
+  /// </summary>
+  let inline foldBack f (NonEmpty xs : NonEmptyList<_>) initialState = List.foldBack f xs initialState
+
+  /// <summary>
+  /// Tests if all elements of the list satisfy the given predicate.
+  /// The predicate is applied to the elements of the input list. If any application returns false then the overall result is false and no further elements are tested. Otherwise, true is returned.
+  /// </summary>
+  let inline forall predicate (NonEmpty xs : NonEmptyList<_>) = List.forall predicate xs 
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a list and yields a list of unique keys. Each unique key contains a list of all elements that match to this key.
+  /// </summary>
+  let inline groupBy projection (NonEmpty xs : NonEmptyList<_>) = List.groupBy projection xs
+
+  /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
   let indexed (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.indexed xs)
@@ -779,6 +796,16 @@ module NonEmpty =
     NonEmpty (xs |> List.map (fun (NonEmpty x) -> x) |> List.concat)
 
   /// <summary>
+  /// Tests if the list contains the specified element.
+  /// </summary>
+  let inline contains element (NonEmpty xs : NonEmptyList<_>) = List.contains element xs  
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a list and returns a list yielding unique keys and their number of occurrences in the original list.
+  /// </summary>
+  let inline countBy projection (NonEmpty xs : NonEmptyList<_>) = List.countBy projection xs
+
+  /// <summary>
   /// Applies the given function to each element of the sequence and concatenates all the results.
   /// </summary>
   let collect (f : 'a -> NonEmptyList<'b>) (NonEmpty xs : NonEmptyList<'a>) : NonEmptyList<'b> = 
@@ -815,6 +842,51 @@ module NonEmpty =
     | Natural i -> drop i lst
     | neg -> xs
 
+  /// <summary>
+  /// Tests if any element of the list satisfies the given predicate.
+  /// The predicate is applied to the elements of the input list. If any application returns true then the overall result is true and no further elements are tested. Otherwise, false is returned.
+  /// </summary>
+  let inline exists predicate (NonEmpty xs : NonEmptyList<_>) = List.exists predicate xs
+
+  /// <summary>
+  /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
+  /// </summary>
+  let inline findSafe predicate (NonEmpty xs : NonEmptyList<_>) = findSafe predicate xs
+
+  /// <summary>
+  /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
+  /// </summary>
+  let inline find' predicate xs = findSafe predicate xs
+
+  /// <summary>
+  /// Returns the last element for which the given function returns True. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findBackSafe predicate (NonEmpty xs : NonEmptyList<_>) = findBackSafe predicate xs
+
+  /// <summary>
+  /// Returns the last element for which the given function returns True. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findBack' predicate xs = findBackSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the list that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndexSafe predicate (NonEmpty xs : NonEmptyList<_>) = findIndexSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the list that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndex' predicate xs = findIndexSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the list that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndexBackSafe predicate (NonEmpty xs : NonEmptyList<_>) = findIndexBackSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the list that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
   /// <summary>
   /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
@@ -846,6 +918,30 @@ module NonEmpty =
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
   /// </summary>
   let scan f initialState (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.scan f initialState xs)
+
+  /// <summary>
+  /// Sorts the given list using Operators.compare.
+  /// This is a stable sort, i.e. the original order of equal elements is preserved.
+  /// </summary>
+  let sort (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.sort xs)
+
+  /// <summary>
+  /// Sorts the given list using keys given by the given projection. Keys are compared using Operators.compare.
+  /// This is a stable sort, i.e. the original order of equal elements is preserved.
+  /// </summary>
+  let sortBy projection (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.sortBy projection xs)
+
+  /// <summary>
+  /// Sorts the given list in descending order using Operators.compare.
+  /// This is a stable sort, i.e. the original order of equal elements is preserved.
+  /// </summary>
+  let sortDescending (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.sortDescending xs)
+
+  /// <summary>
+  /// Sorts the given list in descending order using keys given by the given projection. Keys are compared using Operators.compare.
+  /// This is a stable sort, i.e. the original order of equal elements is preserved.
+  /// </summary>
+  let sortByDescending projection (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.sortByDescending projection xs)
 
   /// <summary>
   /// Builds an array from the given collection.
@@ -902,6 +998,21 @@ module NonEmpty =
   /// Return None if no such element exists.
   /// </summary>
   let tryFind predicate (NonEmpty xs : NonEmptyList<_>) = List.tryFind predicate xs
+
+  /// <summary>
+  /// Returns the last element for which the given function returns True. Return None if no such element exists.
+  /// </summary>
+  let tryFindBack predicate (NonEmpty xs : NonEmptyList<_>) = List.tryFindBack predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the list that satisfies the given predicate. Return None if no such element exists.
+  /// </summary>
+  let tryFindIndex predicate (NonEmpty xs : NonEmptyList<_>) = List.tryFindIndex predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the list that satisfies the given predicate. Return None if no such element exists.
+  /// </summary>
+  let tryFindIndexBack predicate (NonEmpty xs : NonEmptyList<_>) = List.tryFindIndexBack predicate xs
 
   /// <summary>
   /// O(n), where n is count. Return option the list which skips the first 'n' elements of

@@ -60,6 +60,11 @@ module FiniteSeq =
   let inline concat (FSeq xs : FiniteSeq<FiniteSeq<'a>>) = fseq (xs |> LazyList.map (|FSeq|) |> LazyList.concat)
 
   /// <summary>
+  /// Tests if the sequence contains the specified element.
+  /// </summary>
+  let inline contains element (xs : FiniteSeq<_>) = Seq.contains element xs
+
+  /// <summary>
   /// Applies the given function to each element of the sequence and concatenates all the results.
   /// Returned sequence is lazy, effects are delayed until it is enumerated.
   /// </summary>
@@ -72,6 +77,12 @@ module FiniteSeq =
   /// given list.
   /// </summary>
   let cons head (FSeq xs) = fseq (LazyList.cons head xs)
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and returns a sequence yielding unique keys and their number of occurrences in the original sequence.
+  /// Note that this function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// </summary>
+  let countBy projection (xs : FiniteSeq<_>) = fseq <| Seq.countBy projection xs
 
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will remove of at most 'n' elements of
@@ -95,11 +106,23 @@ module FiniteSeq =
   let empty<'a> = fseq (LazyList.empty<'a>)
 
   /// <summary>
+  /// Tests if any element of the sequence satisfies the given predicate.
+  /// The predicate is applied to the elements of the input sequence. If any application returns true then the overall result is true and no further elements are tested. Otherwise, false is returned.
+  /// </summary>
+  let inline exists predicate (xs : FiniteSeq<_>) = Seq.exists predicate xs 
+
+  /// <summary>
   /// Applies a function to each element of the collection, threading an accumulator argument
   /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
   /// then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
   let inline fold f initialState (FSeq xs) = LazyList.fold f initialState xs
+
+  /// <summary>
+  /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
+  /// </summary>
+  let inline foldBack f (xs : FiniteSeq<_>) initialState = Seq.foldBack f xs initialState
 
   /// <summary>
   /// Returns a new collection containing only the elements of the collection
@@ -111,7 +134,24 @@ module FiniteSeq =
   /// Returns the first element for which the given function returns True.
   /// Return None if no such element exists.
   /// </summary>
-  let tryFind predicate (FSeq xs) = LazyList.tryFind predicate xs
+  let inline tryFind predicate (FSeq xs) = LazyList.tryFind predicate xs
+
+  /// <summary>
+  /// Returns the last element for which the given function returns True. Return None if no such element exists.
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before returning the result.
+  /// </summary>
+  let inline tryFindBack predicate (xs : FiniteSeq<_>) = Seq.tryFindBack predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the sequence that satisfies the given predicate. Return None if no such element exists.
+  /// </summary>
+  let inline tryFindIndex predicate (xs : FiniteSeq<_>) = Seq.tryFindIndex predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the sequence that satisfies the given predicate. Return None if no such element exists
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before returning the result.
+  /// </summary>
+  let inline tryFindIndexBack predicate (xs : FiniteSeq<_>) = Seq.tryFindIndexBack predicate xs
 
   /// <summary>
   /// Returns the first element for which the given function returns True.
@@ -140,6 +180,17 @@ module FiniteSeq =
   let inline findBack' predicate xs = findBackSafe predicate xs
 
   /// <summary>
+  /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let findIndexSafe predicate (xs : _ fseq) =
+    Seq.tryFindIndex predicate xs |> Result.ofOption findErr
+
+  /// <summary>
+  /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndex' predicate (xs : _ fseq) = findIndexSafe predicate xs
+
+  /// <summary>
   /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
@@ -151,6 +202,19 @@ module FiniteSeq =
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
   let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
+
+  /// <summary>
+  /// Tests if all elements of the sequence satisfy the given predicate.
+  /// The predicate is applied to the elements of the input sequence. If any application returns false then the overall result is false and no further elements are tested. Otherwise, true is returned.
+  /// </summary>
+  let inline forall predicate (xs : FiniteSeq<_>) = Seq.forall predicate xs 
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
+  /// </summary>
+  let inline groupBy projection (xs : FiniteSeq<_>) = 
+    Seq.groupBy projection xs |> Seq.map (fun (key, value) -> (key, fseq value)) |> fseq
 
   /// <summary>
   /// Returns the first element of the sequence.
@@ -176,6 +240,16 @@ module FiniteSeq =
   /// Returns true if the sequence contains no elements, false otherwise.
   /// </summary>
   let inline isEmpty (FSeq xs) = LazyList.isEmpty xs
+
+  /// <summary>
+  /// Applies the given function to each element of the collection.
+  /// </summary>
+  let inline iter action (xs : FiniteSeq<_>) = Seq.iter action xs
+
+  /// <summary>
+  /// Applies the given function to each element of the collection. The integer passed to the function indicates the index of element.
+  /// </summary>
+  let inline iteri action (xs : FiniteSeq<_>) = Seq.iteri action xs
   
   /// <summary>
   /// Returns the last element of the sequence. Return an Error if no such element exists.
@@ -186,6 +260,11 @@ module FiniteSeq =
   /// Returns the last element of the sequence. Return an Error if no such element exists.
   /// </summary>
   let inline last' xs = lastSafe xs
+
+  /// <summary>
+  /// Returns the last element of the sequence. Return None if no such element exists.
+  /// </summary>
+  let inline tryLast (xs : FiniteSeq<_>) = Seq.tryLast xs 
 
   /// <summary>
   /// Returns the length of the sequence
@@ -239,6 +318,18 @@ module FiniteSeq =
   /// Returns None if the sequences are different lengths.
   /// </summary>
   let tryMap2 f xs ys = map2' f xs ys |> Result.toOption
+
+  /// <summary>
+  /// Combines map and fold. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline mapFold mapping initialState (xs : FiniteSeq<_>) = Seq.mapFold mapping initialState xs
+
+  /// <summary>
+  /// Combines map and foldBack. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline mapFoldBack mapping (xs : FiniteSeq<_>) initialState = Seq.mapFoldBack mapping xs initialState
 
   /// <summary>
   /// Returns the greatest of all elements of the sequence, compared via Operators.max.
@@ -386,6 +477,48 @@ module FiniteSeq =
   let inline scan f initialState (FSeq xs) = fseq (LazyList.scan f initialState xs)
 
   /// <summary>
+  /// Like foldBack, but returns the sequence of intermediary and final results.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. 
+  /// This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline scanBack f (xs : FiniteSeq<_>) initialState = fseq (Seq.scanBack f xs initialState)
+
+  /// <summary>
+  /// Yields a sequence ordered by keys.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline sort (xs : FiniteSeq<_>) = fseq (Seq.sort xs)
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yield a sequence ordered by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved.
+  /// </summary>
+  let inline sortBy projection (xs : FiniteSeq<_>) = fseq (Seq.sortBy projection xs)
+
+  /// <summary>
+  /// Yields a sequence ordered descending by keys.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved.
+  /// </summary>
+  let inline sortDescending (xs : FiniteSeq<_>) = fseq (Seq.sortDescending xs)
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yield a sequence ordered descending by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved.
+  /// </summary>
+  let inline sortByDescending projection (xs : FiniteSeq<_>) = fseq (Seq.sortByDescending projection xs)
+
+  /// <summary>
+  /// Yields a sequence ordered using the given comparison function.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline sortWith comparer (xs : FiniteSeq<_>) = fseq (Seq.sortWith comparer xs)
+
+  /// <summary>
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
@@ -443,6 +576,18 @@ module FiniteSeq =
   /// Returns an Error if <c>count</c> is zero or negative.
   /// </summary>
   let inline splitInto' n xs = splitIntoSafe n xs
+
+  /// <summary>
+  /// Returns the sum of the elements in the sequence.
+  /// The elements are summed using the <c>+</c> operator and <c>Zero</c> property associated with the generated type.
+  /// </summary>
+  let inline sum (xs : FiniteSeq<_>) = Seq.sum xs
+
+  /// <summary>
+  /// Returns the sum of the results generated by applying the function to each element of the sequence.
+  /// The elements are summed using the <c>+</c> operator and <c>Zero</c> property associated with the generated type.
+  /// </summary>
+  let inline sumBy projection (xs : FiniteSeq<_>) = Seq.sumBy projection xs
 
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
@@ -671,6 +816,12 @@ module FSeq =
   let inline fold f initialState xs = FiniteSeq.fold f initialState xs
 
   /// <summary>
+  /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
+  /// </summary>
+  let inline foldBack f (xs : _ fseq) initialState = Seq.foldBack f xs initialState
+
+  /// <summary>
   /// Returns true if the sequence contains no elements, false otherwise.
   /// </summary>
   let inline isEmpty xs = FiniteSeq.isEmpty xs
@@ -684,6 +835,11 @@ module FSeq =
   /// Returns the last element of the sequence. Return an Error if no such element exists.
   /// </summary>
   let inline last' xs = FiniteSeq.last' xs
+
+  /// <summary>
+  /// Returns the last element of the sequence. Return None if no such element exists.
+  /// </summary>
+  let inline tryLast (xs : _ fseq) = Seq.tryLast xs 
 
   /// <summary>
   /// Applies a function to each element of the sequence, threading an accumulator argument
@@ -776,6 +932,17 @@ module FSeq =
   let inline concat xs = FiniteSeq.concat xs
 
   /// <summary>
+  /// Tests if the sequence contains the specified element.
+  /// </summary>
+  let contains element (xs : _ fseq) = Seq.contains element xs
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and returns a sequence yielding unique keys and their number of occurrences in the original sequence.
+  /// Note that this function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// </summary>
+  let countBy projection (xs : _ fseq) = FiniteSeq.countBy projection xs
+
+  /// <summary>
   /// Applies the given function to each element of the sequence and concatenates all the results.
   /// Returned sequence is lazy, effects are delayed until it is enumerated.
   /// </summary>
@@ -798,12 +965,18 @@ module FSeq =
   /// the input seq.
   /// This function will return the input seq unaltered for negative values of 'n'.
   /// </summary>
-  let dropLenient n xs = FiniteSeq.dropLenient n xs
+  let inline dropLenient n xs = FiniteSeq.dropLenient n xs
 
   /// <summary>
   /// O(1). Evaluates to the sequence that contains no items
   /// </summary>
-  let empty<'a when 'a : comparison> = FiniteSeq.empty<'a>
+  let inline empty<'a when 'a : comparison> = FiniteSeq.empty<'a>
+
+  /// <summary>
+  /// Tests if any element of the sequence satisfies the given predicate.
+  /// The predicate is applied to the elements of the input sequence. If any application returns true then the overall result is true and no further elements are tested. Otherwise, false is returned.
+  /// </summary>
+  let inline exists predicate (xs : _ fseq) = Seq.exists predicate xs 
 
   /// <summary>
   /// Views the given array as a finite sequence.
@@ -839,6 +1012,48 @@ module FSeq =
   let inline scan f initialState xs = FiniteSeq.scan f initialState xs
 
   /// <summary>
+  /// Like foldBack, but returns the sequence of intermediary and final results.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. 
+  /// This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline scanBack f (xs : _ fseq) initialState = fseq (Seq.scanBack f xs initialState)
+
+  /// <summary>
+  /// Yields a sequence ordered by keys.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline sort (xs : _ fseq) = fseq (Seq.sort xs)
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yield a sequence ordered by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved.
+  /// </summary>
+  let inline sortBy projection (xs : _ fseq) = fseq (Seq.sortBy projection xs)
+
+  /// <summary>
+  /// Yields a sequence ordered descending by keys.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved.
+  /// </summary>
+  let inline sortDescending (xs : _ fseq) = fseq (Seq.sortDescending xs)
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yield a sequence ordered descending by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved.
+  /// </summary>
+  let inline sortByDescending projection (xs : _ fseq) = fseq (Seq.sortByDescending projection xs)
+
+  /// <summary>
+  /// Yields a sequence ordered using the given comparison function.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+  /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline sortWith comparer (xs : _ fseq) = fseq (Seq.sortWith comparer xs)
+
+  /// <summary>
   /// Builds an array from the given collection.
   /// </summary>
   let inline toArray xs = FiniteSeq.toArray xs
@@ -865,6 +1080,23 @@ module FSeq =
   let inline tryFind predicate xs = FiniteSeq.tryFind predicate xs
 
   /// <summary>
+  /// Returns the last element for which the given function returns True. Return None if no such element exists.
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before returning the result.
+  /// </summary>
+  let inline tryFindBack predicate (xs : _ fseq) = Seq.tryFindBack predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the sequence that satisfies the given predicate. Return None if no such element exists.
+  /// </summary>
+  let inline tryFindIndex predicate (xs : _ fseq) = Seq.tryFindIndex predicate xs
+
+  /// <summary>
+  /// Returns the index of the last element in the sequence that satisfies the given predicate. Return None if no such element exists
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before returning the result.
+  /// </summary>
+  let inline tryFindIndexBack predicate (xs : _ fseq) = Seq.tryFindIndexBack predicate xs
+
+  /// <summary>
   /// Returns the first element for which the given function returns True.
   /// Returns a NoMatchingElement Error if no such element is found.
   /// </summary>
@@ -875,6 +1107,16 @@ module FSeq =
   /// Returns a NoMatchingElement Error if no such element is found.
   /// </summary>
   let inline find' predicate xs = FiniteSeq.find' predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndexSafe predicate (xs : _ fseq) = FiniteSeq.findIndexSafe predicate xs
+
+  /// <summary>
+  /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let inline findIndex' predicate (xs : _ fseq) = FiniteSeq.findIndex' predicate xs
 
   /// <summary>
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
@@ -901,6 +1143,18 @@ module FSeq =
   let inline findIndexBack' predicate xs = FiniteSeq.findIndexBack' predicate xs
 
   /// <summary>
+  /// Tests if all elements of the sequence satisfy the given predicate.
+  /// The predicate is applied to the elements of the input sequence. If any application returns false then the overall result is false and no further elements are tested. Otherwise, true is returned.
+  /// </summary>
+  let inline forall predicate (xs : _ fseq) = Seq.forall predicate xs 
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
+  /// </summary>
+  let inline groupBy projection (xs : _ fseq) = FiniteSeq.groupBy projection xs
+
+  /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
   let inline tryHead xs = FiniteSeq.tryHead xs
@@ -919,6 +1173,16 @@ module FSeq =
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
   let inline indexed xs = FiniteSeq.indexed xs
+
+  /// <summary>
+  /// Applies the given function to each element of the collection.
+  /// </summary>
+  let inline iter action (xs : _ fseq) = Seq.iter action xs
+
+  /// <summary>
+  /// Applies the given function to each element of the collection. The integer passed to the function indicates the index of element.
+  /// </summary>
+  let inline iteri action (xs : FiniteSeq<_>) = Seq.iteri action xs
 
   /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
@@ -940,6 +1204,18 @@ module FSeq =
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
   let inline map2' f xs ys = FiniteSeq.map2' f xs ys
+
+  /// <summary>
+  /// Combines map and fold. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline mapFold mapping initialState (xs : _ fseq) = Seq.mapFold mapping initialState xs
+
+  /// <summary>
+  /// Combines map and foldBack. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
+  /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// </summary>
+  let inline mapFoldBack mapping (xs : _ fseq) initialState = Seq.mapFoldBack mapping xs initialState
 
   /// <summary>
   /// Returns the greatest of all elements of the sequence, compared via Operators.max.
@@ -1032,6 +1308,18 @@ module FSeq =
   /// Returns an Error if <c>count</c> is zero or negative.
   /// </summary>
   let inline splitInto' n xs = FiniteSeq.splitInto' n xs
+
+  /// <summary>
+  /// Returns the sum of the elements in the sequence.
+  /// The elements are summed using the <c>+</c> operator and <c>Zero</c> property associated with the generated type.
+  /// </summary>
+  let inline sum (xs : _ fseq) = Seq.sum xs
+
+  /// <summary>
+  /// Returns the sum of the results generated by applying the function to each element of the sequence.
+  /// The elements are summed using the <c>+</c> operator and <c>Zero</c> property associated with the generated type.
+  /// </summary>
+  let inline sumBy projection (xs : _ fseq) = Seq.sumBy projection xs
 
   /// <summary>
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
@@ -1277,6 +1565,12 @@ module FSeq =
     let fold f initialState (NonEmptyFSeq xs) = FiniteSeq.fold f initialState xs
 
     /// <summary>
+    /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
+    /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
+    /// </summary>
+    let inline foldBack f (xs : FiniteSeq<_>) initialState = foldBack f xs initialState
+
+    /// <summary>
     /// Builds a new collection whose elements are the results of applying the given function
     /// to each of the elements of the collection. The given function will be applied
     /// as elements are demanded using the MoveNext method on enumerators retrieved from the
@@ -1328,6 +1622,17 @@ module FSeq =
       NonEmpty (xs |> FiniteSeq.map (fun (NonEmptyFSeq x) -> x) |> FiniteSeq.concat)
 
     /// <summary>
+    /// Tests if the sequence contains the specified element.
+    /// </summary>
+    let inline contains element (NonEmptyFSeq xs) = contains element xs
+
+    /// <summary>
+    /// Applies a key-generating function to each element of a sequence and returns a sequence yielding unique keys and their number of occurrences in the original sequence. 
+    /// Note that this function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+    /// </summary>
+    let inline countBy projection (NonEmptyFSeq xs) = countBy projection xs
+
+    /// <summary>
     /// Applies the given function to each element of the sequence and concatenates all the results.
     /// Returned sequence is lazy, effects are delayed until it is enumerated.
     /// </summary>
@@ -1347,6 +1652,63 @@ module FSeq =
     /// This function will return the input seq unaltered for negative values of 'n'.
     /// </summary>
     let dropLenient n (NonEmptyFSeq xs) = FiniteSeq.dropLenient n xs
+
+    /// <summary>
+    /// Tests if any element of the sequence satisfies the given predicate. The predicate is applied to the elements of the input sequence. If any application returns true then the overall result is true and no further elements are tested. Otherwise, false is returned.
+    /// </summary>
+    let inline exists predicate (NonEmptyFSeq xs) = exists predicate xs
+
+    /// <summary>
+    /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
+    /// </summary>
+    let inline findSafe predicate (NonEmptyFSeq xs) = findSafe predicate xs
+    
+    /// <summary>
+    /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
+    /// </summary>
+    let inline find' predicate xs = findSafe predicate xs 
+
+    /// <summary>
+    /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+    /// </summary>
+    let inline findIndexSafe predicate (NonEmptyFSeq xs) = findIndexSafe predicate xs
+
+    /// <summary>
+    /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
+    /// </summary>
+    let inline findIndex' predicate xs = findIndexSafe predicate xs
+
+    /// <summary>
+    /// Returns the last element for which the given function returns True. Return an Error if no such element exists. This function digests the whole initial sequence as soon as it is called.
+    /// </summary>
+    let inline findBackSafe predicate (NonEmptyFSeq xs) = findBackSafe predicate xs
+
+    /// <summary>
+    /// Returns the last element for which the given function returns True. Return an Error if no such element exists. This function digests the whole initial sequence as soon as it is called.
+    /// </summary>
+    let inline findBack' predicate xs = findBackSafe predicate xs
+
+    /// <summary>
+    /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists. This function digests the whole initial sequence as soon as it is called.
+    /// </summary>
+    let inline findIndexBackSafe predicate (NonEmptyFSeq xs) = findIndexBackSafe predicate xs
+
+    /// <summary>
+    /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists. This function digests the whole initial sequence as soon as it is called.
+    /// </summary>
+    let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
+
+    /// <summary>
+    /// Tests if all elements of the sequence satisfy the given predicate.
+    /// The predicate is applied to the elements of the input sequence. If any application returns false then the overall result is false and no further elements are tested. Otherwise, true is returned.
+    /// </summary>
+    let inline forall predicate (NonEmptyFSeq xs) = forall predicate xs 
+
+    /// <summary>
+    /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+    /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
+    /// </summary>
+    let inline groupBy projection (NonEmptyFSeq xs) = groupBy projection xs
 
     /// <summary>
     /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
@@ -1383,6 +1745,34 @@ module FSeq =
     /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
     /// </summary>
     let scan f initialState (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.scan f initialState xs)
+
+    /// <summary>
+    /// Yields a sequence ordered by keys.
+    /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+    /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
+    /// </summary>
+    let sort (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (sort xs)
+
+    /// <summary>
+    /// Applies a key-generating function to each element of a sequence and yield a sequence ordered by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
+    /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
+    /// This is a stable sort, that is the original order of equal elements is preserved.
+    /// </summary>
+    let sortBy projection (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (sortBy projection xs)
+
+    /// <summary>
+    /// Yields a sequence ordered descending by keys. 
+    /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. 
+    /// The function makes no assumption on the ordering of the original sequence. This is a stable sort, that is the original order of equal elements is preserved.
+    /// </summary>
+    let sortDescending (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (sortDescending xs)
+
+    /// <summary>
+    /// Applies a key-generating function to each element of a sequence and yield a sequence ordered descending by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>. 
+    /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. 
+    /// The function makes no assumption on the ordering of the original sequence. This is a stable sort, that is the original order of equal elements is preserved.
+    /// </summary>
+    let sortByDescending projection (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (sortByDescending projection xs)
 
     /// <summary>
     /// Builds an array from the given collection.
@@ -1458,7 +1848,22 @@ module FSeq =
     /// Returns the first element for which the given function returns True.
     /// Return None if no such element exists.
     /// </summary>
-    let tryFind predicate (NonEmptyFSeq xs) = FiniteSeq.tryFind predicate xs
+    let inline tryFind predicate (NonEmptyFSeq xs) = FiniteSeq.tryFind predicate xs
+
+    /// <summary>
+    /// Returns the index of the first element in the sequence that satisfies the given predicate. Return None if no such element exists.
+    /// </summary>
+    let inline tryFindIndex predicate (NonEmptyFSeq xs) = FiniteSeq.tryFindIndex predicate xs
+
+    /// <summary>
+    /// Returns the last element for which the given function returns True. Return None if no such element exists. This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before returning the result.
+    /// </summary>    
+    let inline tryFindBack predicate (NonEmptyFSeq xs) = FiniteSeq.tryFindBack predicate xs
+
+    /// <summary>
+    /// Returns the index of the last element in the sequence that satisfies the given predicate. Return None if no such element exists This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before returning the result.
+    /// </summary>
+    let inline tryFindIndexBack predicate (NonEmptyFSeq xs) = FiniteSeq.tryFindIndexBack predicate xs
 
     /// <summary>
     /// O(n), where n is count. Return option the list which skips the first 'n' elements of
