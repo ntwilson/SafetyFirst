@@ -2,8 +2,6 @@ namespace SafetyFirst
 
 open System.Collections.Generic
 
-open ResultDotNet.FSharp
-
 /// <summary>
 /// A sequence that is constrained to have at least one element.
 /// </summary>

@@ -10,6 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="OptionSpec.fs" />
+    <Compile Include="OptionExpressionSpec.fs" />
+    <Compile Include="ValueOptionSpec.fs" />
+    <Compile Include="ValueOptionExpressionSpec.fs" />
+    <Compile Include="ResultSpec.fs" />
     <Compile Include="Lazy.fs" />
     <Compile Include="ConversionsSpec.fs" />
     <Compile Include="MatchSpec.fs" />
@@ -19,11 +24,12 @@
     <Compile Include="MapSpec.fs" />
     <Compile Include="FSeqSpec.fs" />
     <Compile Include="IEnumerableSpec.fs" />
+    <Compile Include="ReadmeSpec.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FsCheck" Version="2.11.0" />
-    <PackageReference Include="fsharp.core" Version="4.5.0" />
+    <PackageReference Include="fsharp.core" Version="4.6.2" />
     <PackageReference Include="microsoft.net.test.sdk" Version="15.7.2" />
     <PackageReference Include="nunit" Version="3.10.1" />
     <PackageReference Include="nunit3TestAdapter" Version="3.10.0" />

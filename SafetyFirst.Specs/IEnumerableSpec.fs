@@ -5,9 +5,8 @@ open System.Linq
 open NUnit.Framework
 open Swensen.Unquote
 
-open ResultDotNet
-
 open SafetyFirst
+open SafetyFirst.CSharp
 
 let throws f = 
   try 
@@ -107,6 +106,3 @@ let ``ZipSafe returns the same answer as Zip`` () =
       &&
       sameAns (seq [1], seq ["hi"], (fun i s -> s + string i))
     @>
-
-[<EntryPoint>]
-let main argv = 0

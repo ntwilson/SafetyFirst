@@ -7,14 +7,21 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Conversions.fs" />
+    <Compile Include="Option.fs" />
+    <Compile Include="OptionExpression.fs" />
+    <Compile Include="ValueOption.fs" />
+    <Compile Include="ValueOptionExpression.fs" />
+    <Compile Include="Result.fs" />
     <Compile Include="Numbers.fs" />
+    <Compile Include="Conversions.fs" />
     <Compile Include="ErrorTypes.fs" />
     <Compile Include="Match.fs" />
     <Compile Include="NonEmpty.fs" />
-    <Compile Include="Seq.fs" />
     <Compile Include="LazyList.fs" />
     <Compile Include="FiniteSeq.fs" />
+    <Compile Include="ResultModule.fs" />
+    <Compile Include="FiniteSeqModule.fs" />    
+    <Compile Include="Seq.fs" />
     <Compile Include="List.fs" />
     <Compile Include="Array.fs" />
     <Compile Include="Set.fs" />
@@ -26,8 +33,7 @@
     <Compile Include="IDictionaryExtensions.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="fsharp.core" Version="4.1.17" />
-    <PackageReference Include="ResultDotNet" Version="2.0.5" />
+    <PackageReference Include="fsharp.core" Version="4.5.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 </Project>
