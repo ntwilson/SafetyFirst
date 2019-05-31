@@ -182,8 +182,8 @@ namespace SafetyFirst.CSharp.Specs {
     [TestMethod]
     public void IsEasyToAddContextToResultErrors() {
       Result<int, PretendError> x = Error<int, PretendError>(new PretendError());
-      Result<int, ErrorWithContext<PretendError>> y = x.WithContext("this error is totally pretend");
-      Result<int, ErrorWithContext<PretendError>> z = y.WithContext("really, really pretend");
+      Result<int, ErrorWithContext<PretendError, string>> y = x.WithContext("this error is totally pretend");
+      Result<int, ErrorWithContext<PretendError, string>> z = y.WithContext("really, really pretend");
 
       z.Match(
         error: e => e.Context.ShouldSatisfy(xs => xs[0] == "really, really pretend" && xs[1] == "this error is totally pretend"),

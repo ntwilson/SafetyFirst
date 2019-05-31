@@ -600,11 +600,13 @@ let inline zip3' xs ys zs = zip3Safe xs ys zs
 /// the input lists differ in length. 
 /// </summary>
 let transposeSafe xs = 
+  let cons h t = Seq.append [h] t
   match xs with 
   | SeqOneOrMore (head, tail) -> 
+    let nonEmptyTails = Seq.filter (not << List.isEmpty) tail
     let headLength = List.length head
-    if Seq.forall (List.length >> (=) headLength) tail
-    then Ok <| List.transpose xs
+    if Seq.forall (List.length >> (=) headLength) nonEmptyTails
+    then Seq.transpose (cons head nonEmptyTails) |> Seq.map Seq.toList |> Seq.toList |> Ok
     else Error transposeErr
   | _ -> Ok []
 
@@ -881,11 +883,9 @@ module NonEmpty =
   /// Returns the transpose of the given sequence of lists. Returns a DifferingLengths Error if
   /// the input lists differ in length. 
   /// </summary>
-  let transposeSafe (xs : NonEmptySeq<NonEmptyList<'a>>) : Result< NonEmptyList<NonEmptyList<'a>> , DifferingLengths> = 
-    let headLength = length (Seq.NonEmpty.head xs)
-    if Seq.forall (length >> (=) headLength) (Seq.NonEmpty.tail xs)
-    then Ok (List.transpose (Seq.map (|NonEmpty|) xs) |> List.map NonEmpty |> NonEmpty)
-    else Error transposeErr
+  let transposeSafe (NonEmpty xs : NonEmptySeq<NonEmptyList<'a>>) : Result< NonEmptyList<NonEmptyList<'a>> , DifferingLengths> = 
+    transposeSafe (xs |> Seq.map (|NonEmpty|))
+    |> Result.map (List.map NonEmpty >> NonEmpty)
 
   /// <summary>
   /// Returns the transpose of the given sequence of lists. Returns a DifferingLengths Error if
@@ -918,12 +918,51 @@ module NonEmpty =
   let tryTake n (NonEmpty xs : NonEmptyList<_>) = Result.toOption <| take' n xs
 
   /// <summary>
-  /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
-  /// when one sequence is exhausted any remaining elements in the other
-  /// sequence are ignored.
+  /// Returns a list that yields sliding windows containing elements drawn from the input
+  /// list. Each window is returned as a fresh list.
+  /// Returns a NegativeInput Error when <c>size</c> is not positive.
   /// </summary>
-  let zip' (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) : Result<NonEmptyList<_>,_> = 
+  let windowedSafe size (NonEmpty xs : NonEmptyList<_>) = windowedSafe size xs
+
+  /// <summary>
+  /// Returns a list that yields sliding windows containing elements drawn from the input
+  /// list. Each window is returned as a fresh list.
+  /// Returns a NegativeInput Error when <c>size</c> is not positive.
+  /// </summary>
+  let inline windowed' size xs = windowedSafe size xs
+
+  /// <summary>
+  /// Returns a list that yields sliding windows containing elements drawn from the input
+  /// list. Each window is returned as a fresh list.
+  /// Same as <c>List.NonEmpty.windowed</c>, but restricts the input to a PositiveInt
+  /// </summary>
+  let window size (NonEmpty xs : NonEmptyList<_>) = window size xs
+
+  /// <summary>
+  /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let zipSafe (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) : Result<NonEmptyList<_>,_> = 
     NonEmpty <!> zip' xs ys
+
+  /// <summary>
+  /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let inline zip' xs ys = zipSafe xs ys
+
+  /// <summary>
+  /// Combines the three lists into a list of triples. The lists must have equal lengths.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let zip3Safe (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) (NonEmpty zs : NonEmptyList<_>) : Result<NonEmptyList<_>,_> = 
+    NonEmpty <!> zip3Safe xs ys zs
+
+  /// <summary>
+  /// Combines the three lists into a list of triples. The lists must have equal lengths.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let inline zip3' xs ys zs = zip3Safe xs ys zs
 
   /// <summary>
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.

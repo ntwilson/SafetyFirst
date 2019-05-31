@@ -16,7 +16,7 @@ type ResultExpectedException<'T> (msg:string, err:'T) =
        err)
   member this.ErrorDetails = err
 
-type ErrorWithContext<'a> = { Error : 'a; Context : string list }
+type ErrorWithContext<'a, 'b> = { Error : 'a; Context : 'b list }
 
 namespace SafetyFirst.CSharp
 
@@ -143,6 +143,12 @@ type Result<'tVal, 'tErr> =
     | Ok v -> FSharp.Core.Ok v
     | Error err -> FSharp.Core.Error err
 
+  static member op_Implicit (rslt:Result<'a, 'b>) = rslt.ToFs ()
+  static member op_Implicit (rslt:FSharp.Core.Result<'a, 'b>) = 
+    match rslt with
+    | FSharp.Core.Ok v -> Ok v
+    | FSharp.Core.Error err -> Error err
+
   /// <summary>
   /// If the Result is ok, "unwraps" the ok value and passes it
   /// to the function given, returning the result of that function.  If the 
@@ -198,12 +204,12 @@ type ResultExtensions private () =
   /// expanded upon through repeat calls to the <c>WithContext</c> method.
   /// </summary>
   [<Extension>]
-  static member WithContext (result:Result<'a, ErrorWithContext<'b>>, contextStr) = 
-    result.MapError(fun ({Context = context} as error) -> { error with Context = contextStr :: context })
+  static member WithContext (result:Result<'a, ErrorWithContext<'b,'c>>, contextElement) = 
+    result.MapError(fun ({Context = context} as error) -> { error with Context = contextElement :: context })
 
   /// <summary>
   /// Expands on the error context created earlier by the <c>WithContext</c> function.
   /// </summary>
   [<Extension>]
-  static member WithContext (result:Result<'a, 'b>, contextStr) = 
-    result.MapError(fun e -> { Error = e; Context = [contextStr] })
+  static member WithContext (result:Result<'a, 'b>, contextElement) = 
+    result.MapError(fun e -> { Error = e; Context = [contextElement] })

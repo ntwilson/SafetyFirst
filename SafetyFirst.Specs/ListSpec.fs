@@ -12,7 +12,7 @@ let averageByFloats' (projection:_ -> float) xs = List.averageBy' projection xs
 let averageByFloats (projection:_ -> float) xs = List.averageBy projection xs
 
 [<Test>]
-let ``Safe Seq functions error whenever unsafe versions throw for all random inputs`` () =
+let ``Safe List functions error whenever unsafe versions throw for all random inputs`` () =
   errorsWheneverThrows1 averageFloats'          averageFloats
   errorsWheneverThrows2 averageByFloats'        averageByFloats
   errorsWheneverThrows2 List.chunkBySize'       List.chunkBySize
@@ -42,13 +42,14 @@ let ``Safe Seq functions error whenever unsafe versions throw for all random inp
   errorsWheneverThrows2 List.splitInto'         List.splitInto
   errorsWheneverThrows1 List.tail'              List.tail
   errorsWheneverThrows2 List.take'              List.take
+  // not testing List.transpose because the behavior is not clearly defined.  See https://github.com/dotnet/fsharp/issues/6908
   errorsWheneverThrows2 List.windowed'          List.windowed
   errorsWheneverThrows2 List.zip'               List.zip
   errorsWheneverThrows3 List.zip3'              List.zip3
 
 
 [<Test>]
-let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
+let ``Safe List functions always produce the same output as unsafe versions for all random inputs`` () =
   alwaysProduceSameOutput1 averageFloats'         averageFloats
   alwaysProduceSameOutput2 averageByFloats'       averageByFloats
   alwaysProduceSameOutput2 List.chunkBySize'      List.chunkBySize
@@ -78,6 +79,7 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutput2 List.splitInto'        List.splitInto
   alwaysProduceSameOutput1 List.tail'             List.tail
   alwaysProduceSameOutput2 List.take'             List.take
+  // not testing List.transpose because the behavior is not clearly defined.  See https://github.com/dotnet/fsharp/issues/6908
   alwaysProduceSameOutput2 List.windowed'         List.windowed
   alwaysProduceSameOutput2 List.zip'              List.zip
   alwaysProduceSameOutput3 List.zip3'             List.zip3

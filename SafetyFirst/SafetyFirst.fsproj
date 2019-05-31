@@ -12,14 +12,15 @@
     <Compile Include="ValueOption.fs" />
     <Compile Include="ValueOptionExpression.fs" />
     <Compile Include="Result.fs" />
-    <Compile Include="ResultModule.fs" />
-    <Compile Include="Conversions.fs" />
     <Compile Include="Numbers.fs" />
+    <Compile Include="Conversions.fs" />
     <Compile Include="ErrorTypes.fs" />
     <Compile Include="Match.fs" />
     <Compile Include="NonEmpty.fs" />
     <Compile Include="LazyList.fs" />
     <Compile Include="FiniteSeq.fs" />
+    <Compile Include="ResultModule.fs" />
+    <Compile Include="FiniteSeqModule.fs" />    
     <Compile Include="Seq.fs" />
     <Compile Include="List.fs" />
     <Compile Include="Array.fs" />

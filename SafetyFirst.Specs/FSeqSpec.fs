@@ -307,20 +307,29 @@ module SafeFunctions =
       (fun a xs -> safeVersion a (fseq xs))
       (fun a xs -> unsafeVersion a (List.toSeq xs))
 
+  let seqTransposeComparable xs = 
+    Array.transpose xs
+    |> Seq.map fseq |> fseq
+
+  let fseqTransposeComparable xs =
+    Seq.map fseq xs
+    |> FSeq.transpose'
+
   [<Test>]
   let ``Safe FSeq functions error whenever unsafe versions throw for all random inputs`` () =
-    errorsWheneverThrowsForFSeq1 averageFloats'          averageFloats
-    errorsWheneverThrowsForFSeq2 averageByFloats'        averageByFloats
-    errorsWheneverThrowsForFSeq2 FSeq.findBack'          Seq.findBack
-    errorsWheneverThrowsForFSeq2 FSeq.findIndexBack'     Seq.findIndexBack
-    errorsWheneverThrowsForFSeq1 FSeq.last'              Seq.last
-    errorsWheneverThrowsForFSeq1 FSeq.max'<int>          Seq.max<int>
-    errorsWheneverThrowsForFSeq2 FSeq.maxBy'<int, int>   Seq.maxBy<int, int>
-    errorsWheneverThrowsForFSeq1 FSeq.min'<int>          Seq.min<int>
-    errorsWheneverThrowsForFSeq2 FSeq.minBy'<int, int>   Seq.minBy<int, int>
-    errorsWheneverThrowsForFSeq2 FSeq.reduce'            Seq.reduce
-    errorsWheneverThrowsForFSeq2 FSeq.reduceBack'        Seq.reduceBack
-    errorsWheneverThrowsForFSeq2 FSeq.splitInto'         Seq.splitInto
+    errorsWheneverThrowsForFSeq1 averageFloats'           averageFloats
+    errorsWheneverThrowsForFSeq2 averageByFloats'         averageByFloats
+    errorsWheneverThrowsForFSeq2 FSeq.findBack'           Seq.findBack
+    errorsWheneverThrowsForFSeq2 FSeq.findIndexBack'      Seq.findIndexBack
+    errorsWheneverThrowsForFSeq1 FSeq.last'               Seq.last
+    errorsWheneverThrowsForFSeq1 FSeq.max'<int>           Seq.max<int>
+    errorsWheneverThrowsForFSeq2 FSeq.maxBy'<int, int>    Seq.maxBy<int, int>
+    errorsWheneverThrowsForFSeq1 FSeq.min'<int>           Seq.min<int>
+    errorsWheneverThrowsForFSeq2 FSeq.minBy'<int, int>    Seq.minBy<int, int>
+    errorsWheneverThrowsForFSeq2 FSeq.reduce'             Seq.reduce
+    errorsWheneverThrowsForFSeq2 FSeq.reduceBack'         Seq.reduceBack
+    errorsWheneverThrowsForFSeq2 FSeq.splitInto'          Seq.splitInto
+    errorsWheneverThrowsForSeq1  fseqTransposeComparable  seqTransposeComparable
 
 
   let alwaysProduceSameOutputForFSeq1 safeVersion unsafeVersion = 
@@ -336,7 +345,7 @@ module SafeFunctions =
     |> Result.map (FSeq.map FSeq.toArray >> FSeq.toSeq)
     
   [<Test>]
-  let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
+  let ``Safe FSeq functions always produce the same output as unsafe versions for all random inputs`` () =
     alwaysProduceSameOutputForFSeq1 averageFloats'          averageFloats
     alwaysProduceSameOutputForFSeq2 averageByFloats'        averageByFloats
     alwaysProduceSameOutputForFSeq2 FSeq.findBack'          Seq.findBack
@@ -349,6 +358,7 @@ module SafeFunctions =
     alwaysProduceSameOutputForFSeq2 FSeq.reduce'            Seq.reduce
     alwaysProduceSameOutputForFSeq2 FSeq.reduceBack'        Seq.reduceBack
     alwaysProduceSameOutputForFSeq2 fseqSplitIntoComparable Seq.splitInto
+    alwaysProduceSameOutputForSeq1  fseqTransposeComparable seqTransposeComparable
 
 
 

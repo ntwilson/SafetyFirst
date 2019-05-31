@@ -97,15 +97,16 @@ module Result =
   /// </summary>
   [<CompiledName("$notForC#_collect")>]
   let collect results =
-    Seq.fold 
-      (fun state element -> 
-        match state, element with
-        | (Ok xs, Ok x) -> Ok (Seq.append xs [x])
-        | (Ok _, Error x) -> Error (seq [x]) 
-        | (Error xs, Error x) -> Error (Seq.append xs [x])
-        | (Error xs, Ok _) -> Error xs)
-      (Ok (seq []))
-      results
+    let rec collect' state xs =
+      match (state, xs) with
+      | (Ok xs, Ok x :: tail) -> collect' (Ok (x :: xs)) tail
+      | (Ok _, Error e :: tail) -> collect' (Error [e]) tail
+      | (Error errs, Error e :: tail) -> collect' (Error (e :: errs)) tail
+      | (Error _ as errors, Ok _ :: tail) -> collect' errors tail
+      | (Ok xs, []) -> Ok <| List.rev xs
+      | (Error errs, []) -> Error <| List.rev errs
+
+    in collect' (Ok []) (Seq.toList results)
 
   let private concatResults results =
     let rec concat state rs =
@@ -455,7 +456,13 @@ module Result =
   /// <c>Result.Collect [Ok(1), Error("err"), Error("fail")]</c> would return <c>Error(["err", "fail"])</c>
   /// </summary>
   [<CompilerMessage(message="not for use from F#", messageNumber=32121, IsHidden=true)>]
-  let Collect results = collect results |> FromFs
+  let Collect (results:seq<Result<'a,'b>>) = 
+    results 
+    |> Seq.map (fun r -> r.ToFs ())
+    |> collect
+    |> Result.map fseq
+    |> Result.mapError fseq
+    |> FromFs
 
 [<AutoOpen>]
 [<Extension>]

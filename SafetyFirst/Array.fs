@@ -572,6 +572,12 @@ let transposeSafe xs =
   | _ -> Ok [||]
 
 /// <summary>
+/// Returns the transpose of the given sequence of arrays.  Returns a DifferingLengths Error if
+/// the input arrays differ in length. 
+/// </summary>
+let inline transpose' xs = transposeSafe xs
+
+/// <summary>
 /// Returns an array that yields sliding windows containing elements drawn from the input
 /// array. Each window is returned as a fresh array.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
@@ -624,8 +630,6 @@ let zip3Safe xs ys zs =
 /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
 /// </summary>
 let inline zip3' xs ys zs = zip3Safe xs ys zs
-
-//TODO: transpose, split once we use a newer FSharp.Core
 
 
 /// <summary>
@@ -896,11 +900,9 @@ module NonEmpty =
   /// Returns the transpose of the given sequence of arrays. Returns a DifferingLengths Error if
   /// the input arrays differ in length. 
   /// </summary>
-  let transposeSafe (xs : NonEmptySeq<NonEmptyArray<'a>>) : Result< NonEmptyArray<NonEmptyArray<'a>> , DifferingLengths> = 
-    let headLength = length (Seq.NonEmpty.head xs)
-    if Seq.forall (length >> (=) headLength) (Seq.NonEmpty.tail xs)
-    then Ok (Array.transpose (Seq.map (|NonEmpty|) xs) |> Array.map NonEmpty |> NonEmpty)
-    else Error transposeErr
+  let transposeSafe (NonEmpty xs : NonEmptySeq<NonEmptyArray<'a>>) : Result< NonEmptyArray<NonEmptyArray<'a>> , DifferingLengths> = 
+    transposeSafe (xs |> Seq.map (|NonEmpty|))
+    |> Result.map (Array.map NonEmpty >> NonEmpty)
 
   /// <summary>
   /// Returns the transpose of the given sequence of arrays. Returns a DifferingLengths Error if
@@ -933,12 +935,54 @@ module NonEmpty =
   let tryTake n (NonEmpty xs : NonEmptyArray<_>) = Result.toOption <| take' n xs
 
   /// <summary>
-  /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
-  /// when one sequence is exhausted any remaining elements in the other
-  /// sequence are ignored.
+  /// Returns an array that yields sliding windows containing elements drawn from the input
+  /// array. Each window is returned as a fresh array.
+  /// Returns a NegativeInput Error when <c>size</c> is not positive.
   /// </summary>
-  let zip' (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) : Result<NonEmptyArray<_>,_> = 
+  let windowedSafe size (NonEmpty xs : NonEmptyArray<_>) = 
+    if size > 0 
+    then Ok <| Array.windowed size xs
+    else Error <| windowedErr size
+
+  /// <summary>
+  /// Returns an array that yields sliding windows containing elements drawn from the input
+  /// array. Each window is returned as a fresh array.
+  /// Returns a NegativeInput Error when <c>size</c> is not positive.
+  /// </summary>
+  let inline windowed' size xs = windowedSafe size xs
+
+  /// <summary>
+  /// Returns an array that yields sliding windows containing elements drawn from the input
+  /// array. Each window is returned as a fresh array.
+  /// Same as <c>Array.NonEmpty.windowed</c>, but restricts the input to a PositiveInt
+  /// </summary>
+  let window (PositiveInt size) (NonEmpty xs : NonEmptyArray<_>) = Array.windowed size xs
+
+  /// <summary>
+  /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let zipSafe (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) : Result<NonEmptyArray<_>,_> = 
     NonEmpty <!> zip' xs ys
+
+  /// <summary>
+  /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let inline zip' xs ys = zipSafe xs ys
+
+  /// <summary>
+  /// Combines the three arrays into an array of triples. The arrays must have equal lengths.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let zip3Safe (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) (NonEmpty zs : NonEmptyArray<_>) : Result<NonEmptyArray<_>,_> = 
+    NonEmpty <!> zip3Safe xs ys zs
+
+  /// <summary>
+  /// Combines the three arrays into an array of triples. The arrays must have equal lengths.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let inline zip3' xs ys zs = zip3Safe xs ys zs
 
   /// <summary>
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
