@@ -37,7 +37,7 @@ let inline averageBy' selector xs = averageBySafe selector xs
 
 /// <summary>
 /// Divides the input list into chunks of size at most <c>size</c>.
-/// Returns a NegativeInput Error if the <c>size</c> is less than zero.
+/// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
 let chunkBySizeSafe size xs =
   if size <= 0 
@@ -46,7 +46,7 @@ let chunkBySizeSafe size xs =
 
 /// <summary>
 /// Divides the input list into chunks of size at most <c>size</c>.
-/// Returns a NegativeInput Error if the <c>size</c> is less than zero.
+/// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
@@ -811,6 +811,18 @@ module NonEmpty =
   let collect (f : 'a -> NonEmptyList<'b>) (NonEmpty xs : NonEmptyList<'a>) : NonEmptyList<'b> = 
     let g = f >> (|NonEmpty|)
     NonEmpty (List.collect g xs)
+
+  /// <summary>
+  /// Returns a list that contains no duplicate entries according to generic hash and equality comparisons on the entries. 
+  /// If an element occurs multiple times in the list then the later occurrences are discarded.
+  /// </summary>
+  let distinct (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty <| List.distinct xs
+
+  /// <summary>
+  /// Returns a list that contains no duplicate entries according to the generic hash and equality comparisons on the keys returned by the given key-generating function. 
+  /// If an element occurs multiple times in the list then the later occurrences are discarded.
+  /// </summary>
+  let distinctBy projection (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty <| List.distinctBy projection xs
 
   /// <summary>
   /// O(n), where n is count. Return the list which will remove at most 'n' elements of

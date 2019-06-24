@@ -106,7 +106,7 @@ module FSeqBuilder =
   /// for whether or not a seq is infinite, so this is more of an assertion of the programmer
   /// that this particular seq is finite.
   /// </summary>
-  let fseq (xs:_ seq) = FiniteSeq xs
+  let fseq (xs:_ seq) : _ fseq = FiniteSeq xs
   let (|FiniteSeq|) (xs:_ fseq) = xs.Values
   let (|FSeq|) (xs:_ fseq) = xs.Values
 
