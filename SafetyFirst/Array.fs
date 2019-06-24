@@ -38,7 +38,7 @@ let inline averageBy' selector xs = averageBySafe selector xs
 
 /// <summary>
 /// Divides the input array into chunks of size at most <c>size</c>.
-/// Returns a NegativeInput Error if the <c>size</c> is less than zero.
+/// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
 let chunkBySizeSafe size xs =
   if size <= 0 
@@ -47,7 +47,7 @@ let chunkBySizeSafe size xs =
 
 /// <summary>
 /// Divides the input array into chunks of size at most <c>size</c>.
-/// Returns a NegativeInput Error if the <c>size</c> is less than zero.
+/// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
@@ -831,6 +831,18 @@ module NonEmpty =
   /// Applies a key-generating function to each element of an array and returns an array yielding unique keys and their number of occurrences in the original array.
   /// </summary>
   let inline countBy projection (NonEmpty xs : NonEmptyArray<_>) = Array.countBy projection xs
+
+  /// <summary>
+  /// Returns an array that contains no duplicate entries according to generic hash and equality comparisons on the entries. 
+  /// If an element occurs multiple times in the array then the later occurrences are discarded.
+  /// </summary>
+  let distinct (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty <| Array.distinct xs
+
+  /// <summary>
+  /// Returns an array that contains no duplicate entries according to the generic hash and equality comparisons on the keys returned by the given key-generating function. 
+  /// If an element occurs multiple times in the array then the later occurrences are discarded.
+  /// </summary>
+  let distinctBy projection (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty <| Array.distinctBy projection xs
 
   /// <summary>
   /// O(n), where n is count. Return the array which will remove at most 'n' elements of

@@ -9,14 +9,14 @@ module FiniteSeq =
   /// <summary>
   /// Wraps the two given enumerations as a single concatenated enumeration.
   /// </summary>
-  let inline append (FSeq xs) (FSeq ys) = fseq (LazyList.append xs ys)
+  let inline append (FSeq xs : FiniteSeq<_>) (FSeq ys : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.append xs ys)
 
   /// <summary>
   /// Returns the average of the elements in the sequence.
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
-  let inline averageSafe (xs : _ fseq) = 
+  let inline averageSafe (xs : FiniteSeq<_>) = 
     if Seq.isEmpty xs 
     then Error <| avgErr ()
     else Ok <| Seq.average xs
@@ -33,7 +33,7 @@ module FiniteSeq =
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the generated type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
-  let inline averageBySafe projection (xs : _ fseq) = 
+  let inline averageBySafe projection (xs : FiniteSeq<_>) = 
     if Seq.isEmpty xs
     then Error <| avgErr ()
     else Ok <| Seq.averageBy projection xs
@@ -52,12 +52,33 @@ module FiniteSeq =
   /// However, individual IEnumerator values generated from the returned sequence should 
   /// not be accessed concurrently.
   /// </summary>
-  let choose chooser (source : _ fseq) = fseq (Seq.choose chooser source)
+  let choose chooser (source : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.choose chooser source)
+    
+  /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let chunkBySizeSafe size (xs : FiniteSeq<_>) : Result<FiniteSeq<_>, _> =
+    if size <= 0 
+    then Error chunkErr
+    else Seq.chunkBySize size xs |> fseq |> Ok
+
+  /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let inline chunkBySize' size xs = chunkBySizeSafe size xs
+
+  /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
+  /// </summary>
+  let chunksOf (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq <| Seq.chunkBySize size xs
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
   /// </summary>
-  let inline concat (FSeq xs : FiniteSeq<FiniteSeq<'a>>) = fseq (xs |> LazyList.map (|FSeq|) |> LazyList.concat)
+  let inline concat (FSeq xs : FiniteSeq<FiniteSeq<'a>>) : FiniteSeq<_> = fseq (xs |> LazyList.map (|FSeq|) |> LazyList.concat)
 
   /// <summary>
   /// Tests if the sequence contains the specified element.
@@ -68,7 +89,7 @@ module FiniteSeq =
   /// Applies the given function to each element of the sequence and concatenates all the results.
   /// Returned sequence is lazy, effects are delayed until it is enumerated.
   /// </summary>
-  let inline collect (f : 'a -> FiniteSeq<'b>) (FSeq xs : FiniteSeq<'a>) = 
+  let inline collect (f : 'a -> FiniteSeq<'b>) (FSeq xs : FiniteSeq<'a>) : FiniteSeq<_> = 
     let g = f >> (|FSeq|)
     fseq (xs |> LazyList.map g |> LazyList.concat)
 
@@ -76,19 +97,29 @@ module FiniteSeq =
   /// O(1). Return a new list which contains the given item followed by the
   /// given list.
   /// </summary>
-  let cons head (FSeq xs) = fseq (LazyList.cons head xs)
+  let cons head (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.cons head xs)
 
   /// <summary>
   /// Applies a key-generating function to each element of a sequence and returns a sequence yielding unique keys and their number of occurrences in the original sequence.
   /// Note that this function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// </summary>
-  let countBy projection (xs : FiniteSeq<_>) = fseq <| Seq.countBy projection xs
+  let countBy projection (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq <| Seq.countBy projection xs
+
+  /// <summary>
+  /// Returns a sequence that contains no duplicate entries according to generic hash and equality comparisons on the entries. If an element occurs multiple times in the sequence then the later occurrences are discarded.
+  /// </summary>
+  let distinct (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq <| Seq.distinct xs
+
+  /// <summary>
+  /// Returns a sequence that contains no duplicate entries according to the generic hash and equality comparisons on the keys returned by the given key-generating function. If an element occurs multiple times in the sequence then the later occurrences are discarded.
+  /// </summary>
+  let distinctBy projection (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq <| Seq.distinctBy projection xs
 
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will remove of at most 'n' elements of
   /// the input list.
   /// </summary>
-  let inline drop n (FSeq xs) = fseq (LazyList.drop n xs)
+  let inline drop n (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.drop n xs)
 
   /// <summary>
   /// O(n), where n is count. Return the seq which will remove at most 'n' elements of
@@ -103,7 +134,7 @@ module FiniteSeq =
   /// <summary>
   /// O(1). Evaluates to the sequence that contains no items
   /// </summary>
-  let empty<'a> = fseq (LazyList.empty<'a>)
+  let empty<'a> : FiniteSeq<_> = fseq (LazyList.empty<'a>)
 
   /// <summary>
   /// Tests if any element of the sequence satisfies the given predicate.
@@ -116,7 +147,7 @@ module FiniteSeq =
   /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
   /// then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
-  let inline fold f initialState (FSeq xs) = LazyList.fold f initialState xs
+  let inline fold f initialState (FSeq xs : FiniteSeq<_>) = LazyList.fold f initialState xs
 
   /// <summary>
   /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
@@ -128,13 +159,13 @@ module FiniteSeq =
   /// Returns a new collection containing only the elements of the collection
   /// for which the given predicate returns "true". This is a synonym for Seq.where.
   /// </summary>
-  let inline filter f (FSeq xs) = fseq (LazyList.filter f xs)
+  let inline filter f (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.filter f xs)
 
   /// <summary>
   /// Returns the first element for which the given function returns True.
   /// Return None if no such element exists.
   /// </summary>
-  let inline tryFind predicate (FSeq xs) = LazyList.tryFind predicate xs
+  let inline tryFind predicate (FSeq xs : FiniteSeq<_>) = LazyList.tryFind predicate xs
 
   /// <summary>
   /// Returns the last element for which the given function returns True. Return None if no such element exists.
@@ -170,7 +201,7 @@ module FiniteSeq =
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// <summary/>
-  let findBackSafe predicate (xs : _ fseq) = 
+  let findBackSafe predicate (xs : FiniteSeq<_>) = 
     Seq.tryFindBack predicate xs |> Result.ofOption findErr
 
   /// <summary>
@@ -182,19 +213,19 @@ module FiniteSeq =
   /// <summary>
   /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
   /// </summary>
-  let findIndexSafe predicate (xs : _ fseq) =
+  let findIndexSafe predicate (xs : FiniteSeq<_>) =
     Seq.tryFindIndex predicate xs |> Result.ofOption findErr
 
   /// <summary>
   /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
   /// </summary>
-  let inline findIndex' predicate (xs : _ fseq) = findIndexSafe predicate xs
+  let inline findIndex' predicate (xs : FiniteSeq<_>) = findIndexSafe predicate xs
 
   /// <summary>
   /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
-  let findIndexBackSafe predicate (xs : _ fseq) = 
+  let findIndexBackSafe predicate (xs : FiniteSeq<_>) = 
     Seq.tryFindIndexBack predicate xs |> Result.ofOption findErr
 
   /// <summary>
@@ -213,13 +244,13 @@ module FiniteSeq =
   /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
   /// </summary>
-  let inline groupBy projection (xs : FiniteSeq<_>) = 
+  let inline groupBy projection (xs : FiniteSeq<_>) : FiniteSeq<(_ * FiniteSeq<_>)> = 
     Seq.groupBy projection xs |> Seq.map (fun (key, value) -> (key, fseq value)) |> fseq
 
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
-  let tryHead (FSeq xs) = LazyList.head xs
+  let tryHead (FSeq xs : FiniteSeq<_>) = LazyList.head xs
 
   /// <summary>
   /// Returns the first element of the sequence.
@@ -234,12 +265,12 @@ module FiniteSeq =
   /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
-  let indexed (xs : _ fseq) = fseq (Seq.indexed xs)
+  let indexed (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.indexed xs)
 
   /// <summary>
   /// Returns true if the sequence contains no elements, false otherwise.
   /// </summary>
-  let inline isEmpty (FSeq xs) = LazyList.isEmpty xs
+  let inline isEmpty (FSeq xs : FiniteSeq<_>) = LazyList.isEmpty xs
 
   /// <summary>
   /// Applies the given function to each element of the collection.
@@ -254,7 +285,7 @@ module FiniteSeq =
   /// <summary>
   /// Returns the last element of the sequence. Return an Error if no such element exists.
   /// </summary>
-  let lastSafe (xs : _ fseq) = Seq.tryLast xs |> Option.toResult lastErr
+  let lastSafe (xs : FiniteSeq<_>) = Seq.tryLast xs |> Option.toResult lastErr
 
   /// <summary>
   /// Returns the last element of the sequence. Return an Error if no such element exists.
@@ -269,7 +300,7 @@ module FiniteSeq =
   /// <summary>
   /// Returns the length of the sequence
   /// </summary>
-  let inline length (xs : _ fseq) = xs.Length
+  let inline length (xs : FiniteSeq<_>) = xs.Length
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
@@ -277,14 +308,14 @@ module FiniteSeq =
   /// as elements are demanded using the MoveNext method on enumerators retrieved from the
   /// object.
   /// </summary>
-  let inline map f (FSeq xs) = fseq (LazyList.map f xs)
+  let inline map f (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.map f xs)
   
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
   /// to each of the elements of the collection. The integer index passed to the
   /// function indicates the index (from 0) of element being transformed.
   /// </summary>
-  let mapi f (FSeq xs) =
+  let mapi f (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> =
     fseq (LazyList.map2 f (LazyList.ofSeq (Seq.initInfinite id)) xs)
 
   /// <summary>
@@ -292,7 +323,7 @@ module FiniteSeq =
   /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other sequence are ignored.
   /// </summary>
-  let inline map2 f (FSeq xs) (FSeq ys) = 
+  let inline map2 f (FSeq xs : FiniteSeq<_>) (FSeq ys : FiniteSeq<_>) : FiniteSeq<_> = 
     fseq (LazyList.map2 f xs ys)
 
   /// <summary>
@@ -323,19 +354,23 @@ module FiniteSeq =
   /// Combines map and fold. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
   /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline mapFold mapping initialState (xs : FiniteSeq<_>) = Seq.mapFold mapping initialState xs
+  let inline mapFold mapping initialState (xs : FiniteSeq<_>) : (FiniteSeq<_> * _) = 
+    let (accumulator, result) = Seq.mapFold mapping initialState xs
+    in (fseq accumulator, result)
 
   /// <summary>
   /// Combines map and foldBack. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
   /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline mapFoldBack mapping (xs : FiniteSeq<_>) initialState = Seq.mapFoldBack mapping xs initialState
+  let inline mapFoldBack mapping (xs : FiniteSeq<_>) initialState : (FiniteSeq<_> * _) = 
+    let (accumulator, result) = Seq.mapFoldBack mapping xs initialState
+    in (fseq accumulator, result)
 
   /// <summary>
   /// Returns the greatest of all elements of the sequence, compared via Operators.max.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let maxSafe<'a when 'a : comparison> (xs : 'a fseq) = 
+  let maxSafe<'a when 'a : comparison> (xs : FiniteSeq<'a>) = 
     if Seq.isEmpty xs 
     then Error maxErr
     else Ok <| Seq.max xs
@@ -344,13 +379,13 @@ module FiniteSeq =
   /// Returns the greatest of all elements of the sequence, compared via Operators.max.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let inline max'<'a when 'a : comparison> (xs : 'a fseq) = maxSafe xs
+  let inline max'<'a when 'a : comparison> (xs : FiniteSeq<'a>) = maxSafe xs
 
   /// <summary>
   /// Returns the greatest of all elements of the sequence, compared via Operators.max on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let maxBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : 'a fseq) = 
+  let maxBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : FiniteSeq<'a>) = 
     if Seq.isEmpty xs 
     then Error maxErr
     else Ok <| Seq.maxBy projection xs
@@ -359,13 +394,13 @@ module FiniteSeq =
   /// Returns the greatest of all elements of the sequence, compared via Operators.max on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let inline maxBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : 'a fseq) = maxBySafe projection xs
+  let inline maxBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : FiniteSeq<'a>) = maxBySafe projection xs
 
   /// <summary>
   /// Returns the lowest of all elements of the sequence, compared via Operators.min.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let minSafe<'a when 'a : comparison> (xs : 'a fseq) = 
+  let minSafe<'a when 'a : comparison> (xs : FiniteSeq<'a>) = 
     if Seq.isEmpty xs 
     then Error minErr
     else Ok <| Seq.min xs
@@ -374,13 +409,13 @@ module FiniteSeq =
   /// Returns the lowest of all elements of the sequence, compared via Operators.min.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let inline min'<'a when 'a : comparison> (xs : 'a fseq) = minSafe xs
+  let inline min'<'a when 'a : comparison> (xs : FiniteSeq<'a>) = minSafe xs
 
   /// <summary>
   /// Returns the lowest of all elements of the sequence, compared via Operators.min on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let minBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : 'a fseq) = 
+  let minBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : FiniteSeq<'a>) = 
     if Seq.isEmpty xs 
     then Error minErr
     else Ok <| Seq.minBy projection xs
@@ -389,30 +424,30 @@ module FiniteSeq =
   /// Returns the lowest of all elements of the sequence, compared via Operators.min on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
-  let inline minBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : 'a fseq) = minBySafe projection xs
+  let inline minBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : FiniteSeq<'a>) = minBySafe projection xs
 
   /// <summary>
   /// Views the given array as a finite sequence.
   /// </summary>
-  let inline ofArray xs = fseq (LazyList.ofArray xs)
+  let inline ofArray xs : FiniteSeq<_> = fseq (LazyList.ofArray xs)
   
   /// <summary>
   /// Views the given seq as a finite sequence.  There is no runtime validation
   /// that the seq is actually finite, so this is a programmer assertion that the
   /// seq will be finite.
   /// </summary>
-  let inline ofSeq xs = fseq (LazyList.ofSeq xs) 
+  let inline ofSeq xs : FiniteSeq<_> = fseq (LazyList.ofSeq xs) 
 
   /// <summary>
   /// Views the given list as a finite sequence.  
   /// </summary>
-  let inline ofList xs = fseq (LazyList.ofList xs)
+  let inline ofList xs : FiniteSeq<_> = fseq (LazyList.ofList xs)
 
   /// <summary>
   /// Returns a sequence of each element in the input sequence and its predecessor, with the
   /// exception of the first element which is only returned as the predecessor of the second element.
   /// </summary>
-  let pairwise (FSeq xs) = fseq (Seq.pairwise xs)
+  let pairwise (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.pairwise xs)
 
   /// <summary>
   /// Applies a function to each element of the sequence, threading an accumulator argument
@@ -422,7 +457,7 @@ module FiniteSeq =
   /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f (f (...(f i0 i1)) iN-1) iN</c>.
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
-  let reduceSafe f (FSeq xs) = 
+  let reduceSafe f (FSeq xs : FiniteSeq<_>) = 
     match LazyList.uncons xs with
     | Some (head, tail) -> Ok <| LazyList.fold f head tail
     | None -> Error reduceErr
@@ -453,7 +488,7 @@ module FiniteSeq =
   /// This function consumes the whole input sequence before returning the result.
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
-  let reduceBackSafe f (xs : _ fseq) = 
+  let reduceBackSafe f (xs : FiniteSeq<_>) = 
     if Seq.isEmpty xs
     then Error reduceErr
     else Ok <| Seq.reduceBack f xs
@@ -469,60 +504,60 @@ module FiniteSeq =
   /// <summary>
   /// Returns a new sequence with the elements in reverse order.
   /// </summary>
-  let inline rev (FSeq xs) = fseq (LazyList.rev xs)
+  let inline rev (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.rev xs)
 
   /// <summary>
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
   /// </summary>
-  let inline scan f initialState (FSeq xs) = fseq (LazyList.scan f initialState xs)
+  let inline scan f initialState (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.scan f initialState xs)
 
   /// <summary>
   /// Like foldBack, but returns the sequence of intermediary and final results.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. 
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline scanBack f (xs : FiniteSeq<_>) initialState = fseq (Seq.scanBack f xs initialState)
+  let inline scanBack f (xs : FiniteSeq<_>) initialState : FiniteSeq<_> = fseq (Seq.scanBack f xs initialState)
 
   /// <summary>
   /// Yields a sequence ordered by keys.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline sort (xs : FiniteSeq<_>) = fseq (Seq.sort xs)
+  let inline sort (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.sort xs)
 
   /// <summary>
   /// Applies a key-generating function to each element of a sequence and yield a sequence ordered by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved.
   /// </summary>
-  let inline sortBy projection (xs : FiniteSeq<_>) = fseq (Seq.sortBy projection xs)
+  let inline sortBy projection (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.sortBy projection xs)
 
   /// <summary>
   /// Yields a sequence ordered descending by keys.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved.
   /// </summary>
-  let inline sortDescending (xs : FiniteSeq<_>) = fseq (Seq.sortDescending xs)
+  let inline sortDescending (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.sortDescending xs)
 
   /// <summary>
   /// Applies a key-generating function to each element of a sequence and yield a sequence ordered descending by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved.
   /// </summary>
-  let inline sortByDescending projection (xs : FiniteSeq<_>) = fseq (Seq.sortByDescending projection xs)
+  let inline sortByDescending projection (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.sortByDescending projection xs)
 
   /// <summary>
   /// Yields a sequence ordered using the given comparison function.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline sortWith comparer (xs : FiniteSeq<_>) = fseq (Seq.sortWith comparer xs)
+  let inline sortWith comparer (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.sortWith comparer xs)
 
   /// <summary>
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
-  let trySkip n (FSeq xs) = Option.map fseq (LazyList.skip n xs)
+  let trySkip n (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.skip n xs)
 
   /// <summary>
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
@@ -551,14 +586,14 @@ module FiniteSeq =
   /// Returns a sequence that, when iterated, skips elements of the underlying sequence while the
   /// given predicate returns True, and then yields the remaining elements of the sequence.
   /// </summary>
-  let skipWhile predicate (FSeq xs) = 
+  let skipWhile predicate (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = 
     fseq (Seq.skipWhile predicate xs)
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let splitIntoN (PositiveInt n) (xs : _ fseq) = Seq.splitInto n xs |> Seq.map fseq |> fseq
+  let splitIntoN (PositiveInt n) (xs : FiniteSeq<_>) : FiniteSeq<FiniteSeq<_>> = Seq.splitInto n xs |> Seq.map fseq |> fseq
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
@@ -593,13 +628,13 @@ module FiniteSeq =
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
-  let tryTail (FSeq xs) = Option.map fseq (LazyList.tail xs)
+  let tryTail (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.tail xs)
   
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
-  let tailSafe xs = tryTail xs |> Result.ofOption tailErr
+  let tailSafe xs  = tryTail xs |> Result.ofOption tailErr
 
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
@@ -611,7 +646,7 @@ module FiniteSeq =
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   /// </summary>
-  let tryTake n (FSeq xs) = Option.map fseq (LazyList.take n xs)
+  let tryTake n (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.take n xs)
 
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
@@ -631,36 +666,36 @@ module FiniteSeq =
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
   /// given predicate returns True, and then returns no further elements.
   /// </summary>
-  let takeWhile predicate (FSeq xs) =
+  let takeWhile predicate (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> =
     fseq (Seq.takeWhile predicate xs)
 
   /// <summary>
   /// Builds an array from the given collection.
   /// </summary>
-  let inline toArray (FSeq xs) = LazyList.toArray xs
+  let inline toArray (FSeq xs : FiniteSeq<_>) = LazyList.toArray xs
 
   /// <summary>
   /// Builds a List from the given collection.
   /// </summary>
-  let inline toList (FSeq xs) = LazyList.toList xs
+  let inline toList (FSeq xs : FiniteSeq<_>) = LazyList.toList xs
   
   /// <summary>
   /// Views the given FiniteSeq as a sequence.
   /// </summary>
-  let inline toSeq (FSeq xs) : _ seq = upcast xs
+  let inline toSeq (FSeq xs : FiniteSeq<_>) : _ seq = upcast xs
 
   /// <summary>
   /// Returns the transpose of the given sequence of sequences.
   /// This function works with non-square inputs by just skipping over
   /// any sublists that aren't long enough.
   /// </summary>
-  let transpose (xs : seq<fseq<_>>) = Seq.transpose xs |> Seq.map fseq |> fseq
+  let transpose (xs : seq<FiniteSeq<_>>) : FiniteSeq<FiniteSeq<_>> = Seq.transpose xs |> Seq.map fseq |> fseq
 
   /// <summary>
   /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
   /// the input sequences differ in length. 
   /// </summary>
-  let transposeSafe xs = 
+  let transposeSafe (xs : seq<FiniteSeq<_>>) : Result<FiniteSeq<FiniteSeq<_>>, _> = 
     match xs with 
     | SeqOneOrMore (head, tail) -> 
       let headLength = length head
@@ -678,12 +713,12 @@ module FiniteSeq =
   /// <summary>
   /// Returns a sequence that when enumerated returns at most N elements.
   /// </summary>
-  let truncate n (FSeq xs) = fseq (LazyList.ofSeq (Seq.truncate n xs))  
+  let truncate n (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.ofSeq (Seq.truncate n xs))  
 
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
-  let unconsSafe (FSeq xs) = 
+  let unconsSafe (FSeq xs : FiniteSeq<_>) : Result<(_ * FiniteSeq<_>), _> =
     match LazyList.uncons xs with
     | Some (head, tail) -> Ok (head, fseq tail)
     | None -> Error unconsErr
@@ -702,7 +737,7 @@ module FiniteSeq =
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Same as Seq.windowed but takes the size in as a <c>PositiveInt</c>.
   /// </summary>
-  let inline window (PositiveInt size) (xs : _ fseq) = fseq (Seq.windowed size xs |> Seq.map fseq)
+  let inline window (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<FiniteSeq<_>> = fseq (Seq.windowed size xs |> Seq.map fseq)
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
@@ -724,7 +759,7 @@ module FiniteSeq =
   /// when one sequence is exhausted any remaining elements in the other
   /// sequence are ignored.
   /// </summary>
-  let inline zip (FSeq xs) (FSeq ys) = fseq (LazyList.zip xs ys)
+  let inline zip (FSeq xs : FiniteSeq<_>) (FSeq ys : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.zip xs ys)
 
   /// <summary>
   /// Combines the two sequences into a list of pairs. 
@@ -751,7 +786,7 @@ module FiniteSeq =
   /// Combines the three sequences into a list of triples.  The three sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other sequences are ignored.
   /// </summary>
-  let inline zip3 (xs : _ fseq) (ys : _ fseq) (zs : _ fseq) = fseq (Seq.zip3 xs ys zs)
+  let inline zip3 (xs : FiniteSeq<_>) (ys : FiniteSeq<_>) (zs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.zip3 xs ys zs)
 
   /// <summary>
   /// Combines the three sequences into a list of triples. 
@@ -780,40 +815,40 @@ module FSeq =
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
-  let inline averageSafe xs = FiniteSeq.averageSafe xs
+  let inline averageSafe (xs : _ fseq) = FiniteSeq.averageSafe xs
 
   /// <summary>
   /// Returns the average of the elements in the sequence.
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
-  let inline average' xs = FiniteSeq.average' xs
+  let inline average' (xs : _ fseq) = FiniteSeq.average' xs
 
   /// <summary>
   /// Returns the average of the results generated by applying the function to each element of the sequence.
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the generated type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
-  let inline averageBySafe projection xs = FiniteSeq.averageBySafe projection xs
+  let inline averageBySafe projection (xs : _ fseq) = FiniteSeq.averageBySafe projection xs
 
   /// <summary>
   /// Returns the average of the results generated by applying the function to each element of the sequence.
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the generated type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
-  let inline averageBy' projection xs = FiniteSeq.averageBy' projection xs
+  let inline averageBy' projection xs = averageBySafe projection xs
 
   /// <summary>
   /// Returns the length of the sequence
   /// </summary>
-  let inline length xs = FiniteSeq.length xs
+  let inline length (xs : _ fseq) = FiniteSeq.length xs
 
   /// <summary>
   /// Applies a function to each element of the collection, threading an accumulator argument
   /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
   /// then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
-  let inline fold f initialState xs = FiniteSeq.fold f initialState xs
+  let inline fold f initialState (xs : _ fseq) = FiniteSeq.fold f initialState xs
 
   /// <summary>
   /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
@@ -824,17 +859,17 @@ module FSeq =
   /// <summary>
   /// Returns true if the sequence contains no elements, false otherwise.
   /// </summary>
-  let inline isEmpty xs = FiniteSeq.isEmpty xs
+  let inline isEmpty (xs : _ fseq) = FiniteSeq.isEmpty xs
   
   /// <summary>
   /// Returns the last element of the sequence. Return an Error if no such element exists.
   /// </summary>
-  let inline lastSafe xs = FiniteSeq.lastSafe xs
+  let inline lastSafe (xs : _ fseq) = FiniteSeq.lastSafe xs
 
   /// <summary>
   /// Returns the last element of the sequence. Return an Error if no such element exists.
   /// </summary>
-  let inline last' xs = FiniteSeq.last' xs
+  let inline last' xs = lastSafe xs
 
   /// <summary>
   /// Returns the last element of the sequence. Return None if no such element exists.
@@ -848,7 +883,7 @@ module FSeq =
   /// Return the final result.  
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
-  let inline reduceSafe f xs = FiniteSeq.reduceSafe f xs
+  let inline reduceSafe f (xs : _ fseq) = FiniteSeq.reduceSafe f xs
 
   /// <summary>
   /// Applies a function to each element of the sequence, threading an accumulator argument
@@ -857,7 +892,7 @@ module FSeq =
   /// Return the final result.  
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
-  let inline reduce' f xs = FiniteSeq.reduce' f xs
+  let inline reduce' f xs = reduceSafe f xs
 
   /// <summary>
   /// Applies a function to each element of the sequence, threading an accumulator argument
@@ -866,7 +901,7 @@ module FSeq =
   /// Return the final result.  
   /// Returns None if the sequence is empty
   /// </summary>
-  let inline tryReduce f xs = FiniteSeq.tryReduce f xs
+  let inline tryReduce f (xs : _ fseq) = FiniteSeq.tryReduce f xs
 
   /// <summary>
   /// Applies a function to each element of the sequence, starting from the end, threading an accumulator argument through the computation. 
@@ -874,7 +909,7 @@ module FSeq =
   /// This function consumes the whole input sequence before returning the result.
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
-  let inline reduceBackSafe f xs = FiniteSeq.reduceBackSafe f xs
+  let inline reduceBackSafe f (xs : _ fseq) = FiniteSeq.reduceBackSafe f xs
 
   /// <summary>
   /// Applies a function to each element of the sequence, starting from the end, threading an accumulator argument through the computation. 
@@ -882,7 +917,7 @@ module FSeq =
   /// This function consumes the whole input sequence before returning the result.
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
-  let inline reduceBack' f xs = FiniteSeq.reduceBack' f xs
+  let inline reduceBack' f xs = reduceBackSafe f xs
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
@@ -890,32 +925,32 @@ module FSeq =
   /// as elements are demanded using the MoveNext method on enumerators retrieved from the
   /// object.
   /// </summary>
-  let inline map f xs = FiniteSeq.map f xs
+  let inline map f (xs : _ fseq) : _ fseq = FiniteSeq.map f xs
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
   /// to each of the elements of the collection. The integer index passed to the
   /// function indicates the index (from 0) of element being transformed.
   /// </summary>
-  let inline mapi f xs = FiniteSeq.mapi f xs
+  let inline mapi f (xs : _ fseq) : _ fseq = FiniteSeq.mapi f xs
 
   /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise. The two sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other sequence are ignored.
   /// </summary>
-  let inline map2 f xs ys = FiniteSeq.map2 f xs ys
+  let inline map2 f (xs : _ fseq) (ys : _ fseq) : _ fseq = FiniteSeq.map2 f xs ys
 
   /// <summary>
   /// Returns a new collection containing only the elements of the collection
   /// for which the given predicate returns "true". This is a synonym for Seq.where.
   /// </summary>
-  let inline filter f xs = FiniteSeq.filter f xs
+  let inline filter f (xs : _ fseq) : _ fseq = FiniteSeq.filter f xs
 
   /// <summary>
   /// Wraps the two given enumerations as a single concatenated enumeration.
   /// </summary>
-  let inline append xs ys = FiniteSeq.append xs ys
+  let inline append (xs : _ fseq) (ys : _ fseq) : _ fseq = FiniteSeq.append xs ys
 
   /// <summary>
   /// Applies the given function to each element of the list. Return the list comprised of 
@@ -924,12 +959,30 @@ module FSeq =
   /// However, individual IEnumerator values generated from the returned sequence should 
   /// not be accessed concurrently.
   /// </summary>
-  let inline choose chooser source = FiniteSeq.choose chooser source
+  let inline choose chooser (source : _ fseq) : _ fseq = FiniteSeq.choose chooser source
+    
+  /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let inline chunkBySizeSafe size (xs : _ fseq) : Result<_ fseq, _> = FiniteSeq.chunkBySizeSafe size xs
+
+  /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let inline chunkBySize' size xs : Result<_ fseq, _> = chunkBySizeSafe size xs
+
+  /// <summary>
+  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
+  /// </summary>
+  let chunksOf (PositiveInt size) (xs : _ fseq) : _ fseq = fseq <| Seq.chunkBySize size xs
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
   /// </summary>
-  let inline concat xs = FiniteSeq.concat xs
+  let inline concat (xs : _ fseq fseq) : _ fseq = FiniteSeq.concat xs
 
   /// <summary>
   /// Tests if the sequence contains the specified element.
@@ -940,37 +993,47 @@ module FSeq =
   /// Applies a key-generating function to each element of a sequence and returns a sequence yielding unique keys and their number of occurrences in the original sequence.
   /// Note that this function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// </summary>
-  let countBy projection (xs : _ fseq) = FiniteSeq.countBy projection xs
+  let countBy projection (xs : _ fseq) : _ fseq = FiniteSeq.countBy projection xs
 
   /// <summary>
   /// Applies the given function to each element of the sequence and concatenates all the results.
   /// Returned sequence is lazy, effects are delayed until it is enumerated.
   /// </summary>
-  let inline collect xs = FiniteSeq.collect xs
+  let inline collect (f : _ -> _ fseq) (xs : _ fseq) : _ fseq = FiniteSeq.collect f xs
 
   /// <summary>
   /// O(1). Return a new list which contains the given item followed by the
   /// given list.
   /// </summary>
-  let inline cons head xs = FiniteSeq.cons head xs
+  let inline cons head (xs : _ fseq) : _ fseq = FiniteSeq.cons head xs
+
+  /// <summary>
+  /// Returns a sequence that contains no duplicate entries according to generic hash and equality comparisons on the entries. If an element occurs multiple times in the sequence then the later occurrences are discarded.
+  /// </summary>
+  let distinct (xs : _ fseq) : _ fseq = fseq <| Seq.distinct xs
+
+  /// <summary>
+  /// Returns a sequence that contains no duplicate entries according to the generic hash and equality comparisons on the keys returned by the given key-generating function. If an element occurs multiple times in the sequence then the later occurrences are discarded.
+  /// </summary>
+  let distinctBy projection (xs : _ fseq) : _ fseq = fseq <| Seq.distinctBy projection xs
 
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will remove of at most 'n' elements of
   /// the input list.
   /// </summary>
-  let inline drop n xs = FiniteSeq.drop n xs
+  let inline drop n (xs : _ fseq) : _ fseq = FiniteSeq.drop n xs
 
   /// <summary>
   /// O(n), where n is count. Return the seq which will remove at most 'n' elements of
   /// the input seq.
   /// This function will return the input seq unaltered for negative values of 'n'.
   /// </summary>
-  let inline dropLenient n xs = FiniteSeq.dropLenient n xs
+  let inline dropLenient n (xs : _ fseq) : _ fseq = FiniteSeq.dropLenient n xs
 
   /// <summary>
   /// O(1). Evaluates to the sequence that contains no items
   /// </summary>
-  let inline empty<'a when 'a : comparison> = FiniteSeq.empty<'a>
+  let inline empty<'a when 'a : comparison> : _ fseq = FiniteSeq.empty<'a>
 
   /// <summary>
   /// Tests if any element of the sequence satisfies the given predicate.
@@ -981,103 +1044,103 @@ module FSeq =
   /// <summary>
   /// Views the given array as a finite sequence.
   /// </summary>
-  let inline ofArray xs = FiniteSeq.ofArray xs
+  let inline ofArray xs : _ fseq = FiniteSeq.ofArray xs
 
   /// <summary>
   /// Views the given seq as a finite sequence.  There is no runtime validation
   /// that the seq is actually finite, so this is a programmer assertion that the
   /// seq will be finite.
   /// </summary>
-  let inline ofSeq xs = FiniteSeq.ofSeq xs 
+  let inline ofSeq xs : _ fseq = FiniteSeq.ofSeq xs 
 
   /// <summary>
   /// Views the given list as a finite sequence.  
   /// </summary>
-  let inline ofList xs = FiniteSeq.ofList xs
+  let inline ofList xs : _ fseq = FiniteSeq.ofList xs
 
   /// <summary>
   /// Returns a sequence of each element in the input sequence and its predecessor, with the
   /// exception of the first element which is only returned as the predecessor of the second element.
   /// </summary>
-  let inline pairwise xs = FiniteSeq.pairwise xs
+  let inline pairwise xs : _ fseq = FiniteSeq.pairwise xs
 
   /// <summary>
   /// Returns a new sequence with the elements in reverse order.
   /// </summary>
-  let inline rev xs = FiniteSeq.rev xs
+  let inline rev (xs : _ fseq) : _ fseq = FiniteSeq.rev xs
 
   /// <summary>
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
   /// </summary>
-  let inline scan f initialState xs = FiniteSeq.scan f initialState xs
+  let inline scan f initialState (xs : _ fseq) : _ fseq = FiniteSeq.scan f initialState xs
 
   /// <summary>
   /// Like foldBack, but returns the sequence of intermediary and final results.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. 
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline scanBack f (xs : _ fseq) initialState = fseq (Seq.scanBack f xs initialState)
+  let inline scanBack f (xs : _ fseq) initialState : _ fseq = fseq (Seq.scanBack f xs initialState)
 
   /// <summary>
   /// Yields a sequence ordered by keys.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline sort (xs : _ fseq) = fseq (Seq.sort xs)
+  let inline sort (xs : _ fseq) : _ fseq = fseq (Seq.sort xs)
 
   /// <summary>
   /// Applies a key-generating function to each element of a sequence and yield a sequence ordered by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved.
   /// </summary>
-  let inline sortBy projection (xs : _ fseq) = fseq (Seq.sortBy projection xs)
+  let inline sortBy projection (xs : _ fseq) : _ fseq = fseq (Seq.sortBy projection xs)
 
   /// <summary>
   /// Yields a sequence ordered descending by keys.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved.
   /// </summary>
-  let inline sortDescending (xs : _ fseq) = fseq (Seq.sortDescending xs)
+  let inline sortDescending (xs : _ fseq) : _ fseq = fseq (Seq.sortDescending xs)
 
   /// <summary>
   /// Applies a key-generating function to each element of a sequence and yield a sequence ordered descending by keys. The keys are compared using generic comparison as implemented by <c>Operators.compare</c>.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved.
   /// </summary>
-  let inline sortByDescending projection (xs : _ fseq) = fseq (Seq.sortByDescending projection xs)
+  let inline sortByDescending projection (xs : _ fseq) : _ fseq = fseq (Seq.sortByDescending projection xs)
 
   /// <summary>
   /// Yields a sequence ordered using the given comparison function.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.
   /// This is a stable sort, that is the original order of equal elements is preserved. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline sortWith comparer (xs : _ fseq) = fseq (Seq.sortWith comparer xs)
+  let inline sortWith comparer (xs : _ fseq) : _ fseq = fseq (Seq.sortWith comparer xs)
 
   /// <summary>
   /// Builds an array from the given collection.
   /// </summary>
-  let inline toArray xs = FiniteSeq.toArray xs
+  let inline toArray (xs : _ fseq) = FiniteSeq.toArray xs
 
   /// <summary>
   /// Builds a List from the given collection.
   /// </summary>
-  let inline toList xs = FiniteSeq.toList xs
+  let inline toList (xs : _ fseq) = FiniteSeq.toList xs
 
   /// <summary>
   /// Views the given FiniteSeq as a sequence.
   /// </summary>
-  let inline toSeq xs = FiniteSeq.toSeq xs
+  let inline toSeq (xs : _ fseq) = FiniteSeq.toSeq xs
 
   /// <summary>
   /// Returns a sequence that when enumerated returns at most N elements.
   /// </summary>
-  let inline truncate n xs = FiniteSeq.truncate n xs
+  let inline truncate n (xs : _ fseq) : _ fseq = FiniteSeq.truncate n xs
 
   /// <summary>
   /// Returns the first element for which the given function returns True.
   /// Return None if no such element exists.
   /// </summary>
-  let inline tryFind predicate xs = FiniteSeq.tryFind predicate xs
+  let inline tryFind predicate (xs : _ fseq) = FiniteSeq.tryFind predicate xs
 
   /// <summary>
   /// Returns the last element for which the given function returns True. Return None if no such element exists.
@@ -1100,13 +1163,13 @@ module FSeq =
   /// Returns the first element for which the given function returns True.
   /// Returns a NoMatchingElement Error if no such element is found.
   /// </summary>
-  let inline findSafe predicate xs = FiniteSeq.findSafe predicate xs
+  let inline findSafe predicate (xs : _ fseq) = FiniteSeq.findSafe predicate xs
   
   /// <summary>
   /// Returns the first element for which the given function returns True.
   /// Returns a NoMatchingElement Error if no such element is found.
   /// </summary>
-  let inline find' predicate xs = FiniteSeq.find' predicate xs
+  let inline find' predicate xs = findSafe predicate xs
 
   /// <summary>
   /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
@@ -1122,25 +1185,25 @@ module FSeq =
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// <summary/>
-  let findBackSafe predicate xs = FiniteSeq.findBackSafe predicate xs
+  let findBackSafe predicate (xs : _ fseq) = FiniteSeq.findBackSafe predicate xs
 
   /// <summary>
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// <summary/>
-  let inline findBack' predicate xs = FiniteSeq.findBack' predicate xs
+  let inline findBack' predicate xs = findBackSafe predicate xs
 
   /// <summary>
   /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
-  let inline findIndexBackSafe predicate xs = FiniteSeq.findIndexBackSafe predicate xs
+  let inline findIndexBackSafe predicate (xs : _ fseq) = FiniteSeq.findIndexBackSafe predicate xs
 
   /// <summary>
   /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
-  let inline findIndexBack' predicate xs = FiniteSeq.findIndexBack' predicate xs
+  let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
   /// <summary>
   /// Tests if all elements of the sequence satisfy the given predicate.
@@ -1152,27 +1215,27 @@ module FSeq =
   /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
   /// </summary>
-  let inline groupBy projection (xs : _ fseq) = FiniteSeq.groupBy projection xs
+  let inline groupBy projection (xs : _ fseq) : (_ * _ fseq) fseq = FiniteSeq.groupBy projection xs
 
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
-  let inline tryHead xs = FiniteSeq.tryHead xs
+  let inline tryHead (xs : _ fseq) = FiniteSeq.tryHead xs
 
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
-  let inline headSafe xs = FiniteSeq.headSafe xs
+  let inline headSafe (xs : _ fseq) = FiniteSeq.headSafe xs
 
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
-  let inline head' xs = FiniteSeq.head' xs
+  let inline head' xs = headSafe xs
 
   /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
-  let inline indexed xs = FiniteSeq.indexed xs
+  let inline indexed (xs : _ fseq) : _ fseq = FiniteSeq.indexed xs
 
   /// <summary>
   /// Applies the given function to each element of the collection.
@@ -1182,40 +1245,44 @@ module FSeq =
   /// <summary>
   /// Applies the given function to each element of the collection. The integer passed to the function indicates the index of element.
   /// </summary>
-  let inline iteri action (xs : FiniteSeq<_>) = Seq.iteri action xs
+  let inline iteri action (xs : _ fseq) = Seq.iteri action xs
 
   /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// Returns None if the sequences are different lengths
   /// </summary>
-  let inline tryMap2 f xs ys = FiniteSeq.tryMap2 f xs ys 
+  let inline tryMap2 f (xs : _ fseq) (ys : _ fseq) : _ fseq option = FiniteSeq.tryMap2 f xs ys 
 
   /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
-  let inline map2Safe f xs ys = FiniteSeq.map2Safe f xs ys
+  let inline map2Safe f (xs : _ fseq) (ys : _ fseq) : Result<_ fseq, _> = FiniteSeq.map2Safe f xs ys
 
   /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
-  let inline map2' f xs ys = FiniteSeq.map2' f xs ys
+  let inline map2' f xs ys = map2Safe f xs ys
 
   /// <summary>
   /// Combines map and fold. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
   /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline mapFold mapping initialState (xs : _ fseq) = Seq.mapFold mapping initialState xs
+  let inline mapFold mapping initialState (xs : _ fseq) : (_ fseq * _) = 
+    let (accumulator, result) = Seq.mapFold mapping initialState xs
+    in (fseq accumulator, result)
 
   /// <summary>
   /// Combines map and foldBack. Builds a new collection whose elements are the results of applying the given function to each of the elements of the collection. The function is also used to accumulate a final value.
   /// This function digests the whole initial sequence as soon as it is called. This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline mapFoldBack mapping (xs : _ fseq) initialState = Seq.mapFoldBack mapping xs initialState
+  let inline mapFoldBack mapping (xs : _ fseq) initialState : (_ fseq * _) = 
+    let (accumulator, result) = Seq.mapFoldBack mapping xs initialState
+    in (fseq accumulator, result)
 
   /// <summary>
   /// Returns the greatest of all elements of the sequence, compared via Operators.max.
@@ -1269,45 +1336,45 @@ module FSeq =
   /// O(n), where n is count. Return option the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
-  let inline trySkip n xs = FiniteSeq.trySkip n xs
+  let inline trySkip n (xs : _ fseq) : _ fseq option = FiniteSeq.trySkip n xs
 
   /// <summary>
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
-  let inline skipSafe n xs = FiniteSeq.skipSafe n xs
+  let inline skipSafe n (xs : _ fseq) : Result<_ fseq, _> = FiniteSeq.skipSafe n xs
 
   /// <summary>
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
-  let inline skip' n xs = FiniteSeq.skip' n xs
+  let inline skip' n xs = skipSafe n xs
 
   /// <summary>
   /// Returns a sequence that, when iterated, skips elements of the underlying sequence while the
   /// given predicate returns True, and then yields the remaining elements of the sequence.
   /// </summary>
-  let inline skipWhile predicate xs = FiniteSeq.skipWhile predicate xs
+  let inline skipWhile predicate (xs : _ fseq) : _ fseq = FiniteSeq.skipWhile predicate xs
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline splitIntoN n xs = FiniteSeq.splitIntoN n xs
-
-  /// <summary>
-  /// Splits the input sequence into at most <c>count</c> chunks.
-  /// This function consumes the whole input sequence before yielding the first element of the result sequence.
-  /// Returns an Error if <c>count</c> is zero or negative.
-  /// </summary>
-  let inline splitIntoSafe n xs = FiniteSeq.splitIntoSafe n xs
+  let inline splitIntoN n (xs : _ fseq) : _ fseq fseq = FiniteSeq.splitIntoN n xs
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// Returns an Error if <c>count</c> is zero or negative.
   /// </summary>
-  let inline splitInto' n xs = FiniteSeq.splitInto' n xs
+  let inline splitIntoSafe n (xs : _ fseq) : Result<_ fseq fseq, _> = FiniteSeq.splitIntoSafe n xs
+
+  /// <summary>
+  /// Splits the input sequence into at most <c>count</c> chunks.
+  /// This function consumes the whole input sequence before yielding the first element of the result sequence.
+  /// Returns an Error if <c>count</c> is zero or negative.
+  /// </summary>
+  let inline splitInto' n xs = splitIntoSafe n xs
 
   /// <summary>
   /// Returns the sum of the elements in the sequence.
@@ -1325,144 +1392,144 @@ module FSeq =
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
   /// given predicate returns True, and then returns no further elements.
   /// </summary>
-  let inline takeWhile predicate xs = FiniteSeq.takeWhile predicate xs
+  let inline takeWhile predicate (xs : _ fseq) : _ fseq = FiniteSeq.takeWhile predicate xs
 
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
-  let inline tryTail xs = FiniteSeq.tryTail xs
+  let inline tryTail (xs : _ fseq) : _ fseq option = FiniteSeq.tryTail xs
 
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
-  let inline tailSafe xs = FiniteSeq.tailSafe xs
+  let inline tailSafe (xs : _ fseq) : Result<_ fseq, _> = FiniteSeq.tailSafe xs
 
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
-  let inline tail' xs = FiniteSeq.tail' xs
+  let inline tail' xs = tailSafe xs
 
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   /// </summary>
-  let inline tryTake n xs = FiniteSeq.tryTake n xs
+  let inline tryTake n (xs : _ fseq) : _ fseq option = FiniteSeq.tryTake n xs
     
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   /// </summary>
-  let inline takeSafe n xs = FiniteSeq.takeSafe n xs
+  let inline takeSafe n (xs : _ fseq) : Result<_ fseq, _> = FiniteSeq.takeSafe n xs
     
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   /// </summary>
-  let inline take' n xs = FiniteSeq.take' n xs
+  let inline take' n xs = takeSafe n xs
 
   /// <summary>
   /// Returns the transpose of the given sequence of sequences.
   /// This function works with non-square inputs by just skipping over
   /// any sublists that aren't long enough.
   /// </summary>
-  let inline transpose xs = FiniteSeq.transpose xs
+  let inline transpose (xs : _ fseq seq) : _ fseq fseq = FiniteSeq.transpose xs
 
   /// <summary>
   /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
   /// the input sequences differ in length. 
   /// </summary>
-  let inline transposeSafe xs = FiniteSeq.transposeSafe xs
+  let inline transposeSafe (xs : _ fseq seq) : Result<_ fseq fseq, _> = FiniteSeq.transposeSafe xs
 
   /// <summary>
   /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
   /// the input sequences differ in length. 
   /// </summary>
-  let inline transpose' xs = FiniteSeq.transpose' xs
+  let inline transpose' xs = transposeSafe xs
 
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
-  let inline tryUncons xs = FiniteSeq.tryUncons xs
+  let inline tryUncons (xs : _ fseq) : (_*_ fseq) option = FiniteSeq.tryUncons xs
 
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
-  let inline unconsSafe xs = FiniteSeq.unconsSafe xs
+  let inline unconsSafe (xs : _ fseq) : Result<_*_ fseq, _> = FiniteSeq.unconsSafe xs
   
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
-  let inline uncons' xs = FiniteSeq.uncons' xs
+  let inline uncons' xs = unconsSafe xs
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Same as Seq.windowed but takes the size in as a <c>PositiveInt</c>.
   /// </summary>
-  let inline window size xs = FiniteSeq.window size xs
+  let inline window size (xs : _ fseq) : _ fseq fseq = FiniteSeq.window size xs
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Returns a NegativeInput Error if the size is zero or negative.
   /// </summary>
-  let inline windowedSafe size xs = FiniteSeq.windowedSafe size xs
+  let inline windowedSafe size (xs : _ fseq) : Result<_ fseq fseq, _> = FiniteSeq.windowedSafe size xs
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Returns a NegativeInput Error if the size is zero or negative.
   /// </summary>
-  let inline windowed' size xs = FiniteSeq.windowed' size xs
+  let inline windowed' size xs = windowedSafe size xs
 
   /// <summary>
   /// Combines the two sequences into a list of pairs. 
   /// Returns None if the sequences are different lengths
   /// </summary>
-  let inline tryZip xs ys = FiniteSeq.tryZip xs ys
+  let inline tryZip (xs : _ fseq) (ys : _ fseq) : _ fseq option = FiniteSeq.tryZip xs ys
 
   /// <summary>
   /// Combines the two sequences into a list of pairs. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
-  let inline zipSafe xs ys = FiniteSeq.zipSafe xs ys
+  let inline zipSafe (xs : _ fseq) (ys : _ fseq) : Result<_ fseq, _> = FiniteSeq.zipSafe xs ys
 
   /// <summary>
   /// Combines the two sequences into a list of pairs. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
-  let inline zip' xs ys = FiniteSeq.zip' xs ys
+  let inline zip' xs ys = zipSafe xs ys
 
   /// <summary>
   /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other
   /// sequence are ignored.
   /// </summary>
-  let inline zip xs ys = FiniteSeq.zip xs ys
+  let inline zip (xs : _ fseq) (ys : _ fseq) : _ fseq = FiniteSeq.zip xs ys
 
   /// <summary>
   /// Combines the three sequences into a list of triples.  The three sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other sequences are ignored.
   /// </summary>
-  let inline zip3 xs ys zs = FiniteSeq.zip3 xs ys zs
+  let inline zip3 (xs : _ fseq) (ys : _ fseq) (zs : _ fseq) : _ fseq = FiniteSeq.zip3 xs ys zs
 
   /// <summary>
   /// Combines the three sequences into a list of triples. 
   /// Returns None if the sequences are different lengths.
   /// </summary>
-  let inline tryZip3 xs ys zs = FiniteSeq.tryZip3 xs ys zs
+  let inline tryZip3 (xs : _ fseq) (ys : _ fseq) (zs : _ fseq) : _ fseq option = FiniteSeq.tryZip3 xs ys zs
 
   /// <summary>
   /// Combines the three sequences into a list of triples. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
-  let inline zip3Safe xs ys zs = FiniteSeq.zip3Safe xs ys zs
+  let inline zip3Safe (xs : _ fseq) (ys : _ fseq) (zs : _ fseq) : Result<_ fseq, _> = FiniteSeq.zip3Safe xs ys zs
 
   /// <summary>
   /// Combines the three sequences into a list of triples. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
-  let inline zip3' xs ys zs = FiniteSeq.zip3' xs ys zs
+  let inline zip3' xs ys zs = zip3Safe xs ys zs
 
   /// <summary>
   /// Functions for manipulating NonEmpty FSeqs 
@@ -1475,7 +1542,7 @@ module FSeq =
     /// The tail is constrained to be finite.  If the tail is infinite,
     /// use Seq.NonEmpty.create instead
     /// </summary>
-    let create head tail : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.cons head tail)
+    let create head tail : NonEmptyFSeq<_> = NonEmpty (cons head tail)
 
     /// <summary>
     /// Returns a sequence that yields one item only.
@@ -1568,7 +1635,7 @@ module FSeq =
     /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
     /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
     /// </summary>
-    let inline foldBack f (xs : FiniteSeq<_>) initialState = foldBack f xs initialState
+    let inline foldBack f (xs : _ fseq) initialState = foldBack f xs initialState
 
     /// <summary>
     /// Builds a new collection whose elements are the results of applying the given function
@@ -1598,22 +1665,22 @@ module FSeq =
     /// Returns a new collection containing only the elements of the collection
     /// for which the given predicate returns "true". This is a synonym for Seq.where.
     /// </summary>
-    let filter f (NonEmptyFSeq xs) = FiniteSeq.filter f xs
+    let filter f (NonEmptyFSeq xs) = filter f xs
+
+    /// <summary>
+    /// Wraps the two given enumerations as a single concatenated enumeration.
+    /// </summary>
+    let appendL (NonEmptyFSeq xs) ys : NonEmptyFSeq<_> = NonEmpty (append xs ys)
+
+    /// <summary>
+    /// Wraps the two given enumerations as a single concatenated enumeration.
+    /// </summary>
+    let appendR xs (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (append xs ys)
 
     /// <summary>
     /// Wraps the two given enumerations as a single concatenated enumeration.
     /// </summary>
     let append (NonEmptyFSeq xs) (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
-
-    /// <summary>
-    /// Wraps the two given enumerations as a single concatenated enumeration.
-    /// </summary>
-    let appendL (NonEmptyFSeq xs) ys : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
-
-    /// <summary>
-    /// Wraps the two given enumerations as a single concatenated enumeration.
-    /// </summary>
-    let appendR xs (NonEmptyFSeq ys) : NonEmptyFSeq<_> = NonEmpty (FiniteSeq.append xs ys)
 
     /// <summary>
     /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -1641,17 +1708,27 @@ module FSeq =
       NonEmpty (collect g xs)
 
     /// <summary>
+    /// Returns a sequence that contains no duplicate entries according to generic hash and equality comparisons on the entries. If an element occurs multiple times in the sequence then the later occurrences are discarded.
+    /// </summary>
+    let distinct (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty <| distinct xs
+
+    /// <summary>
+    /// Returns a sequence that contains no duplicate entries according to the generic hash and equality comparisons on the keys returned by the given key-generating function. If an element occurs multiple times in the sequence then the later occurrences are discarded.
+    /// </summary>
+    let distinctBy projection (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty <| distinctBy projection xs
+
+    /// <summary>
     /// O(n), where n is count. Return the list which on consumption will remove of at most 'n' elements of
     /// the input list.
     /// </summary>
-    let drop n (NonEmptyFSeq xs) = FiniteSeq.drop n xs
+    let drop n (NonEmptyFSeq xs) = drop n xs
 
     /// <summary>
     /// O(n), where n is count. Return the seq which will remove at most 'n' elements of
     /// the input seq.
     /// This function will return the input seq unaltered for negative values of 'n'.
     /// </summary>
-    let dropLenient n (NonEmptyFSeq xs) = FiniteSeq.dropLenient n xs
+    let dropLenient n (NonEmptyFSeq xs) = dropLenient n xs
 
     /// <summary>
     /// Tests if any element of the sequence satisfies the given predicate. The predicate is applied to the elements of the input sequence. If any application returns true then the overall result is true and no further elements are tested. Otherwise, false is returned.
@@ -1734,7 +1811,7 @@ module FSeq =
     /// Returns a sequence of each element in the input sequence and its predecessor, with the
     /// exception of the first element which is only returned as the predecessor of the second element.
     /// </summary>
-    let pairwise (NonEmptyFSeq xs) = FiniteSeq.pairwise xs
+    let pairwise (NonEmptyFSeq xs) = pairwise xs
 
     /// <summary>
     /// Returns a new sequence with the elements in reverse order.
@@ -1869,31 +1946,31 @@ module FSeq =
     /// O(n), where n is count. Return option the list which skips the first 'n' elements of
     /// the input list.
     /// </summary>
-    let trySkip n (NonEmptyFSeq xs) = FiniteSeq.trySkip n xs
+    let trySkip n (NonEmptyFSeq xs) = trySkip n xs
 
     /// <summary>
     /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
     /// the input list.
     /// </summary>
-    let tryTake n (NonEmptyFSeq xs) = FiniteSeq.tryTake n xs
+    let tryTake n (NonEmptyFSeq xs) = tryTake n xs
 
     /// <summary>
     /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
     /// Same as Seq.windowed but takes the size in as a <c>PositiveInt</c>.
     /// </summary>
-    let inline window n (NonEmptyFSeq xs) = FiniteSeq.window n xs 
+    let inline window n (NonEmptyFSeq xs) = window n xs 
 
     /// <summary>
     /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
     /// Returns a NegativeInput Error if the size is zero or negative.
     /// </summary>
-    let inline windowedSafe n (NonEmptyFSeq xs) = FiniteSeq.windowedSafe n xs
+    let inline windowedSafe n (NonEmptyFSeq xs) = windowedSafe n xs
 
     /// <summary>
     /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
     /// Returns a NegativeInput Error if the size is zero or negative.
     /// </summary>
-    let inline windowed' n (NonEmptyFSeq xs) = FiniteSeq.windowed' n xs
+    let inline windowed' n (NonEmptyFSeq xs) = windowed' n xs
 
     /// <summary>
     /// Combines the two sequences into a list of pairs. 
