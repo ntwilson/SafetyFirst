@@ -2,12 +2,12 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>3.1.0</version>
+    <version>3.1.1</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Total functions made convenient for F# and C#</description>
     <summary>Total functions made convenient for F# and C#</summary>
-    <releaseNotes>All functions from the Seq module that diverge for infinite inputs were added to FSeq</releaseNotes>
+    <releaseNotes>`distinct` and `distinctBy` added to all NonEmpty modules</releaseNotes>
     <license type="expression">CC0-1.0</license>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
