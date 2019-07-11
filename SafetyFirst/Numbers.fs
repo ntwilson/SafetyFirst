@@ -4,16 +4,52 @@ namespace SafetyFirst.Numbers
 /// An integer >= 0
 /// </summary>
 [<Struct>]
-type NaturalInt = private NaturalInt of int
+type NaturalInt = 
+  private | NaturalInt of int
 
-[<Struct>]
-type NegativeInt = private NegativeInt of int
+  static member zero = NaturalInt 0
+
+  member this.Value = let (NaturalInt t) = this in t
+  static member value (t:NaturalInt) = t.Value
+  static member op_Implicit (t:NaturalInt) = t.Value
+
+  member this.Increment = let (NaturalInt t) = this in PositiveInt (t + 1)
+  static member increment (t:NaturalInt) = t.Increment
+
+and [<Struct>] NegativeInt = 
+  private | NegativeInt of int
+
+  member this.Value = let (NegativeInt n) = this in n
+  static member value (n:NegativeInt) = n.Value
+  static member op_Implicit (n:NegativeInt) = n.Value
+
+  member this.Decrement = let (NegativeInt n) = this in NegativeInt (n - 1)
+  static member decrement (n:NegativeInt) = n.Decrement
+
+  member this.Opposite = let (NegativeInt n) = this in PositiveInt -n
+  static member opposite (n:NegativeInt) = n.Opposite
 
 /// <summary>
 /// An integer > 0.  If you want to include 0, use <c>NaturalInt</c>
 /// </summary>
-[<Struct>]
-type PositiveInt = private PositiveInt of int
+and [<Struct>] PositiveInt = 
+  private | PositiveInt of int
+
+  member this.Value = let (PositiveInt p) = this in p
+  static member value (p:PositiveInt) = p.Value
+  static member op_Implicit (p:PositiveInt) = p.Value
+
+  member this.AsNatural = let (PositiveInt p) = this in NaturalInt p
+  static member asNatural (p:PositiveInt) = p.AsNatural
+
+  member this.Increment = let (PositiveInt p) = this in PositiveInt (p + 1)
+  static member increment (p:PositiveInt) = p.Increment
+
+  member this.Decrement = let (PositiveInt p) = this in NaturalInt (p - 1)
+  static member decrement (p:PositiveInt) = p.Decrement
+
+  member this.Opposite = let (PositiveInt p) = this in NegativeInt -p
+  static member opposite (p:PositiveInt) = p.Opposite
 
 [<AutoOpen>]
 module NaturalIntMatchers = 
@@ -29,6 +65,10 @@ module NaturalIntMatchers =
     | i when i > 0 -> Positive (PositiveInt i)
     | i when i < 0 -> Negative (NegativeInt i)
     | _ -> Zero
+
+  let (|PositiveNatural|ZeroNatural|) = function
+    | (NaturalInt i) when i > 0 -> PositiveNatural (PositiveInt i)
+    | _ -> ZeroNatural
 
 module NaturalInt = 
   let verify = function 

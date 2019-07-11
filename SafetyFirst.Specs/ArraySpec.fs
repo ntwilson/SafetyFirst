@@ -5,11 +5,17 @@ open FsCheck
 
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
+open SafetyFirst.Numbers
+
+let upcastNE = Array.NonEmpty.toArray
 
 let averageFloats' (xs:float[]) = Array.average' xs
 let averageFloats (xs:float[]) = Array.average xs
 let averageByFloats' (projection:_ -> float) xs = Array.averageBy' projection xs
 let averageByFloats (projection:_ -> float) xs = Array.averageBy projection xs
+
+let initByInts' =        (fun count initializer -> Array.init'          count (NaturalInt.value >> initializer))
+let initByIntsNonEmpty = (fun count initializer -> Array.NonEmpty.initN count (NaturalInt.value >> initializer))
 
 [<Test>]
 let ``Safe Array functions error whenever unsafe versions throw for all random inputs`` () =
@@ -25,6 +31,7 @@ let ``Safe Array functions error whenever unsafe versions throw for all random i
   errorsWheneverThrows4 Array.foldBack2'        Array.foldBack2
   errorsWheneverThrows3 Array.forall2'          Array.forall2
   errorsWheneverThrows1 Array.head'             Array.head
+  errorsWheneverThrows2 initByInts'             Array.init
   errorsWheneverThrows2 Array.item'             Array.item
   errorsWheneverThrows1 Array.last'             Array.last
   errorsWheneverThrows3 Array.map2'             Array.map2
@@ -37,6 +44,7 @@ let ``Safe Array functions error whenever unsafe versions throw for all random i
   errorsWheneverThrows2 Array.pick'             Array.pick
   errorsWheneverThrows2 Array.reduce'           Array.reduce
   errorsWheneverThrows2 Array.reduceBack'       Array.reduceBack
+  errorsWheneverThrows2 Array.replicate'        Array.replicate
   errorsWheneverThrows2 Array.skip'             Array.skip
   errorsWheneverThrows2 Array.splitAt'          Array.splitAt
   errorsWheneverThrows2 Array.splitInto'        Array.splitInto
@@ -63,6 +71,7 @@ let ``Safe Array functions always produce the same output as unsafe versions for
   alwaysProduceSameOutput4 Array.foldBack2'       Array.foldBack2
   alwaysProduceSameOutput3 Array.forall2'         Array.forall2
   alwaysProduceSameOutput1 Array.head'            Array.head
+  alwaysProduceSameOutput2 initByInts'            Array.init
   alwaysProduceSameOutput2 Array.item'            Array.item
   alwaysProduceSameOutput1 Array.last'            Array.last
   alwaysProduceSameOutput3 Array.map2'            Array.map2
@@ -75,6 +84,7 @@ let ``Safe Array functions always produce the same output as unsafe versions for
   alwaysProduceSameOutput2 Array.pick'            Array.pick
   alwaysProduceSameOutput2 Array.reduce'          Array.reduce
   alwaysProduceSameOutput2 Array.reduceBack'      Array.reduceBack
+  alwaysProduceSameOutput2 Array.replicate'       Array.replicate
   alwaysProduceSameOutput2 Array.skip'            Array.skip
   alwaysProduceSameOutput2 Array.splitAt'         Array.splitAt
   alwaysProduceSameOutput2 Array.splitInto'       Array.splitInto
@@ -86,4 +96,12 @@ let ``Safe Array functions always produce the same output as unsafe versions for
   alwaysProduceSameOutput2 Array.zip'             Array.zip
   alwaysProduceSameOutput3 Array.zip3'            Array.zip3
 
+module SafeByType =
+  open SeqSpec.SafeByType
 
+  [<Test>]
+  let ``Array functions that are safe by type behave like the base functions`` () =
+    let (>>>) f g = (fun a b -> f a b |> g)
+
+    alwaysProduceSameOutput2  (initByIntsNonEmpty >>> upcastNE)         (Array.init << PositiveInt.value)
+    alwaysProduceSameOutput2  (Array.NonEmpty.replicateN >>> upcastNE)  (Array.replicate << PositiveInt.value)

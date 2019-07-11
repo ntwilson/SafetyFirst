@@ -36,7 +36,7 @@ module InfiniteSeq =
   /// regenerate the elements. The function is passed the index of the item being
   /// generated.
   /// </summary>
-  let init transform = InfiniteSeq (Seq.initInfinite transform)
+  let init transform = InfiniteSeq (Seq.initInfinite (transform << (NaturalInt.verify >> Option.unless "F# core assumption failed: Seq.initInfinite called an initializer with a negative index.")))
 
   /// <summary>
   /// Computes the element at the specified index in the collection.
@@ -63,6 +63,11 @@ module InfiniteSeq =
   /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
   /// </summary>
   let chunksOf chunkSize (InfiniteSeq xs) = InfiniteSeq <| Seq.chunksOf chunkSize xs
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element.
+  /// </summary>
+  let replicate initial = Seq.initInfinite (fun _ -> initial)
 
   /// <summary>
   /// Returns the first N elements of the sequence.

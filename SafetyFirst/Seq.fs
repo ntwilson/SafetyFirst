@@ -87,6 +87,27 @@ let headSafe xs =
 let inline head' xs = headSafe xs
 
 /// <summary>
+/// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+/// Same as <c>Seq.init</c>, but restricts <c>count</c> to a NaturalInt, and provides NaturalInt indices to <c>initializer</c>.
+/// </summary>
+let initN (count:NaturalInt) initializer = Seq.init count.Value (initializer << (NaturalInt.verify >> Option.unless "F# core assumption failed: Seq.init called an initializer with a negative index."))
+
+/// <summary>
+/// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let initSafe count initializer =
+  match count with
+  | NonNatural _ -> Error <| initErr count
+  | Natural count -> Ok <| initN count initializer
+
+/// <summary>
+/// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let inline init' count initializer = initSafe count initializer
+
+/// <summary>
 /// Computes the element at the specified index in the collection.
 /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the collection.
 /// </summary>
@@ -120,6 +141,27 @@ let pickSafe chooser xs =
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
 let inline pick' chooser xs = pickSafe chooser xs
+
+/// <summary>
+/// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+/// Same as <c>Seq.replicate</c>, but restricts <c>count</c> to a NaturalInt.
+/// </summary>
+let replicateN (count:NaturalInt) initial = Seq.replicate count.Value initial
+
+/// <summary>
+/// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let replicateSafe count initial =
+  match count with
+  | NonNatural _ -> Error <| replicateErr count
+  | Natural count -> Ok <| replicateN count initial
+
+/// <summary>
+/// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let inline replicate' count initial = replicateSafe count initial
 
 /// <summary>
 /// Returns a sequence that skips N elements of the underlying sequence and then yields the
@@ -261,6 +303,27 @@ module NonEmpty =
   let indexed (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.indexed xs)
 
   /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function.
+  /// Same as <c>Seq.initInfinite</c>, but provides NaturalInt indices to <c>initializer</c>.
+  /// </summary>
+  let initInfinitely initializer = 
+    create 
+      (initializer NaturalInt.zero) 
+      (Seq.initInfinite (
+        NaturalInt.verify
+        >> Option.unless "F# core assumption failed: Seq.initInfinite called an initializer with a negative index."
+        >> NaturalInt.increment 
+        >> PositiveInt.asNatural 
+        >> initializer
+      ))
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+  /// Same as <c>Seq.init</c>, but restricts <c>count</c> to a PositiveInt, and provides NaturalInt indices to <c>initializer</c>.
+  /// </summary>
+  let initN (count:PositiveInt) initializer = create (initializer NaturalInt.zero) (initN count.Decrement (NaturalInt.increment >> PositiveInt.asNatural >> initializer))
+
+  /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
   /// to each of the elements of the collection. The given function will be applied
   /// as elements are demanded using the MoveNext method on enumerators retrieved from the
@@ -351,6 +414,17 @@ module NonEmpty =
   /// exception of the first element which is only returned as the predecessor of the second element.
   /// </summary>
   let pairwise (NonEmpty xs) = Seq.pairwise xs
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element.
+  /// </summary>
+  let replicateInfinitely initial = create initial (Seq.initInfinite (fun _ -> initial))
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+  /// Same as <c>Seq.replicate</c>, but restricts <c>count</c> to a PositiveInt.
+  /// </summary>
+  let replicateN (count:PositiveInt) initial = create initial (replicateN count.Decrement initial)
 
   /// <summary>
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.

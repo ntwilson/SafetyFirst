@@ -1,8 +1,8 @@
 namespace SafetyFirst.FSharpxCopy.Collections
 
-//THIS FILE LIFTED STRAIGHT FROM https://github.com/fsprojects/FSharpx.Collections/blob/311c74433fd616611554f38f182bf860c24b91ee/src/FSharpx.Collections/LazyList.fs
+//THIS FILE (partially) LIFTED STRAIGHT FROM https://github.com/fsprojects/FSharpx.Collections/blob/311c74433fd616611554f38f182bf860c24b91ee/src/FSharpx.Collections/LazyList.fs
 //FSharpx.Collections is forcing the use of .NET Framework instead of .NET Standard
-//once FSharpx.Collections v2.0 is released, we can delete this file and reference FSharpx.Collections instead
+//once FSharpx.Collections v2.0 is released, we can remove much of the contents of this file and reference FSharpx.Collections instead
 
 open System
 open System.Collections.Generic
@@ -126,9 +126,23 @@ module  LazyList =
       | CellCons(a,b) -> consc a (append b l2)
 
     let delayed f = lzy(fun () ->  (getCell (f())))
-    let repeat x = 
-      let rec s = cons x (delayed (fun () -> s)) in s
 
+    let initInfinitely (initializer:NaturalInt -> 'a) = 
+      let rec s i () = consc (initializer i) (lzy (s i.Increment.AsNatural))
+      lzy (s NaturalInt.zero)
+
+    let initN count (initializer:NaturalInt -> 'a) =
+      let rec s i () = if i = count then CellEmpty else consc (initializer i) (lzy (s i.Increment.AsNatural))
+      lzy (s NaturalInt.zero)
+
+    let replicateInfinitely initial = 
+      let rec s () = consc initial (lzy s)
+      lzy s
+
+    let replicateN count initial = 
+      let rec s n () = match n with | ZeroNatural -> CellEmpty | PositiveNatural count -> consc initial (lzy (s count.Decrement))
+      lzy (s count)
+      
     let rec map f s = 
       lzy(fun () ->  
         match getCell s with
@@ -279,12 +293,12 @@ module  LazyList =
     let rev r =
         revAux r empty
 
-    let rec drop (NaturalInt n) xs =
-        match n - 1 with
-        | Natural nm1 when n > 0 -> //n > 0 is redundant, just clarifies
+    let rec drop (n:NaturalInt) xs =
+        match n with
+        | PositiveNatural p ->
             match xs with
-            | Cons(x, xs') -> drop nm1 xs'
+            | Cons(x, xs') -> drop p.Decrement xs'
             | _ -> EmptyValue<'T>.Value
-        | neg ->
+        | ZeroNatural ->
             xs
 

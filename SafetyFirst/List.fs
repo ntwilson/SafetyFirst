@@ -212,6 +212,27 @@ let headSafe xs =
 let inline head' xs = headSafe xs
 
 /// <summary>
+/// Creates a list by calling the given generator on each index.
+/// Same as <c>List.init</c>, but restricts <c>count</c> to a NaturalInt, and provides NaturalInt indices to <c>initializer</c>.
+/// </summary>
+let initN (count:NaturalInt) initializer = List.init count.Value (initializer << (NaturalInt.verify >> Option.unless "F# core assumption failed: List.init called an initializer with a negative index."))
+
+/// <summary>
+/// Creates a list by calling the given generator on each index.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let initSafe count initializer =
+  match count with
+  | NonNatural _ -> Error <| initErr count
+  | Natural count -> Ok <| initN count initializer
+
+/// <summary>
+/// Creates a list by calling the given generator on each index.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let inline init' count initializer = initSafe count initializer
+
+/// <summary>
 /// Computes the element at the specified index in the collection.
 /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the collection.
 /// </summary>
@@ -443,6 +464,27 @@ let reduceBackSafe reduction xs =
 let inline reduceBack' reduction xs = reduceBackSafe reduction xs 
 
 /// <summary>
+/// Creates a list of a specified length with every element set to the given value.
+/// Same as <c>List.replicate</c>, but restricts <c>count</c> to a NaturalInt.
+/// </summary>
+let replicateN (count:NaturalInt) initial = List.replicate count.Value initial
+
+/// <summary>
+/// Creates a list of a specified length with every element set to the given value.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let replicateSafe count initial =
+  match count with
+  | NonNatural _ -> Error <| replicateErr count
+  | Natural count -> Ok <| replicateN count initial
+
+/// <summary>
+/// Creates a list of a specified length with every element set to the given value.
+/// Returns a NegativeInput Error when <c>count</c> is not natural.
+/// </summary>
+let inline replicate' count initial = replicateSafe count initial
+
+/// <summary>
 /// Returns a list that skips N elements of the underlying list and then yields the
 /// remaining elements of the list.
 /// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
@@ -647,6 +689,12 @@ module NonEmpty =
   /// </summary>
   let head (NonEmpty xs : NonEmptyList<_>) = List.head xs
   
+  /// <summary>
+  /// Creates a list by calling the given generator on each index.
+  /// Same as <c>List.init</c>, but restricts <c>count</c> to a PositiveInt, and provides NaturalInt indices to <c>initializer</c>.
+  /// </summary>
+  let initN (count:PositiveInt) initializer = create (initializer NaturalInt.zero) (initN count.Decrement (NaturalInt.increment >> PositiveInt.asNatural >> initializer))
+
   /// <summary>
   /// Returns the last element of the list.
   /// </summary>
@@ -920,6 +968,12 @@ module NonEmpty =
   /// exception of the first element which is only returned as the predecessor of the second element.
   /// </summary>
   let pairwise (NonEmpty xs : NonEmptyList<_>) = List.pairwise xs
+
+  /// <summary>
+  /// Creates a list of a specified length with every element set to the given value.
+  /// Same as <c>List.replicate</c>, but restricts <c>count</c> to a PositiveInt.
+  /// </summary>
+  let replicateN (count:PositiveInt) initial = create initial (replicateN count.Decrement initial)
 
   /// <summary>
   /// Returns a new sequence with the elements in reverse order.

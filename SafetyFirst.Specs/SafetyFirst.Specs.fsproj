@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Generators.fs" />
     <Compile Include="OptionSpec.fs" />
     <Compile Include="OptionExpressionSpec.fs" />
     <Compile Include="ValueOptionSpec.fs" />
@@ -23,6 +24,7 @@
     <Compile Include="ArraySpec.fs" />
     <Compile Include="MapSpec.fs" />
     <Compile Include="FSeqSpec.fs" />
+    <Compile Include="StringSpec.fs" />
     <Compile Include="IEnumerableSpec.fs" />
     <Compile Include="ReadmeSpec.fs" />
   </ItemGroup>
