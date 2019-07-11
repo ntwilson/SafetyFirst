@@ -5,11 +5,17 @@ open FsCheck
 
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
+open SafetyFirst.Numbers
+
+let upcastNE = List.NonEmpty.toList
 
 let averageFloats' (xs:float list) = List.average' xs
 let averageFloats (xs:float list) = List.average xs
 let averageByFloats' (projection:_ -> float) xs = List.averageBy' projection xs
 let averageByFloats (projection:_ -> float) xs = List.averageBy projection xs
+
+let initByInts' =        (fun count initializer -> List.init'          count (NaturalInt.value >> initializer))
+let initByIntsNonEmpty = (fun count initializer -> List.NonEmpty.initN count (NaturalInt.value >> initializer))
 
 let arrayTransposeComparable xs = 
   Array.transpose xs
@@ -33,6 +39,7 @@ let ``Safe List functions error whenever unsafe versions throw for all random in
   errorsWheneverThrows4 List.foldBack2'               List.foldBack2
   errorsWheneverThrows3 List.forall2'                 List.forall2
   errorsWheneverThrows1 List.head'                    List.head
+  errorsWheneverThrows2 initByInts'                   List.init
   errorsWheneverThrows2 List.item'                    List.item
   errorsWheneverThrows1 List.last'                    List.last
   errorsWheneverThrows3 List.map2'                    List.map2
@@ -45,6 +52,7 @@ let ``Safe List functions error whenever unsafe versions throw for all random in
   errorsWheneverThrows2 List.pick'                    List.pick
   errorsWheneverThrows2 List.reduce'                  List.reduce
   errorsWheneverThrows2 List.reduceBack'              List.reduceBack
+  errorsWheneverThrows2 List.replicate'               List.replicate
   errorsWheneverThrows2 List.skip'                    List.skip
   errorsWheneverThrows2 List.splitAt'                 List.splitAt
   errorsWheneverThrows2 List.splitInto'               List.splitInto
@@ -70,6 +78,7 @@ let ``Safe List functions always produce the same output as unsafe versions for 
   alwaysProduceSameOutput4 List.foldBack2'                List.foldBack2
   alwaysProduceSameOutput3 List.forall2'                  List.forall2 
   alwaysProduceSameOutput1 List.head'                     List.head
+  alwaysProduceSameOutput2 initByInts'                    List.init
   alwaysProduceSameOutput2 List.item'                     List.item
   alwaysProduceSameOutput1 List.last'                     List.last
   alwaysProduceSameOutput3 List.map2'                     List.map2
@@ -82,6 +91,7 @@ let ``Safe List functions always produce the same output as unsafe versions for 
   alwaysProduceSameOutput2 List.pick'                     List.pick
   alwaysProduceSameOutput2 List.reduce'                   List.reduce
   alwaysProduceSameOutput2 List.reduceBack'               List.reduceBack
+  alwaysProduceSameOutput2 List.replicate'                List.replicate
   alwaysProduceSameOutput2 List.skip'                     List.skip
   alwaysProduceSameOutput2 List.splitAt'                  List.splitAt
   alwaysProduceSameOutput2 List.splitInto'                List.splitInto
@@ -92,3 +102,12 @@ let ``Safe List functions always produce the same output as unsafe versions for 
   alwaysProduceSameOutput2 List.zip'                      List.zip
   alwaysProduceSameOutput3 List.zip3'                     List.zip3
 
+module SafeByType =
+  open SeqSpec.SafeByType
+
+  [<Test>]
+  let ``List functions that are safe by type behave like the base functions`` () =
+    let (>>>) f g = (fun a b -> f a b |> g)
+
+    alwaysProduceSameOutput2  (initByIntsNonEmpty >>> upcastNE)        (List.init << PositiveInt.value)
+    alwaysProduceSameOutput2  (List.NonEmpty.replicateN >>> upcastNE)  (List.replicate << PositiveInt.value)

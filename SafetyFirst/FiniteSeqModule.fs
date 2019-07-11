@@ -268,6 +268,27 @@ module FiniteSeq =
   let indexed (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (Seq.indexed xs)
 
   /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+  /// Same as <c>Seq.init</c>, but restricts <c>count</c> to a NaturalInt, and provides NaturalInt indices to <c>initializer</c>.
+  /// </summary>
+  let initN count initializer = fseq (LazyList.initN count initializer)
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let initSafe count initializer =
+    match count with
+    | NonNatural _ -> Error <| initErr count
+    | Natural count -> Ok <| initN count initializer
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let inline init' count initializer = initSafe count initializer
+
+  /// <summary>
   /// Returns true if the sequence contains no elements, false otherwise.
   /// </summary>
   let inline isEmpty (FSeq xs : FiniteSeq<_>) = LazyList.isEmpty xs
@@ -500,6 +521,27 @@ module FiniteSeq =
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
   let inline reduceBack' f xs = reduceBackSafe f xs
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+  /// Same as <c>Seq.replicate</c>, but restricts <c>count</c> to a NaturalInt.
+  /// </summary>
+  let replicateN (count:NaturalInt) initial = fseq (LazyList.replicateN count initial)
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let replicateSafe count initial =
+    match count with
+    | NonNatural _ -> Error <| replicateErr count
+    | Natural count -> Ok <| replicateN count initial
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let inline replicate' count initial = replicateSafe count initial
 
   /// <summary>
   /// Returns a new sequence with the elements in reverse order.
@@ -1063,6 +1105,24 @@ module FSeq =
   /// exception of the first element which is only returned as the predecessor of the second element.
   /// </summary>
   let inline pairwise xs : _ fseq = FiniteSeq.pairwise xs
+  
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+  /// Same as <c>Seq.replicate</c>, but restricts <c>count</c> to a NaturalInt.
+  /// </summary>
+  let inline replicateN count initial = FiniteSeq.replicateN count initial
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let inline replicateSafe count initial = FiniteSeq.replicateSafe count initial
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let inline replicate' count initial = replicateSafe count initial
 
   /// <summary>
   /// Returns a new sequence with the elements in reverse order.
@@ -1236,6 +1296,24 @@ module FSeq =
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
   let inline indexed (xs : _ fseq) : _ fseq = FiniteSeq.indexed xs
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+  /// Same as <c>Seq.init</c>, but restricts <c>count</c> to a NaturalInt, and provides NaturalInt indices to <c>initializer</c>.
+  /// </summary>
+  let inline initN count initializer = FiniteSeq.initN count initializer
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let inline initSafe count initializer = FiniteSeq.initSafe count initializer
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+  /// Returns a NegativeInput Error when <c>count</c> is not natural.
+  /// </summary>
+  let inline init' count initializer = initSafe count initializer
 
   /// <summary>
   /// Applies the given function to each element of the collection.
@@ -1793,6 +1871,12 @@ module FSeq =
     let indexed (NonEmptyFSeq xs) : NonEmptyFSeq<_> = NonEmpty (indexed xs)
 
     /// <summary>
+    /// Generates a new sequence which, when iterated, will return successive elements by calling the given function, up to the given count.
+    /// Same as <c>Seq.init</c>, but restricts <c>count</c> to a PositiveInt, and provides NaturalInt indices to <c>initializer</c>.
+    /// </summary>
+    let initN (count:PositiveInt) initializer = create (initializer NaturalInt.zero) (initN count.Decrement (NaturalInt.increment >> PositiveInt.asNatural >> initializer))
+
+    /// <summary>
     /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
     /// </summary>
@@ -1812,6 +1896,12 @@ module FSeq =
     /// exception of the first element which is only returned as the predecessor of the second element.
     /// </summary>
     let pairwise (NonEmptyFSeq xs) = pairwise xs
+
+    /// <summary>
+    /// Generates a new sequence which, when iterated, will return the given value for every element, up to the given count.
+    /// Same as <c>Seq.replicate</c>, but restricts <c>count</c> to a PositiveInt.
+    /// </summary>
+    let replicateN (count:PositiveInt) initial = create initial (replicateN count.Decrement initial)
 
     /// <summary>
     /// Returns a new sequence with the elements in reverse order.
