@@ -7,7 +7,7 @@ module NonEmpty =
   /// The tail is constrained to be finite.  If the tail is infinite,
   /// use Seq.NonEmpty.create instead.
   /// </summary>
-  let create head tail : NonEmptySet<_> = NonEmpty (set (Seq.append [head] tail)) 
+  let create head tail : NonEmptySet<_> = NonEmpty (Set.add head (set tail))
 
   /// <summary>
   /// Returns a set that contains one item only.
@@ -42,8 +42,20 @@ module NonEmpty =
   /// </summary>
   let count (NonEmpty xs : NonEmptySet<_>) = Set.count xs
 
-  // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
-  // let difference xs ys = Set.difference xs ys
+  /// <summary>
+  /// Returns a new set with the elements of the second set removed from the first.
+  /// </summary>
+  let difference (NonEmpty xs : NonEmptySet<_>) (NonEmpty ys : NonEmptySet<_>) = Set.difference xs ys
+
+  /// <summary>
+  /// Returns a new set with the elements of the second set removed from the first.
+  /// </summary>
+  let differenceL (NonEmpty xs : NonEmptySet<_>) ys = Set.difference xs ys
+
+  /// <summary>
+  /// Returns a new set with the elements of the second set removed from the first.
+  /// </summary>
+  let differenceR xs (NonEmpty ys : NonEmptySet<_>) = Set.difference xs ys
 
   /// <summary>
   /// Tests if any element of the collection satisfies the given predicate. 
@@ -59,12 +71,14 @@ module NonEmpty =
   let filter predicate (NonEmpty xs : NonEmptySet<_>) = Set.filter predicate xs
 
   /// <summary>
-  /// Applies the given accumulating function to all the elements of the set.
+  /// Applies a function to each element of the collection, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
   let fold folder initialState (NonEmpty xs : NonEmptySet<_>) = Set.fold folder initialState xs
 
   /// <summary>
-  /// Applies the given accumulating function to all the elements of the set.
+  /// Applies a function to each element of the collection, starting from the end, threading an accumulator argument through the computation. 
+  /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f i0 (... (f iN s)...)</c>
   /// </summary>
   let foldBack folder (NonEmpty xs : NonEmptySet<_>) initialState = Set.foldBack folder xs initialState 
 
@@ -75,26 +89,86 @@ module NonEmpty =
   /// </summary>
   let forall predicate (NonEmpty xs : NonEmptySet<_>) = Set.forall predicate xs
 
-  // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
-  // let Set.intersect xs ys
+  /// <summary>
+  /// Computes the intersection of the two sets.
+  /// </summary>
+  let intersect (NonEmpty xs : NonEmptySet<_>) (NonEmpty ys : NonEmptySet<_>) = Set.intersect xs ys
+
+  /// <summary>
+  /// Computes the intersection of the two sets.
+  /// </summary>
+  let intersectL (NonEmpty xs : NonEmptySet<_>) ys = Set.intersect xs ys
+
+  /// <summary>
+  /// Computes the intersection of the two sets.
+  /// </summary>
+  let intersectR xs (NonEmpty ys : NonEmptySet<_>) = Set.intersect xs ys
 
   /// <summary>
   /// Computes the intersection of a sequence of sets. The sequence must be non-empty.
   /// </summary>
-  let intersectMany (NonEmpty xs : NonEmpty<#seq<NonEmptySet<_>>, _>) : NonEmptySet<_> = 
-    NonEmpty (Set.intersectMany (Seq.map (|NonEmpty|) xs))
+  let intersectMany (NonEmpty xs : NonEmpty<#seq<NonEmptySet<_>>, _>) = 
+    Set.intersectMany (Seq.map (|NonEmpty|) xs)
 
-  // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
-  // let isProperSubset xs ys 
+  /// <summary>
+  /// Evaluates to <c>true</c> if all elements of the first set are in the second, and at least one element of the second is not in the first.
+  /// </summary>
+  let isProperSubset (NonEmpty xs : NonEmptySet<_>) (NonEmpty ys : NonEmptySet<_>) = Set.isProperSubset xs ys 
 
-  // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
-  // let isProperSuperset xs ys 
+  /// <summary>
+  /// Evaluates to <c>true</c> if all elements of the first set are in the second, and at least one element of the second is not in the first.
+  /// </summary>
+  let isProperSubsetL (NonEmpty xs : NonEmptySet<_>) ys = Set.isProperSubset xs ys 
 
-  // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
-  // let isSubset xs ys 
+  /// <summary>
+  /// Evaluates to <c>true</c> if all elements of the first set are in the second, and at least one element of the second is not in the first.
+  /// </summary>
+  let isProperSubsetR xs (NonEmpty ys : NonEmptySet<_>) = Set.isProperSubset xs ys 
 
-  // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
-  // let isSuperset xs ys 
+  /// <summary>
+  /// Evaluates to <c>true</c> if all elements of the second set are in the first, and at least one element of the first is not in the second.
+  /// </summary>
+  let isProperSuperset (NonEmpty xs : NonEmptySet<_>) (NonEmpty ys : NonEmptySet<_>) = Set.isProperSuperset xs ys
+
+  /// <summary>
+  /// Evaluates to <c>true</c> if all elements of the second set are in the first, and at least one element of the first is not in the second.
+  /// </summary>
+  let isProperSupersetL (NonEmpty xs : NonEmptySet<_>) ys = Set.isProperSuperset xs ys
+
+  /// <summary>
+  /// Evaluates to <c>true</c> if all elements of the second set are in the first, and at least one element of the first is not in the second.
+  /// </summary>
+  let isProperSupersetR xs (NonEmpty ys : NonEmptySet<_>) = Set.isProperSuperset xs ys
+
+  /// <summary>
+  /// Evaluates to "true" if all elements of the first set are in the second.
+  /// </summary>
+  let isSubset (NonEmpty xs : NonEmptySet<_>) (NonEmpty ys : NonEmptySet<_>) = Set.isSubset xs ys
+
+  /// <summary>
+  /// Evaluates to "true" if all elements of the first set are in the second.
+  /// </summary>
+  let isSubsetL (NonEmpty xs : NonEmptySet<_>) ys = Set.isSubset xs ys
+
+  /// <summary>
+  /// Evaluates to "true" if all elements of the first set are in the second.
+  /// </summary>
+  let isSubsetR xs (NonEmpty ys : NonEmptySet<_>) = Set.isSubset xs ys
+
+  /// <summary>
+  /// Evaluates to "true" if all elements of the second set are in the first.
+  /// </summary>
+  let isSuperset (NonEmpty xs : NonEmptySet<_>) (NonEmpty ys : NonEmptySet<_>) = Set.isSuperset xs ys
+
+  /// <summary>
+  /// Evaluates to "true" if all elements of the second set are in the first.
+  /// </summary>
+  let isSupersetL (NonEmpty xs : NonEmptySet<_>) ys = Set.isSuperset xs ys
+
+  /// <summary>
+  /// Evaluates to "true" if all elements of the second set are in the first.
+  /// </summary>
+  let isSupersetR xs (NonEmpty ys : NonEmptySet<_>) = Set.isSuperset xs ys
 
   /// <summary>
   /// Applies the given function to each element of the set, in order according to the comparison function.
@@ -209,10 +283,25 @@ module NonEmpty =
   /// <summary>
   /// Builds a NonEmptySeq that contains the elements of the set in order.
   /// </summary>
-  let toNonEmptySeq (NonEmpty xs : NonEmptySet<_>) : NonEmptySeq<_> = NonEmpty (Set.toSeq xs)
+  let toNonEmptySeq (NonEmpty xs : NonEmptySet<_>) : NonEmptySeq<_> = NonEmpty (upcast xs)
 
-  // should xs be NonEmpty?  ys?  Both?  Should we have overloads for all 3?
-  // let union xs ys
+  /// <summary>
+  /// Computes the union of the two sets.
+  /// </summary>
+  let union (NonEmpty xs : NonEmptySet<_>) (NonEmpty ys : NonEmptySet<_>) : NonEmptySet<_> = 
+    NonEmpty (Set.union xs ys)
+
+  /// <summary>
+  /// Computes the union of the two sets.
+  /// </summary>
+  let unionL (NonEmpty xs : NonEmptySet<_>) ys : NonEmptySet<_> = 
+    NonEmpty (Set.union xs ys)
+
+  /// <summary>
+  /// Computes the union of the two sets.
+  /// </summary>
+  let unionR xs (NonEmpty ys : NonEmptySet<_>) : NonEmptySet<_> = 
+    NonEmpty (Set.union xs ys)
 
   let unionMany (NonEmpty xs : NonEmpty<#seq<NonEmptySet<_>>, _>) : NonEmptySet<_> = 
     NonEmpty (Set.unionMany (Seq.map (|NonEmpty|) xs))

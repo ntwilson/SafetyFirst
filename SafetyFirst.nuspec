@@ -2,24 +2,24 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>2.1.2</version>
+    <version>3.1.1</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Total functions made convenient for F# and C#</description>
     <summary>Total functions made convenient for F# and C#</summary>
-    <releaseNotes>Adds an `average` function for each of the NonEmpty modules.</releaseNotes>
+    <releaseNotes>`distinct` and `distinctBy` added to all NonEmpty modules</releaseNotes>
     <license type="expression">CC0-1.0</license>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
 
     <dependencies>
-      <dependency id="FSharp.Core" version="4.1.17" />
-      <dependency id="ResultDotNet" version="2.0.5" />
+      <dependency id="FSharp.Core" version="4.5.0" />
       <dependency id="System.ValueTuple" version="4.5.0" />
     </dependencies>
   </metadata>
   <files>
     <file src="README.md" target="" />
+    <file src="v3.0_UpgradeGuide.md" target="" />
     <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.dll" target="lib\netstandard2.0" />
     <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.XML" target="lib\netstandard2.0" />
     <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.pdb" target="lib\netstandard2.0" />

@@ -2,8 +2,6 @@ namespace SafetyFirst
 
 open System.Collections.Generic
 
-open ResultDotNet.FSharp
-
 /// <summary>
 /// A sequence that is constrained to have at least one element.
 /// </summary>
@@ -42,13 +40,6 @@ type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 /// An alias for <c>NonEmpty<Set<'a>, 'a></c>.
 /// </summary>
 type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
-
-/// <summary>
-/// A Map constrained to be non-empty.
-/// An alias for <c>NonEmpty<Map<'key, 'value>, KeyValuePair<'key, 'value>></c>.
-/// </summary>
-type NonEmptyMap<'key, 'value when 'key : comparison> = 
-  NonEmpty<Map<'key, 'value>, KeyValuePair<'key, 'value>>
 
 [<AutoOpen>]
 module NonEmptySeqMatcher = 

@@ -12,7 +12,7 @@ let averageByFloats' (projection:_ -> float) xs = Array.averageBy' projection xs
 let averageByFloats (projection:_ -> float) xs = Array.averageBy projection xs
 
 [<Test>]
-let ``Safe Seq functions error whenever unsafe versions throw for all random inputs`` () =
+let ``Safe Array functions error whenever unsafe versions throw for all random inputs`` () =
   errorsWheneverThrows1 averageFloats'          averageFloats
   errorsWheneverThrows2 averageByFloats'        averageByFloats
   errorsWheneverThrows2 Array.chunkBySize'      Array.chunkBySize
@@ -43,13 +43,14 @@ let ``Safe Seq functions error whenever unsafe versions throw for all random inp
   errorsWheneverThrows3 Array.sub'              Array.sub
   errorsWheneverThrows1 Array.tail'             Array.tail
   errorsWheneverThrows2 Array.take'             Array.take
+  errorsWheneverThrowsForSeq1 Array.transpose'  Array.transpose
   errorsWheneverThrows2 Array.windowed'         Array.windowed
   errorsWheneverThrows2 Array.zip'              Array.zip
   errorsWheneverThrows3 Array.zip3'             Array.zip3
                                                 
 
 [<Test>]
-let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
+let ``Safe Array functions always produce the same output as unsafe versions for all random inputs`` () =
   alwaysProduceSameOutput1 averageFloats'         averageFloats
   alwaysProduceSameOutput2 averageByFloats'       averageByFloats
   alwaysProduceSameOutput2 Array.chunkBySize'     Array.chunkBySize
@@ -80,6 +81,7 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutput3 Array.sub'             Array.sub      
   alwaysProduceSameOutput1 Array.tail'            Array.tail
   alwaysProduceSameOutput2 Array.take'            Array.take
+  alwaysProduceSameOutputForSeq1 Array.transpose' Array.transpose
   alwaysProduceSameOutput2 Array.windowed'        Array.windowed
   alwaysProduceSameOutput2 Array.zip'             Array.zip
   alwaysProduceSameOutput3 Array.zip3'            Array.zip3

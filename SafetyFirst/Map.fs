@@ -1,7 +1,5 @@
 module SafetyFirst.Map
 
-open ResultDotNet.FSharp
-
 open SafetyFirst.ErrorTypes
 
 /// <summary>
