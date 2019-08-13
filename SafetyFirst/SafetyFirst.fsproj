@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Numbers.fs" />
+    <Compile Include="Partial.fs" />
     <Compile Include="ErrorTypes.fs" />
     <Compile Include="Match.fs" />
     <Compile Include="NonEmpty.fs" />
