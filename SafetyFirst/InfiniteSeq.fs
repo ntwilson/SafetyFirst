@@ -5,29 +5,26 @@ open SafetyFirst.Numbers
 
 /// <summary>
 /// An infinite sequence created by <c>InfiniteSeq.init</c>.
-/// The functions in InfiniteSeq are all safe for use with infinite sequences
+/// The functions in InfiniteSeq are all safe for use with infinite sequences.
+/// Note that an InfiniteSeq is technically finite, with an upper bound supplied
+/// at the time of creation. This upper bound represents a limit such that we can 
+/// be sure that the application "hung" if the sequence produced that many elements.
+/// This allows for safe usage of <c>InfiniteSeq</c> without needing to worry about
+/// the application truly hanging in an infinite loop.
+/// Note that this makes the InfiniteSeq type inappropriate for intentionally initiating
+/// an infinite loop (e.g., with an <c>iter</c> function).  You might consider using a 
+/// regular infinite seq with <c>Seq.initInfinite</c> if you're looking to initiate an 
+/// infinite loop.
 /// </summary>
-type InfiniteSeq<'a> = private InfiniteSeq of seq<'a> with
-
-  interface IEnumerable<'a> with
-    member this.GetEnumerator () = 
-      let (InfiniteSeq xs) = this
-      in xs.GetEnumerator ()
-
-    member this.GetEnumerator () : System.Collections.IEnumerator = 
-      let (InfiniteSeq xs) = this
-      in upcast (xs.GetEnumerator ())
+type InfiniteSeq<'a> = private InfiniteSeq of seq<'a>
 
 /// <summary>
 /// Functions safe to use with InfiniteSeqs.  None of the functions in this module
-/// hang indefinitely for typical infinite sequences, though some of them could hang indefinitely
-/// for some infinite sequences (e.g., using 
-/// <c>InfiniteSeq.filter ((<>) 0) (InfiniteSeq.init (fun _ -> 0))</c> as a source
-/// would cause many of the functions to hang indefinitely).
+/// hang indefinitely.
 /// </summary>
 module InfiniteSeq =
 
-  let asNonEmpty (xs:InfiniteSeq<_>) = NonEmpty xs
+  type InfiniteSeqMaxElements = MaxElements of int
 
   /// <summary>
   /// Generates a new sequence which, when iterated, will return successive
@@ -35,13 +32,26 @@ module InfiniteSeq =
   /// will not be saved, that is the function will be reapplied as necessary to
   /// regenerate the elements. The function is passed the index of the item being
   /// generated.
+  /// Note that an InfiniteSeq is technically finite, with the upper bound supplied
+  /// representing a limit such that we can be sure that the application "hung" if 
+  /// the sequence produced that many elements.
+  /// This allows for safe usage of <c>InfiniteSeq</c> without needing to worry about
+  /// the application truly hanging in an infinite loop.
   /// </summary>
-  let init transform = InfiniteSeq (Seq.initInfinite transform)
+  let init (MaxElements maxElements) transform = 
+    InfiniteSeq (Seq.initInfinite transform |> Seq.truncate maxElements)
 
   /// <summary>
   /// Computes the element at the specified index in the collection.
   /// </summary>
-  let item (NaturalInt i) (InfiniteSeq xs) = Seq.item i xs
+  let item' (NaturalInt i) (InfiniteSeq xs) = 
+    Seq.tryItem i xs
+    |> Result.ofOption (NoMatchingElement (sprintf "unable to find an element at index %i after exhausting the entire sequence." i))
+
+  /// <summary>
+  /// Computes the element at the specified index in the collection.
+  /// </summary>
+  let itemSafe i xs = item' i xs
 
   /// <summary>
   /// Applies the given function to each element of the seq. Return the seq comprised of the results <c>x</c> 
@@ -165,9 +175,9 @@ module InfiniteSeq =
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
   /// </code>
   /// </summary>
-  let split splitAfter xs = 
-    InfiniteSeq (Seq.NonEmpty.split splitAfter (asNonEmpty xs))
-    |> map (InfiniteSeq << seq)
+  // let split splitAfter xs = 
+  //   InfiniteSeq (Seq.NonEmpty.split splitAfter (asNonEmpty xs))
+  //   |> map (InfiniteSeq << seq)
 
   let private uncurry f (a, b) = f a b
 
@@ -179,6 +189,6 @@ module InfiniteSeq =
   ///   //returns seq { [0;1];[1;2;3;4];[4];[4;5];... }
   /// </code>
   /// </summary>
-  let splitPairwise splitBetween xs =
-    InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween (asNonEmpty xs))
-    |> map (InfiniteSeq << seq)
+  // let splitPairwise splitBetween xs =
+  //   InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween (asNonEmpty xs))
+  //   |> map (InfiniteSeq << seq)
