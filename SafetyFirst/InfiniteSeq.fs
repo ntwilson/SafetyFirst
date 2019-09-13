@@ -81,9 +81,41 @@ module InfiniteSeq =
 
   /// <summary>
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
-  /// given predicate returns True, and then returns no further elements.
+  /// given predicate returns True, and then returns no further elements.  Note that the resulting
+  /// sequence is evaluated eagerly to ensure that a hang does not occur when iterated.  If you
+  /// expect to possibly receive an infinite result from this function, consider using 
+  /// <c>takeWhileLazy</c> instead.
   /// </summary>
-  let takeWhile predicate (InfiniteSeq xs) = fseq (Seq.takeWhile predicate xs)
+  let takeWhile' predicate (InfiniteSeq xs) = 
+    let xs = Seq.cache xs
+    Seq.find' (not << predicate) xs 
+    |> Result.map (fun _ -> Seq.takeWhile predicate xs)
+    // |> Result.mapError hungErr
+
+  /// <summary>
+  /// Used when iterating an infinite sequence lazily while still safely detecting if the 
+  /// application hangs. The normal approach for infinite sequences is to eagerly evaluate whenever
+  /// consuming a finite result to detect a hang.  This defers the detection to each individual
+  /// element so that computation can be kept lazy.
+  /// </summary>
+  type private InfiniteSeqElement<'a> = ItHung | Element of 'a
+
+  type SequenceHung = SequenceHung
+
+  /// <summary>
+  /// Lazily returns elements of the underlying sequence while the given predicate returns True, and 
+  /// then returns no further elements. Note that reaching the end of the infinite sequence represents
+  /// the application hanging, and we cannot preemptively detect a hang while executing lazily.  As such
+  /// the possibility of a hang is deferred to each individual element.  If you are expecting a finite
+  /// result and are able to eagerly evaluate up to the first element that doesn't pass the predicate, 
+  /// consider using <c>takeWhile'</c> instead, which is likely easier to consume.
+  /// </summary>
+  let takeWhileLazy predicate (InfiniteSeq xs) = 
+    let xs = Seq.append (Seq.map Element xs) [ItHung]
+    in 
+      xs 
+      |> Seq.takeWhile (function | ItHung -> true | Element x -> predicate x)
+      |> Seq.map (function | ItHung -> Error SequenceHung | Element x -> Ok x)
 
   /// <summary>
   /// Returns a sequence that skips N elements of the underlying sequence and then yields the
