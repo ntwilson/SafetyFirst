@@ -26,6 +26,9 @@ module InfiniteSeq =
 
   type InfiniteSeqMaxElements = MaxElements of int
 
+  type InfiniteSeqHung = InfiniteSeqHung of string
+  let private hungErr _ = InfiniteSeqHung "Program execution hung.  This infinite sequence was allowed to evaluate elements for too long."
+
   /// <summary>
   /// Generates a new sequence which, when iterated, will return successive
   /// elements by calling the given function. The results of calling the function
@@ -45,8 +48,7 @@ module InfiniteSeq =
   /// Computes the element at the specified index in the collection.
   /// </summary>
   let item' (NaturalInt i) (InfiniteSeq xs) = 
-    Seq.tryItem i xs
-    |> Result.ofOption (NoMatchingElement (sprintf "unable to find an element at index %i after exhausting the entire sequence." i))
+    Seq.item' i xs |> Result.mapError hungErr
 
   /// <summary>
   /// Computes the element at the specified index in the collection.
@@ -75,21 +77,24 @@ module InfiniteSeq =
   let chunksOf chunkSize (InfiniteSeq xs) = InfiniteSeq <| Seq.chunksOf chunkSize xs
 
   /// <summary>
-  /// Returns the first N elements of the sequence.
+  /// Returns the first N elements of the sequence.  Note that this will happen
+  /// eagerly to check for a hang.
   /// </summary>
-  let take n (InfiniteSeq xs) = fseq (Seq.take n xs)
+  let take n (InfiniteSeq xs) = Seq.take' n xs |> Result.mapError hungErr
 
   /// <summary>
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
-  /// given predicate returns True, and then returns no further elements.
+  /// given predicate returns True, and then returns no further elements.  Note that this will
+  /// happen eagerly to check for a hang.
   /// </summary>
-  let takeWhile predicate (InfiniteSeq xs) = fseq (Seq.takeWhile predicate xs)
+  // let takeWhile predicate (InfiniteSeq xs) = 
+  //   fseq (Seq.takeWhile predicate xs)
 
   /// <summary>
-  /// Returns a sequence that skips N elements of the underlying sequence and then yields the
-  /// remaining elements of the sequence.
+  /// Returns a sequence that (eagerly) skips N elements of the underlying sequence and then 
+  /// yields the remaining elements of the sequence (the remaining sequence remains lazy).
   /// </summary>
-  let skip n (InfiniteSeq xs) = InfiniteSeq (Seq.skip n xs)
+  let skip n (InfiniteSeq xs) = InfiniteSeq (Seq.skipLenient n xs)
 
   /// <summary>
   /// Returns a sequence that, when iterated, skips elements of the underlying sequence while the
@@ -100,18 +105,23 @@ module InfiniteSeq =
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
-  let head (InfiniteSeq xs) = Seq.head xs
+  let head' (InfiniteSeq xs) = Seq.head' xs |> Result.mapError hungErr
 
   /// <summary>
   /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
   /// remaining elements of the sequence.
   /// </summary>
-  let tail (InfiniteSeq xs) = InfiniteSeq (Seq.tail xs)
+  let tail' (InfiniteSeq xs) = Seq.tail' xs |> Result.map InfiniteSeq |> Result.mapError hungErr
 
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
-  let uncons xs = (head xs, tail xs)
+  let uncons xs = 
+    result { 
+      let! h = head' xs 
+      let! t = tail' xs
+      return (h, t)
+    }
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
@@ -132,7 +142,19 @@ module InfiniteSeq =
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// </summary>
-  let map2 f xs (InfiniteSeq ys) = Seq.map2 f xs ys
+  let map2 f (InfiniteSeq xs) (InfiniteSeq ys) = InfiniteSeq <| Seq.map2 f xs ys
+
+  /// <summary>
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  
+  /// </summary>
+  let map2L f (InfiniteSeq xs) ys = Seq.map2 f xs ys
+
+  /// <summary>
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  
+  /// </summary>
+  let map2R f xs (InfiniteSeq ys) = Seq.map2 f xs ys
 
   /// <summary>
   /// Returns a new collection containing only the elements of the collection
@@ -155,14 +177,26 @@ module InfiniteSeq =
   /// Use this function with caution.  Will continue to search the InfiniteSeq
   /// until an element matching the predicate is found, no matter how long it takes.
   /// </summary>
-  let find predicate (InfiniteSeq xs) = Seq.find predicate xs
+  let find' predicate (InfiniteSeq xs) = Seq.find' predicate xs |> Result.mapError hungErr
 
   /// <summary>
-  /// Combines the two sequences into a list of pairs. The two sequences need not have equal lengths:
-  /// when one sequence is exhausted any remaining elements in the other
+  /// Combines the two sequences into a list of pairs. 
+  /// </summary>
+  let zip (InfiniteSeq xs) (InfiniteSeq ys) = InfiniteSeq <| Seq.zip xs ys
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. 
+  /// When one sequence is exhausted any remaining elements in the other
   /// sequence are ignored.
   /// </summary>
-  let zip xs (InfiniteSeq ys) = Seq.zip xs ys
+  let zipL (InfiniteSeq xs) ys = Seq.zip xs ys
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. 
+  /// When one sequence is exhausted any remaining elements in the other
+  /// sequence are ignored.
+  /// </summary>
+  let zipR xs (InfiniteSeq ys) = Seq.zip xs ys
 
   /// <summary>
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
@@ -175,9 +209,13 @@ module InfiniteSeq =
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
   /// </code>
   /// </summary>
-  // let split splitAfter xs = 
-  //   InfiniteSeq (Seq.NonEmpty.split splitAfter (asNonEmpty xs))
-  //   |> map (InfiniteSeq << seq)
+  let split splitAfter xs = 
+    uncons xs 
+    |> Result.map (fun (head, InfiniteSeq tail) ->
+      let nonEmpty = Seq.NonEmpty.create head tail
+      InfiniteSeq (Seq.NonEmpty.split splitAfter nonEmpty)
+      |> map (InfiniteSeq << seq))
+    |> Result.mapError hungErr
 
   let private uncurry f (a, b) = f a b
 
@@ -189,6 +227,10 @@ module InfiniteSeq =
   ///   //returns seq { [0;1];[1;2;3;4];[4];[4;5];... }
   /// </code>
   /// </summary>
-  // let splitPairwise splitBetween xs =
-  //   InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween (asNonEmpty xs))
-  //   |> map (InfiniteSeq << seq)
+  let splitPairwise splitBetween xs =
+    uncons xs
+    |> Result.map (fun (head, InfiniteSeq tail) -> 
+      let nonEmpty = Seq.NonEmpty.create head tail
+      InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween nonEmpty)
+      |> map (InfiniteSeq << seq))
+    |> Result.mapError hungErr
