@@ -78,17 +78,54 @@ module InfiniteSeq =
 
   /// <summary>
   /// Returns the first N elements of the sequence.  Note that this will happen
-  /// eagerly to check for a hang.
+  /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
+  /// <c>takeLazy</c> instead.
   /// </summary>
-  let take n (InfiniteSeq xs) = Seq.take' n xs |> Result.mapError hungErr
+  let take' n (InfiniteSeq xs) = Seq.take' n xs |> Result.mapError hungErr
+
+  /// <summary>
+  /// Returns the first N elements of the sequence.  Note that this will happen
+  /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
+  /// <c>takeLazy</c> instead.
+  /// </summary>
+  let takeSafe n xs = take' n xs
+
+  /// <summary>
+  /// Lazily returns the first N elements of the sequence.  Note that this will happen
+  /// eagerly to check for a hang.  Note that reaching the end of the infinite sequence represents
+  /// the application hanging, and we cannot preemptively detect a hang while executing lazily.  
+  /// As such the possibility of a hang is deferred to each individual element.  
+  /// If you are able to eagerly evaluate the first n elements, consider using 
+  /// <c>take'</c> instead, which is likely easier to consume.
+  /// </summary>
+  let takeLazy n (InfiniteSeq xs) = 
+    let xs = Seq.append (Seq.map Ok xs) [Error (hungErr ())]
+    in Seq.truncate n xs
 
   /// <summary>
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
-  /// given predicate returns True, and then returns no further elements.  Note that this will
-  /// happen eagerly to check for a hang.
+  /// given predicate returns True, and then returns no further elements.  Note that the resulting
+  /// sequence is evaluated eagerly to ensure that a hang does not occur when iterated.  If you
+  /// expect to possibly receive an infinite result from this function, consider using 
+  /// <c>takeWhileLazy</c> instead.
   /// </summary>
-  // let takeWhile predicate (InfiniteSeq xs) = 
-  //   fseq (Seq.takeWhile predicate xs)
+  let takeWhile' predicate (InfiniteSeq xs) = 
+    let xs = Seq.cache xs
+    Seq.find' (not << predicate) xs 
+    |> Result.map (fun _ -> Seq.takeWhile predicate xs)
+    |> Result.mapError hungErr
+
+  /// <summary>
+  /// Lazily returns elements of the underlying sequence while the given predicate returns True, and 
+  /// then returns no further elements. Note that reaching the end of the infinite sequence represents
+  /// the application hanging, and we cannot preemptively detect a hang while executing lazily.  As such
+  /// the possibility of a hang is deferred to each individual element.  If you are expecting a finite
+  /// result and are able to eagerly evaluate up to the first element that doesn't pass the predicate, 
+  /// consider using <c>takeWhile'</c> instead, which is likely easier to consume.
+  /// </summary>
+  let takeWhileLazy predicate (InfiniteSeq xs) = 
+    let xs = Seq.append (Seq.map Ok xs) [Error (hungErr ())]
+    in xs |> Seq.takeWhile (function | Error _ -> true | Ok x -> predicate x)
 
   /// <summary>
   /// Returns a sequence that (eagerly) skips N elements of the underlying sequence and then 
@@ -116,7 +153,7 @@ module InfiniteSeq =
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
-  let uncons xs = 
+  let uncons' xs = 
     result { 
       let! h = head' xs 
       let! t = tail' xs
@@ -148,13 +185,21 @@ module InfiniteSeq =
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// </summary>
-  let map2L f (InfiniteSeq xs) ys = Seq.map2 f xs ys
+  let map2L f (InfiniteSeq xs) ys = 
+    let result = Seq.map2 f xs ys |> fseq
+    if FSeq.length result = FSeq.length ys
+    then Ok result
+    else Error (hungErr ())
 
   /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  
   /// </summary>
-  let map2R f xs (InfiniteSeq ys) = Seq.map2 f xs ys
+  let map2R f xs (InfiniteSeq ys) = 
+    let result = Seq.map2 f xs ys |> fseq
+    if FSeq.length result = FSeq.length xs
+    then Ok result
+    else Error (hungErr ())
 
   /// <summary>
   /// Returns a new collection containing only the elements of the collection
@@ -189,14 +234,22 @@ module InfiniteSeq =
   /// When one sequence is exhausted any remaining elements in the other
   /// sequence are ignored.
   /// </summary>
-  let zipL (InfiniteSeq xs) ys = Seq.zip xs ys
+  let zipL (InfiniteSeq xs) ys = 
+    let result = Seq.zip xs ys |> fseq
+    if FSeq.length result = FSeq.length ys
+    then Ok result
+    else Error (hungErr ())
 
   /// <summary>
   /// Combines the two sequences into a list of pairs. 
   /// When one sequence is exhausted any remaining elements in the other
   /// sequence are ignored.
   /// </summary>
-  let zipR xs (InfiniteSeq ys) = Seq.zip xs ys
+  let zipR xs (InfiniteSeq ys) = 
+    let result = Seq.zip xs ys |> fseq
+    if FSeq.length result = FSeq.length xs
+    then Ok result
+    else Error (hungErr ())
 
   /// <summary>
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
@@ -209,15 +262,15 @@ module InfiniteSeq =
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
   /// </code>
   /// </summary>
-  let split splitAfter xs = 
-    uncons xs 
-    |> Result.map (fun (head, InfiniteSeq tail) ->
-      let nonEmpty = Seq.NonEmpty.create head tail
-      InfiniteSeq (Seq.NonEmpty.split splitAfter nonEmpty)
-      |> map (InfiniteSeq << seq))
-    |> Result.mapError hungErr
+  // let split splitAfter xs = 
+  //   uncons xs 
+  //   |> Result.map (fun (head, InfiniteSeq tail) ->
+  //     let nonEmpty = Seq.NonEmpty.create head tail
+  //     InfiniteSeq (Seq.NonEmpty.split splitAfter nonEmpty)
+  //     |> map (InfiniteSeq << seq))
+  //   |> Result.mapError hungErr
 
-  let private uncurry f (a, b) = f a b
+  // let private uncurry f (a, b) = f a b
 
   /// <summary>
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
@@ -227,10 +280,10 @@ module InfiniteSeq =
   ///   //returns seq { [0;1];[1;2;3;4];[4];[4;5];... }
   /// </code>
   /// </summary>
-  let splitPairwise splitBetween xs =
-    uncons xs
-    |> Result.map (fun (head, InfiniteSeq tail) -> 
-      let nonEmpty = Seq.NonEmpty.create head tail
-      InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween nonEmpty)
-      |> map (InfiniteSeq << seq))
-    |> Result.mapError hungErr
+  // let splitPairwise splitBetween xs =
+  //   uncons xs
+  //   |> Result.map (fun (head, InfiniteSeq tail) -> 
+  //     let nonEmpty = Seq.NonEmpty.create head tail
+  //     InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween nonEmpty)
+  //     |> map (InfiniteSeq << seq))
+  //   |> Result.mapError hungErr
