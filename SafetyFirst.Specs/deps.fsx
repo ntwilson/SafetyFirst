@@ -1,0 +1,1 @@
+#r "./bin/Debug/netcoreapp2.0/SafetyFirst.dll"

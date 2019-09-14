@@ -190,27 +190,27 @@ module Splitting =
           = [[1;2]; [12;13]; [23]]
       @>
 
-  [<Test>]
-  let ``splits infinite sequences without hanging`` () = 
-    let alwaysFalse (_:int) = false
-    test 
-      <@
-        InfiniteSeq.split (fun i -> i % 20 = 0) (InfiniteSeq.init id) |> InfiniteSeq.take 3 |> ofNonEmpty
-          = [[0]; [1 .. 20]; [21 .. 40]]
+  // [<Test>]
+  // let ``splits infinite sequences without hanging`` () = 
+  //   let alwaysFalse (_:int) = false
+  //   test 
+  //     <@
+  //       InfiniteSeq.split (fun i -> i % 20 = 0) (InfiniteSeq.init id) |> InfiniteSeq.take 3 |> ofNonEmpty
+  //         = [[0]; [1 .. 20]; [21 .. 40]]
 
-        &&
+  //       &&
 
-        InfiniteSeq.splitPairwise (fun left right -> left % 20 = 0) (InfiniteSeq.init id) |> InfiniteSeq.take 3 |> ofNonEmpty
-          = [[0]; [1 .. 20]; [21 .. 40]]
+  //       InfiniteSeq.splitPairwise (fun left right -> left % 20 = 0) (InfiniteSeq.init id) |> InfiniteSeq.take 3 |> ofNonEmpty
+  //         = [[0]; [1 .. 20]; [21 .. 40]]
 
-        &&
+  //       &&
 
-        InfiniteSeq.split alwaysFalse (InfiniteSeq.init id) |> InfiniteSeq.head |> InfiniteSeq.take 40 |> FSeq.toList
-          = [0 .. 39]
+  //       InfiniteSeq.split alwaysFalse (InfiniteSeq.init id) |> InfiniteSeq.head |> InfiniteSeq.take 40 |> FSeq.toList
+  //         = [0 .. 39]
 
-        &&
+  //       &&
 
-        InfiniteSeq.splitPairwise (fun left right -> false) (InfiniteSeq.init id) |> InfiniteSeq.head |> InfiniteSeq.take 40 |> FSeq.toList 
-          = [0 .. 39]        
-      @>
+  //       InfiniteSeq.splitPairwise (fun left right -> false) (InfiniteSeq.init id) |> InfiniteSeq.head |> InfiniteSeq.take 40 |> FSeq.toList 
+  //         = [0 .. 39]        
+  //     @>
 

@@ -23,6 +23,7 @@
     <Compile Include="ArraySpec.fs" />
     <Compile Include="MapSpec.fs" />
     <Compile Include="FSeqSpec.fs" />
+    <Compile Include="InfiniteSeqSpec.fs" />
     <Compile Include="IEnumerableSpec.fs" />
     <Compile Include="ReadmeSpec.fs" />
   </ItemGroup>
