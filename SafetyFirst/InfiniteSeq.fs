@@ -1,5 +1,7 @@
 namespace SafetyFirst
 
+// #load "./deps.fsx"
+
 open System.Collections.Generic
 open SafetyFirst.Numbers
 
@@ -48,32 +50,36 @@ module InfiniteSeq =
 
   /// <summary>
   /// Returns a new collection containing only the elements of the collection
-  /// for which the given predicate returns "true". This is a synonym for Seq.where.
+  /// for which the given predicate returns "true".
   /// </summary>
   let filter f (InfiniteSeq xs) = InfiniteSeq (Seq.filter f xs)
 
   /// <summary>
-  /// Computes the element at the specified index in the collection.
+  /// Computes the element at the specified index in the collection.  Returns
+  /// an error if the sequence hung (produced too many elements).
   /// </summary>
   let item' (NaturalInt i) (InfiniteSeq xs) = 
     Seq.item' i xs |> Result.mapError (always hung)
 
   /// <summary>
-  /// Computes the element at the specified index in the collection.
+  /// Computes the element at the specified index in the collection.  Returns
+  /// an error if the sequence hung (produced too many elements).
   /// </summary>
   let itemSafe i xs = item' i xs
 
   /// <summary>
   /// Returns the first N elements of the sequence.  Note that this will happen
   /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
-  /// <c>takeLazy</c> instead.
+  /// <c>takeLazy</c> instead.  Returns
+  /// an error if the sequence hung (produced too many elements).
   /// </summary>
   let take' n (InfiniteSeq xs) = Seq.take' n xs |> Result.mapError (always hung)
 
   /// <summary>
   /// Returns the first N elements of the sequence.  Note that this will happen
   /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
-  /// <c>takeLazy</c> instead.
+  /// <c>truncate</c> instead.  Returns
+  /// an error if the sequence hung (produced too many elements).
   /// </summary>
   let takeSafe n xs = take' n xs
 
@@ -81,7 +87,9 @@ module InfiniteSeq =
   /// Lazily returns up to the first N elements of the sequence.  
   /// Note that reaching the end of the infinite sequence represents
   /// the application hanging, and we cannot preemptively detect a hang while executing lazily.  
-  /// As such the possibility of a hang is deferred to each individual element.  
+  /// As such the possibility of a hang is deferred to each individual element.
+  /// This only returns elements up to the first Error, so there is no guarantee that
+  /// the resulting sequence would contain <c>n</c> elements.  
   /// If you are able to eagerly evaluate the first n elements, consider using 
   /// <c>take'</c> instead, which is likely easier to consume.
   /// </summary>
@@ -94,7 +102,8 @@ module InfiniteSeq =
   /// given predicate returns True, and then returns no further elements.  Note that the resulting
   /// sequence is evaluated eagerly to ensure that a hang does not occur when iterated.  If you
   /// expect to possibly receive an infinite result from this function, consider using 
-  /// <c>takeWhileLazy</c> instead.
+  /// <c>takeWhileLazy</c> instead.  Returns
+  /// an error if the sequence hung (produced too many elements).
   /// </summary>
   let takeWhile' predicate (InfiniteSeq xs) = 
     let xs = Seq.cache xs
@@ -124,28 +133,30 @@ module InfiniteSeq =
 
   /// <summary>
   /// Divides the input sequence into chunks of size at most <c>size</c>.
-  /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
+  /// Each chunk is guaranteed to contain <c>chunkSize</c> elements.
+  /// Same as <c>InfiniteSeq.chunkBySizeUnsafe</c>, but restricts the input to a PositiveInt.
   /// </summary>
   let chunksOf ((PositiveInt n) as chunkSize) (InfiniteSeq xs) = 
     Seq.chunksOf chunkSize xs
     |> Seq.map (fun innerChunk ->
-      if Array.length innerChunk = n then Ok innerChunk else Error hung
+      if Array.length innerChunk = n then Some innerChunk else None
     )
-    |> Seq.takeWhile Result.isOk
-    |> Seq.choose Result.toOption
+    |> Seq.takeWhile Option.isSome
+    |> Seq.choose id
     |> InfiniteSeq 
 
   /// <summary>
   /// Divides the input sequence into chunks of size at most <c>size</c>.
-  /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt.
+  /// Each chunk is guaranteed to contain <c>chunkSize</c> elements.
+  /// Same as <c>InfiniteSeq.chunksOf</c>, but allows a regular int as input.
   /// CAUTION: This function will THROW for a chunkSize <= 0
   /// </summary>
   let chunkBySizeUnsafe chunkSize xs =
     chunksOf (PositiveInt.assume chunkSize) xs 
 
   /// <summary>
-  /// Returns a sequence that (eagerly) skips N elements of the underlying sequence and then 
-  /// yields the remaining elements of the sequence (the remaining sequence remains lazy).
+  /// Returns a sequence that skips N elements of the underlying sequence and then 
+  /// yields the remaining elements of the sequence.
   /// </summary>
   let skip n (InfiniteSeq xs) = InfiniteSeq (Seq.skipLenient n xs)
 
@@ -155,115 +166,136 @@ module InfiniteSeq =
   /// </summary>
   let skipWhile predicate (InfiniteSeq xs) = InfiniteSeq (Seq.skipWhile predicate xs)
 
+  /// <summary>
+  /// Returns the first element of the sequence.  Returns an error if 
+  /// the sequence hung (produced too many elements).
+  /// </summary>
+  let head' (InfiniteSeq xs) = Seq.head' xs |> Result.mapError (always hung)
+
+  /// <summary>
+  /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
+  /// remaining elements of the sequence. Returns an error if 
+  /// the sequence hung (produced too many elements).
+  /// </summary>
+  let tail' (InfiniteSeq xs) = Seq.tail' xs |> Result.map InfiniteSeq |> Result.mapError (always hung)
+
+  /// <summary>
+  /// O(1). Returns tuple of head element and tail of the list.
+  /// Returns an error if the sequence hung (produced too many elements).
+  /// </summary>
+  let uncons' xs = 
+    result { 
+      let! h = head' xs 
+      let! t = tail' xs
+      return (h, t)
+    }
+
+  /// <summary>
+  /// Builds a new collection whose elements are the results of applying the given function
+  /// to each of the elements of the collection. The given function will be applied
+  /// as elements are demanded using the MoveNext method on enumerators retrieved from the
+  /// object.
+  /// </summary>
+  let map f (InfiniteSeq xs) = InfiniteSeq (Seq.map f xs)
+
+  /// <summary>
+  /// Builds a new collection whose elements are the results of applying the given function
+  /// to each of the elements of the collection. The integer index passed to the
+  /// function indicates the index (from 0) of element being transformed.
+  /// </summary>
+  let mapi f (InfiniteSeq xs) = InfiniteSeq (Seq.mapi f xs)
+
+  /// <summary>
+  /// O(1). Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  
+  /// </summary>
+  let map2 f (InfiniteSeq xs) (InfiniteSeq ys) = InfiniteSeq <| Seq.map2 f xs ys
+
+  /// <summary>
+  /// Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  Truncates the 
+  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// is computed eagerly (though of course the elements of the infinite sequence that aren't
+  /// needed are left lazy).  Returns an error if the infinite sequence hung 
+  /// while trying to produce as many elements as the finite sequence.
+  /// </summary>
+  let map2L f (InfiniteSeq xs) ys = 
+    let result = Seq.map2 f xs ys |> fseq
+    if FSeq.length result = FSeq.length ys
+    then Ok result
+    else Error hung
+
+  /// <summary>
+  /// Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  Truncates the 
+  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// is computed eagerly (though of course the elements of the infinite sequence that aren't
+  /// needed are left lazy).  Returns an error if the infinite sequence hung 
+  /// while trying to produce as many elements as the finite sequence.
+  /// </summary>
+  let map2R f xs (InfiniteSeq ys) = 
+    let result = Seq.map2 f xs ys |> fseq
+    if FSeq.length result = FSeq.length xs
+    then Ok result
+    else Error hung
+
+  /// <summary>
+  /// Returns a sequence of each element in the input sequence and its predecessor, with the
+  /// exception of the first element which is only returned as the predecessor of the second element.
+  /// </summary>
+  let pairwise (InfiniteSeq xs) = InfiniteSeq (Seq.pairwise xs)
+  
+  /// <summary>
+  /// Searches the sequence until an element matching the predicate is found.
+  /// Returns an error if the infinite sequence hung 
+  /// while trying to find a matching element.
+  /// </summary>
+  let find' predicate (InfiniteSeq xs) = Seq.find' predicate xs |> Result.mapError (always hung)
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. 
+  /// </summary>
+  let zip (InfiniteSeq xs) (InfiniteSeq ys) = InfiniteSeq <| Seq.zip xs ys
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. 
+  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// The resulting sequence is computed eagerly (though of course the elements
+  /// of the infinite sequence that aren't needed are left lazy).  
+  /// Returns an error if the infinite sequence hung while trying 
+  /// to produce as many elements as the finite sequence.
+  /// </summary>
+  let zipL (InfiniteSeq xs) ys = 
+    let result = Seq.zip xs ys |> fseq
+    if FSeq.length result = FSeq.length ys
+    then Ok result
+    else Error hung
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. 
+  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// The resulting sequence is computed eagerly (though of course the elements
+  /// of the infinite sequence that aren't needed are left lazy).  
+  /// Returns an error if the infinite sequence hung while trying 
+  /// to produce as many elements as the finite sequence.
+  /// </summary>
+  let zipR xs (InfiniteSeq ys) = 
+    let result = Seq.zip xs ys |> fseq
+    if FSeq.length result = FSeq.length xs
+    then Ok result
+    else Error hung
+
+
 
   // -- tests end here -- 
 
 
-  // /// <summary>
-  // /// Returns the first element of the sequence.
-  // /// </summary>
-  // let head' (InfiniteSeq xs) = Seq.head' xs |> Result.mapError (always hung)
-
-  // /// <summary>
-  // /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
-  // /// remaining elements of the sequence.
-  // /// </summary>
-  // let tail' (InfiniteSeq xs) = Seq.tail' xs |> Result.map InfiniteSeq |> Result.mapError (always hung)
-
-  // /// <summary>
-  // /// O(1). Returns tuple of head element and tail of the list.
-  // /// </summary>
-  // let uncons' xs = 
-  //   result { 
-  //     let! h = head' xs 
-  //     let! t = tail' xs
-  //     return (h, t)
-  //   }
-
-  // /// <summary>
-  // /// Builds a new collection whose elements are the results of applying the given function
-  // /// to each of the elements of the collection. The given function will be applied
-  // /// as elements are demanded using the MoveNext method on enumerators retrieved from the
-  // /// object.
-  // /// </summary>
-  // let map f (InfiniteSeq xs) = InfiniteSeq (Seq.map f xs)
-
-  // /// <summary>
-  // /// Builds a new collection whose elements are the results of applying the given function
-  // /// to each of the elements of the collection. The integer index passed to the
-  // /// function indicates the index (from 0) of element being transformed.
-  // /// </summary>
-  // let mapi f (InfiniteSeq xs) = InfiniteSeq (Seq.mapi f xs)
-
-  // /// <summary>
-  // /// O(1). Build a new collection whose elements are the results of applying the given function
-  // /// to the corresponding elements of the two collections pairwise.  
-  // /// </summary>
-  // let map2 f (InfiniteSeq xs) (InfiniteSeq ys) = InfiniteSeq <| Seq.map2 f xs ys
-
-  // /// <summary>
-  // /// O(1). Build a new collection whose elements are the results of applying the given function
-  // /// to the corresponding elements of the two collections pairwise.  
-  // /// </summary>
-  // let map2L f (InfiniteSeq xs) ys = 
-  //   let result = Seq.map2 f xs ys |> fseq
-  //   if FSeq.length result = FSeq.length ys
-  //   then Ok result
-  //   else Error hung
-
-  // /// <summary>
-  // /// O(1). Build a new collection whose elements are the results of applying the given function
-  // /// to the corresponding elements of the two collections pairwise.  
-  // /// </summary>
-  // let map2R f xs (InfiniteSeq ys) = 
-  //   let result = Seq.map2 f xs ys |> fseq
-  //   if FSeq.length result = FSeq.length xs
-  //   then Ok result
-  //   else Error hung
-
-  // /// <summary>
-  // /// Returns a sequence of each element in the input sequence and its predecessor, with the
-  // /// exception of the first element which is only returned as the predecessor of the second element.
-  // /// </summary>
-  // let pairwise (InfiniteSeq xs) = InfiniteSeq (Seq.pairwise xs)
 
   // /// <summary>
   // /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
   // /// </summary>
   // let scan f initialState (InfiniteSeq xs) = InfiniteSeq (Seq.scan f initialState xs)
-  
-  // /// <summary>
-  // /// Use this function with caution.  Will continue to search the InfiniteSeq
-  // /// until an element matching the predicate is found, no matter how long it takes.
-  // /// </summary>
-  // let find' predicate (InfiniteSeq xs) = Seq.find' predicate xs |> Result.mapError (always hung)
 
-  // /// <summary>
-  // /// Combines the two sequences into a list of pairs. 
-  // /// </summary>
-  // let zip (InfiniteSeq xs) (InfiniteSeq ys) = InfiniteSeq <| Seq.zip xs ys
-
-  // /// <summary>
-  // /// Combines the two sequences into a list of pairs. 
-  // /// When one sequence is exhausted any remaining elements in the other
-  // /// sequence are ignored.
-  // /// </summary>
-  // let zipL (InfiniteSeq xs) ys = 
-  //   let result = Seq.zip xs ys |> fseq
-  //   if FSeq.length result = FSeq.length ys
-  //   then Ok result
-  //   else Error hung
-
-  // /// <summary>
-  // /// Combines the two sequences into a list of pairs. 
-  // /// When one sequence is exhausted any remaining elements in the other
-  // /// sequence are ignored.
-  // /// </summary>
-  // let zipR xs (InfiniteSeq ys) = 
-  //   let result = Seq.zip xs ys |> fseq
-  //   if FSeq.length result = FSeq.length xs
-  //   then Ok result
-  //   else Error hung
 
   // /// <summary>
   // /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
