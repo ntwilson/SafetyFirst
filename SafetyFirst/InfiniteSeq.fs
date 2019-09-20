@@ -1,7 +1,5 @@
 namespace SafetyFirst
 
-// #load "./deps.fsx"
-
 open System.Collections.Generic
 open SafetyFirst.Numbers
 
@@ -89,7 +87,7 @@ module InfiniteSeq =
   /// the application hanging, and we cannot preemptively detect a hang while executing lazily.  
   /// As such the possibility of a hang is deferred to each individual element.
   /// This only returns elements up to the first Error, so there is no guarantee that
-  /// the resulting sequence would contain <c>n</c> elements.  
+  /// the resulting sequence would contain N elements.  
   /// If you are able to eagerly evaluate the first n elements, consider using 
   /// <c>take'</c> instead, which is likely easier to consume.
   /// </summary>
@@ -174,19 +172,18 @@ module InfiniteSeq =
 
   /// <summary>
   /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
-  /// remaining elements of the sequence. Returns an error if 
-  /// the sequence hung (produced too many elements).
+  /// remaining elements of the sequence. 
   /// </summary>
-  let tail' (InfiniteSeq xs) = Seq.tail' xs |> Result.map InfiniteSeq |> Result.mapError (always hung)
+  let tail xs = skip 1 xs
 
   /// <summary>
-  /// O(1). Returns tuple of head element and tail of the list.
+  /// Returns tuple of head element and tail of the list.
   /// Returns an error if the sequence hung (produced too many elements).
   /// </summary>
   let uncons' xs = 
     result { 
       let! h = head' xs 
-      let! t = tail' xs
+      let t = tail xs
       return (h, t)
     }
 
@@ -285,51 +282,51 @@ module InfiniteSeq =
     then Ok result
     else Error hung
 
+  /// <summary>
+  /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
+  /// </summary>
+  let scan f initialState (InfiniteSeq xs) = InfiniteSeq (Seq.scan f initialState xs)
+
 
 
   // -- tests end here -- 
 
 
 
-  // /// <summary>
-  // /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.
-  // /// </summary>
-  // let scan f initialState (InfiniteSeq xs) = InfiniteSeq (Seq.scan f initialState xs)
 
+  /// <summary>
+  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+  /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+  /// the sequence preceeding the split.
+  /// For example:
+  /// <code>
+  /// IniniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
+  ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
+  /// </code>
+  /// </summary>
+  // let split splitAfter xs = 
+  //   uncons xs 
+  //   |> Result.map (fun (head, InfiniteSeq tail) ->
+  //     let nonEmpty = Seq.NonEmpty.create head tail
+  //     InfiniteSeq (Seq.NonEmpty.split splitAfter nonEmpty)
+  //     |> map (InfiniteSeq << seq))
+  //   |> Result.mapError hungErr
 
-  // /// <summary>
-  // /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
-  // /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
-  // /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  // /// the sequence preceeding the split.
-  // /// For example:
-  // /// <code>
-  // /// IniniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
-  // ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
-  // /// </code>
-  // /// </summary>
-  // // let split splitAfter xs = 
-  // //   uncons xs 
-  // //   |> Result.map (fun (head, InfiniteSeq tail) ->
-  // //     let nonEmpty = Seq.NonEmpty.create head tail
-  // //     InfiniteSeq (Seq.NonEmpty.split splitAfter nonEmpty)
-  // //     |> map (InfiniteSeq << seq))
-  // //   |> Result.mapError hungErr
+  // let private uncurry f (a, b) = f a b
 
-  // // let private uncurry f (a, b) = f a b
-
-  // /// <summary>
-  // /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
-  // /// For example:
-  // /// <code>
-  // /// NonEmptySeq.splitPairwise (=) (seq { 0;1;1;2;3;4;4;4;5;...})
-  // ///   //returns seq { [0;1];[1;2;3;4];[4];[4;5];... }
-  // /// </code>
-  // /// </summary>
-  // // let splitPairwise splitBetween xs =
-  // //   uncons xs
-  // //   |> Result.map (fun (head, InfiniteSeq tail) -> 
-  // //     let nonEmpty = Seq.NonEmpty.create head tail
-  // //     InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween nonEmpty)
-  // //     |> map (InfiniteSeq << seq))
-  // //   |> Result.mapError hungErr
+  /// <summary>
+  /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+  /// For example:
+  /// <code>
+  /// NonEmptySeq.splitPairwise (=) (seq { 0;1;1;2;3;4;4;4;5;...})
+  ///   //returns seq { [0;1];[1;2;3;4];[4];[4;5];... }
+  /// </code>
+  /// </summary>
+  // let splitPairwise splitBetween xs =
+  //   uncons xs
+  //   |> Result.map (fun (head, InfiniteSeq tail) -> 
+  //     let nonEmpty = Seq.NonEmpty.create head tail
+  //     InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween nonEmpty)
+  //     |> map (InfiniteSeq << seq))
+  //   |> Result.mapError hungErr
