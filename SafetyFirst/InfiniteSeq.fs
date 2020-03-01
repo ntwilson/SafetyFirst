@@ -45,7 +45,24 @@ module InfiniteSeq =
   /// This allows for safe usage of <c>InfiniteSeq</c> without needing to worry about
   /// the application truly hanging in an infinite loop.
   /// </summary>
+  [<CompiledName("$init_NotUsedByC#")>]
   let init (MaxElements maxElements) transform = 
+    InfiniteSeq (Seq.initInfinite transform |> Seq.truncate maxElements)
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive
+  /// elements by calling the given function. The results of calling the function
+  /// will not be saved, that is the function will be reapplied as necessary to
+  /// regenerate the elements. The function is passed the index of the item being
+  /// generated.
+  /// Note that an InfiniteSeq is technically finite, with the upper bound supplied
+  /// representing a limit such that we can be sure that the application "hung" if 
+  /// the sequence produced that many elements.
+  /// This allows for safe usage of <c>InfiniteSeq</c> without needing to worry about
+  /// the application truly hanging in an infinite loop.
+  /// </summary>
+  [<CompilerMessage(message="not for use from F# - Intended to be used from C# only", messageNumber=17333, IsHidden=true)>]
+  let Init maxElements transform = 
     InfiniteSeq (Seq.initInfinite transform |> Seq.truncate maxElements)
 
   /// <summary>
