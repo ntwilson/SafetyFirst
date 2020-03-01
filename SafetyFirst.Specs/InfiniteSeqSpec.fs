@@ -1,8 +1,5 @@
 module SafetyFirst.Specs.InfiniteSeqSpec
 
-// #load "./deps.fsx"
-// #load "../SafetyFirst/InfiniteSeq.fsx"
-
 open NUnit.Framework
 open Swensen.Unquote
 
@@ -123,9 +120,9 @@ let ``taking the head does not hang`` () =
 let ``taking the tail does not hang`` () = 
   test 
     <@
-      wellFormedList |> InfiniteSeq.tail' |> Result.map (take 5) = Ok (Ok [1 .. 5])
+      wellFormedList |> InfiniteSeq.tail |> take 5 = Ok [1 .. 5]
       &&
-      illFormedList |> InfiniteSeq.tail' |> Result.isError
+      illFormedList |> InfiniteSeq.tail |> take 5 |> Result.isError
     @>
 
 [<Test>]
@@ -232,6 +229,15 @@ let ``zipping an infinite sequence with a finite sequence does not hang`` () =
       InfiniteSeq.zipR (fseq [1 .. 4]) wellFormedList = Ok (fseq [ (1, 0); (2, 1); (3, 2); (4, 3) ])
       &&
       InfiniteSeq.zipR (fseq [1 .. 4]) illFormedList |> Result.isError
+    @>
+
+[<Test>]
+let ``scanning does not hang`` () = 
+  test 
+    <@
+      InfiniteSeq.scan (+) 1 wellFormedList |> take 6 = Ok [1; 1; 2; 4; 7; 11]
+      &&
+      InfiniteSeq.scan (+) 1 illFormedList |> take 6 |> Result.isError
     @>
 
 
