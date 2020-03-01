@@ -83,11 +83,12 @@ let ``chunking by some finite size does not hang`` () =
   test
     <@
       wellFormedList |> InfiniteSeq.chunkBySizeUnsafe 2 |> take 3
-        = Ok [ [|0;1|]; [|2;3|]; [|4;5|] ]
+        = Ok (List.map NonEmpty.assume [ [|0;1|]; [|2;3|]; [|4;5|] ])
       &&
       illFormedList |> InfiniteSeq.chunkBySizeUnsafe 2 |> take 3 |> Result.isError
       &&
-      listWith5 |> InfiniteSeq.chunkBySizeUnsafe 2 |> take 2 = Ok [ [|-4;-3|]; [|-2;-1|] ]
+      listWith5 |> InfiniteSeq.chunkBySizeUnsafe 2 |> take 2 
+        = Ok (List.map NonEmpty.assume [ [|-4;-3|]; [|-2;-1|] ])
       &&
       listWith5 |> InfiniteSeq.chunkBySizeUnsafe 2 |> take 3 |> Result.isError
     @>

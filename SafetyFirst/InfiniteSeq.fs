@@ -154,8 +154,8 @@ module InfiniteSeq =
   let chunksOf ((PositiveInt n) as chunkSize) (InfiniteSeq xs) : InfiniteSeq<NonEmptyArray<_>> = 
     Seq.chunksOf chunkSize xs
     |> Seq.map (fun innerChunk ->
-      if Array.length innerChunk = n 
-      then Some <| NonEmpty.assume innerChunk
+      if Array.NonEmpty.length innerChunk = n 
+      then Some innerChunk
       else None
     )
     |> Seq.takeWhile Option.isSome

@@ -102,6 +102,14 @@ let alwaysProduceSameOutput2 safeVersion unsafeVersion =
 
   Check.QuickThrowOnFailure prop
 
+let alwaysProduceSameOutput2ExceptNonEmpty safeVersion unsafeVersion = 
+  let prop input1 input2 =
+    safeAndUnsafeVersionProduceSameOutput 
+      (safeVersion input1 input2 |> Result.map (Seq.map Seq.toArray)) 
+      (lazy (unsafeVersion input1 input2 |> Seq.map Seq.toArray))
+
+  Check.QuickThrowOnFailure prop
+
 let alwaysProduceSameOutput3 safeVersion unsafeVersion =
   let prop input1 input2 input3 =
     safeAndUnsafeVersionProduceSameOutput (safeVersion input1 input2 input3) (lazy (unsafeVersion input1 input2 input3))
@@ -122,10 +130,15 @@ let alwaysProduceSameOutputForSeq2 safeVersion unsafeVersion =
     (fun a xs -> safeVersion a (List.toSeq xs))
     (fun a xs -> unsafeVersion a (List.toSeq xs))
 
+let alwaysProduceSameOutputForSeq2ExceptNonEmpty safeVersion unsafeVersion =
+  alwaysProduceSameOutput2ExceptNonEmpty
+    (fun a xs -> safeVersion a (List.toSeq xs))
+    (fun a xs -> unsafeVersion a (List.toSeq xs))
+    
+
 
 [<Test>]
 let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
-  alwaysProduceSameOutputForSeq2 Seq.chunkBySize'     Seq.chunkBySize
   alwaysProduceSameOutputForSeq1 Seq.exactlyOne'      Seq.exactlyOne
   alwaysProduceSameOutputForSeq2 Seq.find'            Seq.find
   alwaysProduceSameOutputForSeq2 Seq.findIndex'       Seq.findIndex
@@ -135,7 +148,9 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutputForSeq2 Seq.skip'            Seq.skip
   alwaysProduceSameOutputForSeq1 Seq.tail'            Seq.tail
   alwaysProduceSameOutputForSeq2 Seq.take'            Seq.take
-  alwaysProduceSameOutputForSeq2 Seq.windowed'        Seq.windowed
+
+  alwaysProduceSameOutputForSeq2ExceptNonEmpty  Seq.chunkBySize'  Seq.chunkBySize
+  alwaysProduceSameOutputForSeq2ExceptNonEmpty  Seq.windowed'     Seq.windowed
 
 module Splitting = 
   let ofNonEmpty (xs:seq<#seq<_>>) = 

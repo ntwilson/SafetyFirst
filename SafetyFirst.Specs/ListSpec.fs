@@ -60,7 +60,6 @@ let ``Safe List functions error whenever unsafe versions throw for all random in
 let ``Safe List functions always produce the same output as unsafe versions for all random inputs`` () =
   alwaysProduceSameOutput1 averageFloats'                 averageFloats
   alwaysProduceSameOutput2 averageByFloats'               averageByFloats
-  alwaysProduceSameOutput2 List.chunkBySize'              List.chunkBySize
   alwaysProduceSameOutput1 List.exactlyOne'               List.exactlyOne
   alwaysProduceSameOutput2 List.find'                     List.find
   alwaysProduceSameOutput2 List.findBack'                 List.findBack
@@ -84,11 +83,14 @@ let ``Safe List functions always produce the same output as unsafe versions for 
   alwaysProduceSameOutput2 List.reduceBack'               List.reduceBack
   alwaysProduceSameOutput2 List.skip'                     List.skip
   alwaysProduceSameOutput2 List.splitAt'                  List.splitAt
-  alwaysProduceSameOutput2 List.splitInto'                List.splitInto
   alwaysProduceSameOutput1 List.tail'                     List.tail
   alwaysProduceSameOutput2 List.take'                     List.take
   alwaysProduceSameOutputForSeq1 listTransposeComparable  arrayTransposeComparable
-  alwaysProduceSameOutput2 List.windowed'                 List.windowed
   alwaysProduceSameOutput2 List.zip'                      List.zip
   alwaysProduceSameOutput3 List.zip3'                     List.zip3
+
+
+  alwaysProduceSameOutput2ExceptNonEmpty  List.chunkBySize'  List.chunkBySize
+  alwaysProduceSameOutput2ExceptNonEmpty  List.splitInto'    List.splitInto
+  alwaysProduceSameOutput2ExceptNonEmpty  List.windowed'     List.windowed
 
