@@ -151,10 +151,12 @@ module InfiniteSeq =
   /// Each chunk is guaranteed to contain <c>chunkSize</c> elements.
   /// Same as <c>InfiniteSeq.chunkBySizeUnsafe</c>, but restricts the input to a PositiveInt.
   /// </summary>
-  let chunksOf ((PositiveInt n) as chunkSize) (InfiniteSeq xs) = 
+  let chunksOf ((PositiveInt n) as chunkSize) (InfiniteSeq xs) : InfiniteSeq<NonEmptyArray<_>> = 
     Seq.chunksOf chunkSize xs
     |> Seq.map (fun innerChunk ->
-      if Array.length innerChunk = n then Some innerChunk else None
+      if Array.length innerChunk = n 
+      then Some <| NonEmpty.assume innerChunk
+      else None
     )
     |> Seq.takeWhile Option.isSome
     |> Seq.choose id

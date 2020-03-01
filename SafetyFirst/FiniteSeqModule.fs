@@ -58,10 +58,10 @@ module FiniteSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
   /// </summary>
-  let chunkBySizeSafe size (xs : FiniteSeq<_>) : Result<FiniteSeq<_>, _> =
+  let chunkBySizeSafe size (xs : FiniteSeq<_>) : Result<FiniteSeq<NonEmptyArray<_>>, _> =
     if size <= 0 
     then Error chunkErr
-    else Seq.chunkBySize size xs |> fseq |> Ok
+    else Seq.chunkBySize size xs |> Seq.map NonEmpty.assume |> fseq |> Ok
 
   /// <summary>
   /// Divides the input sequence into chunks of size at most <c>size</c>.
@@ -73,7 +73,10 @@ module FiniteSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
   /// </summary>
-  let chunksOf (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq <| Seq.chunkBySize size xs
+  let chunksOf (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<NonEmptyArray<_>> = 
+    fseq 
+      (Seq.chunkBySize size xs
+       |> Seq.map NonEmpty.assume) 
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -593,7 +596,8 @@ module FiniteSeq =
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let splitIntoN (PositiveInt n) (xs : FiniteSeq<_>) : FiniteSeq<FiniteSeq<_>> = Seq.splitInto n xs |> Seq.map fseq |> fseq
+  let splitIntoN (PositiveInt n) (xs : FiniteSeq<_>) : FiniteSeq<NonEmptyFSeq<_>> = 
+    Seq.splitInto n xs |> Seq.map (fseq >> NonEmpty.assume) |> fseq
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
@@ -737,7 +741,8 @@ module FiniteSeq =
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Same as Seq.windowed but takes the size in as a <c>PositiveInt</c>.
   /// </summary>
-  let inline window (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<FiniteSeq<_>> = fseq (Seq.windowed size xs |> Seq.map fseq)
+  let inline window (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<NonEmptyFSeq<_>> = 
+    fseq (Seq.windowed size xs |> Seq.map (fseq >> NonEmpty.assume))
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
@@ -977,7 +982,8 @@ module FSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
   /// </summary>
-  let chunksOf (PositiveInt size) (xs : _ fseq) : _ fseq = fseq <| Seq.chunkBySize size xs
+  let chunksOf (PositiveInt size) (xs : _ fseq) : NonEmptyArray<_> fseq = 
+    fseq (Seq.chunkBySize size xs |> Seq.map NonEmpty.assume)
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -1360,14 +1366,14 @@ module FSeq =
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline splitIntoN n (xs : _ fseq) : _ fseq fseq = FiniteSeq.splitIntoN n xs
+  let inline splitIntoN n (xs : _ fseq) : NonEmptyFSeq<_> fseq = FiniteSeq.splitIntoN n xs
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// Returns an Error if <c>count</c> is zero or negative.
   /// </summary>
-  let inline splitIntoSafe n (xs : _ fseq) : Result<_ fseq fseq, _> = FiniteSeq.splitIntoSafe n xs
+  let inline splitIntoSafe n (xs : _ fseq) : Result<NonEmptyFSeq<_> fseq, _> = FiniteSeq.splitIntoSafe n xs
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
@@ -1468,13 +1474,13 @@ module FSeq =
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Same as Seq.windowed but takes the size in as a <c>PositiveInt</c>.
   /// </summary>
-  let inline window size (xs : _ fseq) : _ fseq fseq = FiniteSeq.window size xs
+  let inline window size (xs : _ fseq) : NonEmptyFSeq<_> fseq = FiniteSeq.window size xs
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Returns a NegativeInput Error if the size is zero or negative.
   /// </summary>
-  let inline windowedSafe size (xs : _ fseq) : Result<_ fseq fseq, _> = FiniteSeq.windowedSafe size xs
+  let inline windowedSafe size (xs : _ fseq) : Result<NonEmptyFSeq<_> fseq, _> = FiniteSeq.windowedSafe size xs
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.

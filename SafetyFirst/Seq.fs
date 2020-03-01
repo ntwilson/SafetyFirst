@@ -7,10 +7,10 @@ open SafetyFirst.Numbers
 /// Divides the input sequence into chunks of size at most <c>size</c>.
 /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
-let chunkBySizeSafe size xs =
+let chunkBySizeSafe size xs : Result<NonEmptyArray<_> seq, _> =
   if size <= 0 
   then Error chunkErr
-  else Ok <| Seq.chunkBySize size xs
+  else Ok (Seq.chunkBySize size xs |> Seq.map NonEmpty.assume)
 
 /// <summary>
 /// Divides the input sequence into chunks of size at most <c>size</c>.
@@ -22,7 +22,8 @@ let inline chunkBySize' size xs = chunkBySizeSafe size xs
 /// Divides the input sequence into chunks of size at most <c>size</c>.
 /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
 /// </summary>
-let chunksOf (PositiveInt size) xs = Seq.chunkBySize size xs
+let chunksOf (PositiveInt size) xs : NonEmptyArray<_> seq = 
+  Seq.chunkBySize size xs |> Seq.map NonEmpty.assume
 
 /// <summary>
 /// If the input sequence has only one element, returns that element.
@@ -206,9 +207,9 @@ let inline take' count xs = takeSafe count xs
 /// sequence. Each window is returned as a fresh array.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
-let windowedSafe size xs = 
+let windowedSafe size xs : Result<NonEmptyArray<_> seq, _> = 
   if size > 0 
-  then Ok <| Seq.windowed size xs
+  then Ok (Seq.windowed size xs |> Seq.map NonEmpty.assume)
   else Error <| windowedErr size
 
 /// <summary>
@@ -223,7 +224,8 @@ let inline windowed' size xs = windowedSafe size xs
 /// sequence. Each window is returned as a fresh array.
 /// Same as <c>Seq.windowed</c> but restricts the input to a PositiveInt
 /// </summary>
-let window (PositiveInt size) xs = Seq.windowed size xs
+let window (PositiveInt size) xs : NonEmptyArray<_> seq = 
+  Seq.windowed size xs |> Seq.map NonEmpty.assume
 
 /// <summary>
 /// Functions for manipulating NonEmpty Seqs 

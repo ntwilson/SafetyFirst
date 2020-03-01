@@ -40,10 +40,10 @@ let inline averageBy' selector xs = averageBySafe selector xs
 /// Divides the input array into chunks of size at most <c>size</c>.
 /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
-let chunkBySizeSafe size xs =
+let chunkBySizeSafe size xs : Result<NonEmptyArray<_>[], _> =
   if size <= 0 
   then Error chunkErr
-  else Ok <| Array.chunkBySize size xs
+  else Ok <| (Array.chunkBySize size xs |> Array.map NonEmpty.assume)
 
 /// <summary>
 /// Divides the input array into chunks of size at most <c>size</c>.
@@ -55,7 +55,9 @@ let inline chunkBySize' size xs = chunkBySizeSafe size xs
 /// Divides the input array into chunks of size at most <c>size</c>.
 /// Same as <c>Array.chunkBySize</c>, but restricts the input to a PositiveInt
 /// </summary>
-let chunksOf (PositiveInt size) xs = Array.chunkBySize size xs
+let chunksOf (PositiveInt size) xs : NonEmptyArray<_>[] = 
+  Array.chunkBySize size xs
+  |> Array.map NonEmpty.assume
 
 /// <summary>
 /// If the input array has only one element, returns that element.
@@ -485,9 +487,9 @@ let inline splitAt' index xs = splitAtSafe index xs
 /// Splits the input array into at most count chunks.
 /// Returns a NegativeInput Error if <c>count</c> is not positive.
 /// </summary>
-let splitIntoSafe count xs = 
+let splitIntoSafe count xs : Result<NonEmptyArray<_>[], _> = 
   if count > 0 
-  then Ok <| Array.splitInto count xs
+  then Ok <| (Array.splitInto count xs |> Array.map NonEmpty.assume)
   else Error <| splitIntoErr count
 
 /// <summary>
@@ -500,7 +502,9 @@ let inline splitInto' count xs = splitIntoSafe count xs
 /// Splits the input array into at most count chunks.
 /// Same as <c>Array.splitInto</c>, but restricts the input to a PositiveInt
 /// </summary>
-let splitIntoN (PositiveInt count) xs = Array.splitInto count xs
+let splitIntoN (PositiveInt count) xs : NonEmptyArray<_>[] = 
+  Array.splitInto count xs
+  |> Array.map NonEmpty.assume
 
 /// <summary>
 /// Slices an array given a starting index and a count of elements to return.
@@ -582,9 +586,9 @@ let inline transpose' xs = transposeSafe xs
 /// array. Each window is returned as a fresh array.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
-let windowedSafe size xs = 
+let windowedSafe size xs : Result<NonEmptyArray<_>[], _> = 
   if size > 0 
-  then Ok <| Array.windowed size xs
+  then Ok <| (Array.windowed size xs |> Array.map NonEmpty.assume)
   else Error <| windowedErr size
 
 /// <summary>
@@ -599,7 +603,8 @@ let inline windowed' size xs = windowedSafe size xs
 /// array. Each window is returned as a fresh array.
 /// Same as <c>Array.windowed</c>, but restricts the input to a PositiveInt
 /// </summary>
-let window (PositiveInt size) xs = Array.windowed size xs
+let window (PositiveInt size) xs : NonEmptyArray<_>[] = 
+  Array.windowed size xs |> Array.map NonEmpty.assume
 
 /// <summary>
 /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
@@ -1063,9 +1068,9 @@ module NonEmpty =
   /// array. Each window is returned as a fresh array.
   /// Returns a NegativeInput Error when <c>size</c> is not positive.
   /// </summary>
-  let windowedSafe size (NonEmpty xs : NonEmptyArray<_>) = 
+  let windowedSafe size (NonEmpty xs : NonEmptyArray<_>) : Result<NonEmptyArray<_>[], _> = 
     if size > 0 
-    then Ok <| Array.windowed size xs
+    then Ok <| (Array.windowed size xs |> Array.map NonEmpty.assume)
     else Error <| windowedErr size
 
   /// <summary>
@@ -1080,7 +1085,8 @@ module NonEmpty =
   /// array. Each window is returned as a fresh array.
   /// Same as <c>Array.NonEmpty.windowed</c>, but restricts the input to a PositiveInt
   /// </summary>
-  let window (PositiveInt size) (NonEmpty xs : NonEmptyArray<_>) = Array.windowed size xs
+  let window (PositiveInt size) (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_>[] = 
+    Array.windowed size xs |> Array.map NonEmpty.assume
 
   /// <summary>
   /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.

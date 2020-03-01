@@ -39,10 +39,10 @@ let inline averageBy' selector xs = averageBySafe selector xs
 /// Divides the input list into chunks of size at most <c>size</c>.
 /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
-let chunkBySizeSafe size xs =
+let chunkBySizeSafe size xs : Result<NonEmptyList<_> list, _> =
   if size <= 0 
   then Error chunkErr
-  else Ok <| List.chunkBySize size xs
+  else Ok (List.chunkBySize size xs |> List.map NonEmpty.assume)
 
 /// <summary>
 /// Divides the input list into chunks of size at most <c>size</c>.
@@ -54,7 +54,7 @@ let inline chunkBySize' size xs = chunkBySizeSafe size xs
 /// Divides the input sequence into chunks of size at most <c>size</c>.
 /// Same as <c>List.chunkBySize</c>, but restricts the input to a PositiveInt
 /// </summary>
-let chunksOf (PositiveInt size) xs = List.chunkBySize size xs
+let chunksOf (PositiveInt size) xs : NonEmptyList<_> list = List.chunkBySize size xs |> List.map NonEmpty.assume
 
 /// <summary>
 /// If the input list has only one element, returns that element.
@@ -492,9 +492,9 @@ let inline splitAt' index xs = splitAtSafe index xs
 /// Splits the input list into at most count chunks.
 /// Returns a NegativeInput Error if <c>count</c> is not positive.
 /// </summary>
-let splitIntoSafe count xs = 
+let splitIntoSafe count xs : Result<NonEmptyList<_> list, _> = 
   if count > 0 
-  then Ok <| List.splitInto count xs
+  then Ok (List.splitInto count xs |> List.map NonEmpty.assume)
   else Error <| splitIntoErr count
 
 /// <summary>
@@ -507,7 +507,8 @@ let inline splitInto' count xs = splitIntoSafe count xs
 /// Splits the input list into at most count chunks.
 /// Same as <c>List.splitInto</c>, but restricts the input to a PositiveInt
 /// </summary>
-let splitIntoN (PositiveInt count) xs = List.splitInto count xs
+let splitIntoN (PositiveInt count) xs : NonEmptyList<_> list = 
+  List.splitInto count xs |> List.map NonEmpty.assume
 
 /// <summary>
 /// Returns a list that skips 1 element of the underlying list and then yields the
@@ -546,9 +547,9 @@ let inline take' count xs = takeSafe count xs
 /// list. Each window is returned as a fresh list.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
-let windowedSafe size xs = 
+let windowedSafe size xs : Result<NonEmptyList<_> list, _> = 
   if size > 0 
-  then Ok <| List.windowed size xs
+  then Ok (List.windowed size xs |> List.map NonEmpty.assume)
   else Error <| windowedErr size
 
 /// <summary>
@@ -563,7 +564,8 @@ let inline windowed' size xs = windowedSafe size xs
 /// list. Each window is returned as a fresh list.
 /// Same as <c>List.windowed</c>, but restricts the input to a PositiveInt
 /// </summary>
-let window (PositiveInt size) xs = List.windowed size xs
+let window (PositiveInt size) xs : NonEmptyList<_> list = 
+  List.windowed size xs |> List.map NonEmpty.assume
 
 /// <summary>
 /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
