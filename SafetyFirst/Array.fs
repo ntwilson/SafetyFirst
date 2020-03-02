@@ -757,7 +757,7 @@ module NonEmpty =
   /// Applies a key-generating function to each element of an array and yields an array of unique keys. Each unique key contains an array of all elements that match to this key.
   /// </summary>
   let inline groupBy projection (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<(_ * _[])> = 
-    NonEmpty <| Array.groupBy projection xs
+    NonEmpty.assume <| Array.groupBy projection xs
 
 
   /// <summary>

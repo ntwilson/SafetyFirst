@@ -734,7 +734,7 @@ module NonEmpty =
   /// Applies a key-generating function to each element of a list and yields a list of unique keys. Each unique key contains a list of all elements that match to this key.
   /// </summary>
   let inline groupBy projection (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<(_ * _ list)> = 
-    NonEmpty <| List.groupBy projection xs
+    NonEmpty.assume <| List.groupBy projection xs
 
 
   /// <summary>

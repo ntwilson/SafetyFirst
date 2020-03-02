@@ -1807,7 +1807,7 @@ module FSeq =
     /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
     /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
     /// </summary>
-    let inline groupBy projection (NonEmptyFSeq xs) : NonEmptyFSeq<(_ * _ fseq)> = NonEmpty <| groupBy projection xs
+    let inline groupBy projection (NonEmptyFSeq xs) : NonEmptyFSeq<(_ * _ fseq)> = NonEmpty.assume <| groupBy projection xs
 
     /// <summary>
     /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
