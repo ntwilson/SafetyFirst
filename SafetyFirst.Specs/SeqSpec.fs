@@ -56,16 +56,34 @@ let errorsWheneverThrowsForSeq2 safeVersion unsafeVersion =
     (fun a xs -> safeVersion a (List.toSeq xs))
     (fun a xs -> unsafeVersion a (List.toSeq xs))
 
+let averageFloats' (xs:float seq) = Seq.average' xs
+let averageFloats (xs:float seq) = Seq.average xs
+let averageByFloats' (projection:_ -> float) xs = Seq.averageBy' projection xs
+let averageByFloats (projection:_ -> float) xs = Seq.averageBy projection xs
+
+
 [<Test>]
 let ``Safe Seq functions error whenever unsafe versions throw for all random inputs`` () =
+  errorsWheneverThrowsForSeq1 averageFloats'        averageFloats
+  errorsWheneverThrowsForSeq2 averageByFloats'      averageByFloats
   errorsWheneverThrowsForSeq2 Seq.chunkBySize'      Seq.chunkBySize
   errorsWheneverThrowsForSeq1 Seq.exactlyOne'       Seq.exactlyOne
   errorsWheneverThrowsForSeq2 Seq.find'             Seq.find
+  errorsWheneverThrowsForSeq2 Seq.findBack'         Seq.findBack
   errorsWheneverThrowsForSeq2 Seq.findIndex'        Seq.findIndex
+  errorsWheneverThrowsForSeq2 Seq.findIndexBack'    Seq.findIndexBack
   errorsWheneverThrowsForSeq1 Seq.head'             Seq.head
   errorsWheneverThrowsForSeq2 Seq.item'             Seq.item
+  errorsWheneverThrowsForSeq1 Seq.last'             Seq.last
+  errorsWheneverThrowsForSeq1 Seq.max'<int>         Seq.max<int>
+  errorsWheneverThrowsForSeq2 Seq.maxBy'<int, int>  Seq.maxBy<int, int>
+  errorsWheneverThrowsForSeq1 Seq.min'<int>         Seq.min<int>
+  errorsWheneverThrowsForSeq2 Seq.minBy'<int, int>  Seq.minBy<int, int>
   errorsWheneverThrowsForSeq2 Seq.pick'             Seq.pick
+  errorsWheneverThrowsForSeq2 Seq.reduce'           Seq.reduce
+  errorsWheneverThrowsForSeq2 Seq.reduceBack'       Seq.reduceBack
   errorsWheneverThrowsForSeq2 Seq.skip'             Seq.skip
+  errorsWheneverThrowsForSeq2 Seq.splitInto'        Seq.splitInto
   errorsWheneverThrowsForSeq1 Seq.tail'             Seq.tail
   errorsWheneverThrowsForSeq2 Seq.take'             Seq.take
   errorsWheneverThrowsForSeq2 Seq.windowed'         Seq.windowed
@@ -139,13 +157,25 @@ let alwaysProduceSameOutputForSeq2ExceptNonEmpty safeVersion unsafeVersion =
 
 [<Test>]
 let ``Safe Seq functions always produce the same output as unsafe versions for all random inputs`` () =
+  alwaysProduceSameOutputForSeq1 averageFloats'       averageFloats
+  alwaysProduceSameOutputForSeq2 averageByFloats'     averageByFloats
   alwaysProduceSameOutputForSeq1 Seq.exactlyOne'      Seq.exactlyOne
   alwaysProduceSameOutputForSeq2 Seq.find'            Seq.find
+  alwaysProduceSameOutputForSeq2 Seq.findBack'        Seq.findBack
   alwaysProduceSameOutputForSeq2 Seq.findIndex'       Seq.findIndex
+  alwaysProduceSameOutputForSeq2 Seq.findIndexBack'   Seq.findIndexBack
   alwaysProduceSameOutputForSeq1 Seq.head'            Seq.head
   alwaysProduceSameOutputForSeq2 Seq.item'            Seq.item
+  alwaysProduceSameOutputForSeq1 Seq.last'            Seq.last
+  alwaysProduceSameOutputForSeq1 Seq.max'<int>        Seq.max
+  alwaysProduceSameOutputForSeq2 Seq.maxBy'<int, int> Seq.maxBy
+  alwaysProduceSameOutputForSeq1 Seq.min'<int>        Seq.min
+  alwaysProduceSameOutputForSeq2 Seq.minBy'<int, int> Seq.minBy
   alwaysProduceSameOutputForSeq2 Seq.pick'            Seq.pick
+  alwaysProduceSameOutputForSeq2 Seq.reduce'          Seq.reduce
+  alwaysProduceSameOutputForSeq2 Seq.reduceBack'      Seq.reduceBack
   alwaysProduceSameOutputForSeq2 Seq.skip'            Seq.skip
+  alwaysProduceSameOutputForSeq2 Seq.splitInto'       Seq.splitInto
   alwaysProduceSameOutputForSeq1 Seq.tail'            Seq.tail
   alwaysProduceSameOutputForSeq2 Seq.take'            Seq.take
 
