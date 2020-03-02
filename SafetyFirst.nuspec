@@ -2,12 +2,12 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>4.0.0</version>
+    <version>4.0.1</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Total functions made convenient for F# and C#</description>
     <summary>Total functions made convenient for F# and C#</summary>
-    <releaseNotes>InfiniteSeq reworked to prevent hangs</releaseNotes>
+    <releaseNotes>Restore the Seq module functions that hang for infinite input.</releaseNotes>
     <license type="expression">CC0-1.0</license>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
@@ -19,7 +19,7 @@
   </metadata>
   <files>
     <file src="README.md" target="" />
-    <file src="v3.0_UpgradeGuide.md" target="" />
+    <file src="v4.0_UpgradeGuide.md" target="" />
     <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.dll" target="lib\netstandard2.0" />
     <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.XML" target="lib\netstandard2.0" />
     <file src="SafetyFirst\bin\Release\netstandard2.0\SafetyFirst.pdb" target="lib\netstandard2.0" />
