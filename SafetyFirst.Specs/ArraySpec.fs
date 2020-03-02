@@ -53,7 +53,6 @@ let ``Safe Array functions error whenever unsafe versions throw for all random i
 let ``Safe Array functions always produce the same output as unsafe versions for all random inputs`` () =
   alwaysProduceSameOutput1 averageFloats'         averageFloats
   alwaysProduceSameOutput2 averageByFloats'       averageByFloats
-  alwaysProduceSameOutput2 Array.chunkBySize'     Array.chunkBySize
   alwaysProduceSameOutput1 Array.exactlyOne'      Array.exactlyOne
   alwaysProduceSameOutput2 Array.find'            Array.find
   alwaysProduceSameOutput2 Array.findBack'        Array.findBack
@@ -77,13 +76,15 @@ let ``Safe Array functions always produce the same output as unsafe versions for
   alwaysProduceSameOutput2 Array.reduceBack'      Array.reduceBack
   alwaysProduceSameOutput2 Array.skip'            Array.skip
   alwaysProduceSameOutput2 Array.splitAt'         Array.splitAt
-  alwaysProduceSameOutput2 Array.splitInto'       Array.splitInto
   alwaysProduceSameOutput3 Array.sub'             Array.sub      
   alwaysProduceSameOutput1 Array.tail'            Array.tail
   alwaysProduceSameOutput2 Array.take'            Array.take
   alwaysProduceSameOutputForSeq1 Array.transpose' Array.transpose
-  alwaysProduceSameOutput2 Array.windowed'        Array.windowed
   alwaysProduceSameOutput2 Array.zip'             Array.zip
   alwaysProduceSameOutput3 Array.zip3'            Array.zip3
 
+
+  alwaysProduceSameOutput2ExceptNonEmpty  Array.chunkBySize'  Array.chunkBySize
+  alwaysProduceSameOutput2ExceptNonEmpty  Array.splitInto'    Array.splitInto
+  alwaysProduceSameOutput2ExceptNonEmpty  Array.windowed'     Array.windowed
 

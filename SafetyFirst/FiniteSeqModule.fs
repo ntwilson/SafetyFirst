@@ -58,10 +58,10 @@ module FiniteSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
   /// </summary>
-  let chunkBySizeSafe size (xs : FiniteSeq<_>) : Result<FiniteSeq<_>, _> =
+  let chunkBySizeSafe size (xs : FiniteSeq<_>) : Result<FiniteSeq<NonEmptyArray<_>>, _> =
     if size <= 0 
     then Error chunkErr
-    else Seq.chunkBySize size xs |> fseq |> Ok
+    else Seq.chunkBySize size xs |> Seq.map NonEmpty.assume |> fseq |> Ok
 
   /// <summary>
   /// Divides the input sequence into chunks of size at most <c>size</c>.
@@ -73,7 +73,10 @@ module FiniteSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
   /// </summary>
-  let chunksOf (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<_> = fseq <| Seq.chunkBySize size xs
+  let chunksOf (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<NonEmptyArray<_>> = 
+    fseq 
+      (Seq.chunkBySize size xs
+       |> Seq.map NonEmpty.assume) 
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -246,6 +249,16 @@ module FiniteSeq =
   /// </summary>
   let inline groupBy projection (xs : FiniteSeq<_>) : FiniteSeq<(_ * FiniteSeq<_>)> = 
     Seq.groupBy projection xs |> Seq.map (fun (key, value) -> (key, fseq value)) |> fseq
+
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+  /// </summary>
+  let group projection (xs : FiniteSeq<_>) : FiniteSeq<(_ * NonEmptyFSeq<_>)> = 
+    groupBy projection xs
+    |> Seq.map (fun (key, group) -> (key, NonEmpty group))
+    |> fseq
 
   /// <summary>
   /// Returns the first element of the sequence.
@@ -593,7 +606,8 @@ module FiniteSeq =
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let splitIntoN (PositiveInt n) (xs : FiniteSeq<_>) : FiniteSeq<FiniteSeq<_>> = Seq.splitInto n xs |> Seq.map fseq |> fseq
+  let splitIntoN (PositiveInt n) (xs : FiniteSeq<_>) : FiniteSeq<NonEmptyFSeq<_>> = 
+    Seq.splitInto n xs |> Seq.map (fseq >> NonEmpty.assume) |> fseq
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
@@ -737,7 +751,8 @@ module FiniteSeq =
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Same as Seq.windowed but takes the size in as a <c>PositiveInt</c>.
   /// </summary>
-  let inline window (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<FiniteSeq<_>> = fseq (Seq.windowed size xs |> Seq.map fseq)
+  let inline window (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<NonEmptyFSeq<_>> = 
+    fseq (Seq.windowed size xs |> Seq.map (fseq >> NonEmpty.assume))
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
@@ -977,7 +992,8 @@ module FSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
   /// </summary>
-  let chunksOf (PositiveInt size) (xs : _ fseq) : _ fseq = fseq <| Seq.chunkBySize size xs
+  let chunksOf (PositiveInt size) (xs : _ fseq) : NonEmptyArray<_> fseq = 
+    fseq (Seq.chunkBySize size xs |> Seq.map NonEmpty.assume)
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -1218,6 +1234,12 @@ module FSeq =
   let inline groupBy projection (xs : _ fseq) : (_ * _ fseq) fseq = FiniteSeq.groupBy projection xs
 
   /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+  /// </summary>
+  let inline group projection (xs : _ fseq) : (_ * NonEmptyFSeq<_>) fseq = FiniteSeq.group projection xs
+
+  /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
   let inline tryHead (xs : _ fseq) = FiniteSeq.tryHead xs
@@ -1360,14 +1382,14 @@ module FSeq =
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
-  let inline splitIntoN n (xs : _ fseq) : _ fseq fseq = FiniteSeq.splitIntoN n xs
+  let inline splitIntoN n (xs : _ fseq) : NonEmptyFSeq<_> fseq = FiniteSeq.splitIntoN n xs
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// Returns an Error if <c>count</c> is zero or negative.
   /// </summary>
-  let inline splitIntoSafe n (xs : _ fseq) : Result<_ fseq fseq, _> = FiniteSeq.splitIntoSafe n xs
+  let inline splitIntoSafe n (xs : _ fseq) : Result<NonEmptyFSeq<_> fseq, _> = FiniteSeq.splitIntoSafe n xs
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
@@ -1468,13 +1490,13 @@ module FSeq =
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Same as Seq.windowed but takes the size in as a <c>PositiveInt</c>.
   /// </summary>
-  let inline window size (xs : _ fseq) : _ fseq fseq = FiniteSeq.window size xs
+  let inline window size (xs : _ fseq) : NonEmptyFSeq<_> fseq = FiniteSeq.window size xs
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Returns a NegativeInput Error if the size is zero or negative.
   /// </summary>
-  let inline windowedSafe size (xs : _ fseq) : Result<_ fseq fseq, _> = FiniteSeq.windowedSafe size xs
+  let inline windowedSafe size (xs : _ fseq) : Result<NonEmptyFSeq<_> fseq, _> = FiniteSeq.windowedSafe size xs
 
   /// <summary>
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
@@ -1785,7 +1807,15 @@ module FSeq =
     /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
     /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
     /// </summary>
-    let inline groupBy projection (NonEmptyFSeq xs) = groupBy projection xs
+    let inline groupBy projection (NonEmptyFSeq xs) : NonEmptyFSeq<(_ * _ fseq)> = NonEmpty.assume <| groupBy projection xs
+
+    /// <summary>
+    /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+    /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+    /// </summary>
+    let group projection xs : NonEmptyFSeq<(_ * NonEmptyFSeq<_>)> = 
+      groupBy projection xs
+      |> map (fun (key, group) -> (key, NonEmpty group))
 
     /// <summary>
     /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.

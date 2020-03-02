@@ -342,7 +342,7 @@ module SafeFunctions =
 
   let fseqSplitIntoComparable n xs = 
     FSeq.splitInto' n xs
-    |> Result.map (FSeq.map FSeq.toArray >> FSeq.toSeq)
+    |> Result.map (FSeq.map FSeq.NonEmpty.toArray >> FSeq.toSeq)
     
   [<Test>]
   let ``Safe FSeq functions always produce the same output as unsafe versions for all random inputs`` () =

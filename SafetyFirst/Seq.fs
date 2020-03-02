@@ -7,10 +7,10 @@ open SafetyFirst.Numbers
 /// Divides the input sequence into chunks of size at most <c>size</c>.
 /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
-let chunkBySizeSafe size xs =
+let chunkBySizeSafe size xs : Result<NonEmptyArray<_> seq, _> =
   if size <= 0 
   then Error chunkErr
-  else Ok <| Seq.chunkBySize size xs
+  else Ok (Seq.chunkBySize size xs |> Seq.map NonEmpty)
 
 /// <summary>
 /// Divides the input sequence into chunks of size at most <c>size</c>.
@@ -22,7 +22,8 @@ let inline chunkBySize' size xs = chunkBySizeSafe size xs
 /// Divides the input sequence into chunks of size at most <c>size</c>.
 /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
 /// </summary>
-let chunksOf (PositiveInt size) xs = Seq.chunkBySize size xs
+let chunksOf (PositiveInt size) xs : NonEmptyArray<_> seq = 
+  Seq.chunkBySize size xs |> Seq.map NonEmpty
 
 /// <summary>
 /// If the input sequence has only one element, returns that element.
@@ -70,6 +71,14 @@ let findIndexSafe predicate xs =
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
 let inline findIndex' predicate xs = findIndexSafe predicate xs
+
+/// <summary>
+/// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+/// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+/// </summary>
+let group projection xs : (_ * NonEmptySeq<_>) seq = 
+  Seq.groupBy projection xs
+  |> Seq.map (fun (key, group) -> (key, NonEmpty group))
 
 /// <summary>
 /// Returns the first element of the sequence.
@@ -206,9 +215,9 @@ let inline take' count xs = takeSafe count xs
 /// sequence. Each window is returned as a fresh array.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
-let windowedSafe size xs = 
+let windowedSafe size xs : Result<NonEmptyArray<_> seq, _> = 
   if size > 0 
-  then Ok <| Seq.windowed size xs
+  then Ok (Seq.windowed size xs |> Seq.map NonEmpty)
   else Error <| windowedErr size
 
 /// <summary>
@@ -223,7 +232,8 @@ let inline windowed' size xs = windowedSafe size xs
 /// sequence. Each window is returned as a fresh array.
 /// Same as <c>Seq.windowed</c> but restricts the input to a PositiveInt
 /// </summary>
-let window (PositiveInt size) xs = Seq.windowed size xs
+let window (PositiveInt size) xs : NonEmptyArray<_> seq = 
+  Seq.windowed size xs |> Seq.map NonEmpty
 
 /// <summary>
 /// Functions for manipulating NonEmpty Seqs 
@@ -330,6 +340,17 @@ module NonEmpty =
   /// If an element occurs multiple times in the sequence then the later occurrences are discarded.
   /// </summary>
   let distinctBy projection (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.distinctBy projection xs) 
+
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+  /// </summary>
+  let group projection (NonEmpty xs : NonEmptySeq<_>) : NonEmptySeq<(_ * NonEmptySeq<_>)> = 
+    Seq.groupBy projection xs
+    |> Seq.map (fun (key, group) -> (key, NonEmpty group))
+    |> NonEmpty
+
 
   /// <summary>
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
