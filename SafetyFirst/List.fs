@@ -197,6 +197,13 @@ let forall2Safe predicate xs ys =
 let forall2' predicate xs ys = forall2Safe predicate xs ys
 
 /// <summary>
+/// Applies a key-generating function to each element of a list and yields a list of unique keys. Each unique key contains a list of all elements that match to this key.
+/// </summary>
+let group projection xs : (_ * NonEmptyList<_>) list = 
+  List.groupBy projection xs
+  |> List.map (fun (key, group) -> (key, NonEmpty group))
+
+/// <summary>
 /// Returns the first element of the list.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 /// </summary>
@@ -726,7 +733,9 @@ module NonEmpty =
   /// <summary>
   /// Applies a key-generating function to each element of a list and yields a list of unique keys. Each unique key contains a list of all elements that match to this key.
   /// </summary>
-  let inline groupBy projection (NonEmpty xs : NonEmptyList<_>) = List.groupBy projection xs
+  let inline groupBy projection (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<(_ * _ list)> = 
+    NonEmpty <| List.groupBy projection xs
+
 
   /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
@@ -740,6 +749,13 @@ module NonEmpty =
   /// object.
   /// </summary>
   let map f (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.map f xs)
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a list and yields a list of unique keys. Each unique key contains a list of all elements that match to this key.
+  /// </summary>
+  let group projection xs : NonEmptyList<(_ * NonEmptyList<_>)> = 
+    groupBy projection xs
+    |> map (fun (key, group) -> (key, NonEmpty group))
   
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function

@@ -88,7 +88,8 @@ module InfiniteSeq =
   /// <c>takeLazy</c> instead.  Returns
   /// an error if the sequence hung (produced too many elements).
   /// </summary>
-  let take' n (InfiniteSeq xs) = Seq.take' n xs |> Result.mapError (always hung)
+  let take' n (InfiniteSeq xs) = 
+    Seq.take' n xs |> Result.mapError (always hung)
 
   /// <summary>
   /// Returns the first N elements of the sequence.  Note that this will happen
@@ -110,7 +111,7 @@ module InfiniteSeq =
   /// </summary>
   let truncate n (InfiniteSeq xs) = 
     let xs = Seq.append (Seq.map Ok xs) [Error hung]
-    in Seq.truncate n xs
+    in (Seq.truncate n xs)
 
   /// <summary>
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the

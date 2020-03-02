@@ -250,6 +250,16 @@ module FiniteSeq =
   let inline groupBy projection (xs : FiniteSeq<_>) : FiniteSeq<(_ * FiniteSeq<_>)> = 
     Seq.groupBy projection xs |> Seq.map (fun (key, value) -> (key, fseq value)) |> fseq
 
+
+  /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+  /// </summary>
+  let group projection (xs : FiniteSeq<_>) : FiniteSeq<(_ * NonEmptyFSeq<_>)> = 
+    groupBy projection xs
+    |> Seq.map (fun (key, group) -> (key, NonEmpty group))
+    |> fseq
+
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
@@ -1224,6 +1234,12 @@ module FSeq =
   let inline groupBy projection (xs : _ fseq) : (_ * _ fseq) fseq = FiniteSeq.groupBy projection xs
 
   /// <summary>
+  /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+  /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+  /// </summary>
+  let inline group projection (xs : _ fseq) : (_ * NonEmptyFSeq<_>) fseq = FiniteSeq.group projection xs
+
+  /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
   let inline tryHead (xs : _ fseq) = FiniteSeq.tryHead xs
@@ -1791,7 +1807,15 @@ module FSeq =
     /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
     /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. The function makes no assumption on the ordering of the original sequence.  
     /// </summary>
-    let inline groupBy projection (NonEmptyFSeq xs) = groupBy projection xs
+    let inline groupBy projection (NonEmptyFSeq xs) : NonEmptyFSeq<(_ * _ fseq)> = NonEmpty <| groupBy projection xs
+
+    /// <summary>
+    /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
+    /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
+    /// </summary>
+    let group projection xs : NonEmptyFSeq<(_ * NonEmptyFSeq<_>)> = 
+      groupBy projection xs
+      |> map (fun (key, group) -> (key, NonEmpty group))
 
     /// <summary>
     /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.

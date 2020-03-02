@@ -43,7 +43,7 @@ let inline averageBy' selector xs = averageBySafe selector xs
 let chunkBySizeSafe size xs : Result<NonEmptyArray<_>[], _> =
   if size <= 0 
   then Error chunkErr
-  else Ok <| (Array.chunkBySize size xs |> Array.map NonEmpty.assume)
+  else Ok <| (Array.chunkBySize size xs |> Array.map NonEmpty)
 
 /// <summary>
 /// Divides the input array into chunks of size at most <c>size</c>.
@@ -57,7 +57,7 @@ let inline chunkBySize' size xs = chunkBySizeSafe size xs
 /// </summary>
 let chunksOf (PositiveInt size) xs : NonEmptyArray<_>[] = 
   Array.chunkBySize size xs
-  |> Array.map NonEmpty.assume
+  |> Array.map NonEmpty
 
 /// <summary>
 /// If the input array has only one element, returns that element.
@@ -191,6 +191,13 @@ let forall2Safe predicate xs ys =
 /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
 /// </summary>
 let inline forall2' predicate xs ys = forall2Safe predicate xs ys
+
+/// <summary>
+/// Applies a key-generating function to each element of an array and yields an array of unique keys. Each unique key contains an array of all elements that match to this key.
+/// </summary>
+let group projection xs : (_ * NonEmptyArray<_>)[] = 
+  Array.groupBy projection xs
+  |> Array.map (fun (key, group) -> (key, NonEmpty group))
 
 /// <summary>
 /// Returns the first element of the array.
@@ -489,7 +496,7 @@ let inline splitAt' index xs = splitAtSafe index xs
 /// </summary>
 let splitIntoSafe count xs : Result<NonEmptyArray<_>[], _> = 
   if count > 0 
-  then Ok <| (Array.splitInto count xs |> Array.map NonEmpty.assume)
+  then Ok <| (Array.splitInto count xs |> Array.map NonEmpty)
   else Error <| splitIntoErr count
 
 /// <summary>
@@ -504,7 +511,7 @@ let inline splitInto' count xs = splitIntoSafe count xs
 /// </summary>
 let splitIntoN (PositiveInt count) xs : NonEmptyArray<_>[] = 
   Array.splitInto count xs
-  |> Array.map NonEmpty.assume
+  |> Array.map NonEmpty
 
 /// <summary>
 /// Slices an array given a starting index and a count of elements to return.
@@ -588,7 +595,7 @@ let inline transpose' xs = transposeSafe xs
 /// </summary>
 let windowedSafe size xs : Result<NonEmptyArray<_>[], _> = 
   if size > 0 
-  then Ok <| (Array.windowed size xs |> Array.map NonEmpty.assume)
+  then Ok <| (Array.windowed size xs |> Array.map NonEmpty)
   else Error <| windowedErr size
 
 /// <summary>
@@ -604,7 +611,7 @@ let inline windowed' size xs = windowedSafe size xs
 /// Same as <c>Array.windowed</c>, but restricts the input to a PositiveInt
 /// </summary>
 let window (PositiveInt size) xs : NonEmptyArray<_>[] = 
-  Array.windowed size xs |> Array.map NonEmpty.assume
+  Array.windowed size xs |> Array.map NonEmpty
 
 /// <summary>
 /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
@@ -749,7 +756,9 @@ module NonEmpty =
   /// <summary>
   /// Applies a key-generating function to each element of an array and yields an array of unique keys. Each unique key contains an array of all elements that match to this key.
   /// </summary>
-  let inline groupBy projection (NonEmpty xs : NonEmptyArray<_>) = Array.groupBy projection xs
+  let inline groupBy projection (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<(_ * _[])> = 
+    NonEmpty <| Array.groupBy projection xs
+
 
   /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
@@ -763,6 +772,13 @@ module NonEmpty =
   /// object.
   /// </summary>
   let map f (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.map f xs)
+
+  /// <summary>
+  /// Applies a key-generating function to each element of an array and yields an array of unique keys. Each unique key contains an array of all elements that match to this key.
+  /// </summary>
+  let group projection (xs : NonEmptyArray<_>) : NonEmptyArray<(_ * NonEmptyArray<_>)> = 
+    groupBy projection xs 
+    |> map (fun (key, group) -> (key, NonEmpty group))
   
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
@@ -1070,7 +1086,7 @@ module NonEmpty =
   /// </summary>
   let windowedSafe size (NonEmpty xs : NonEmptyArray<_>) : Result<NonEmptyArray<_>[], _> = 
     if size > 0 
-    then Ok <| (Array.windowed size xs |> Array.map NonEmpty.assume)
+    then Ok <| (Array.windowed size xs |> Array.map NonEmpty)
     else Error <| windowedErr size
 
   /// <summary>
@@ -1086,7 +1102,7 @@ module NonEmpty =
   /// Same as <c>Array.NonEmpty.windowed</c>, but restricts the input to a PositiveInt
   /// </summary>
   let window (PositiveInt size) (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_>[] = 
-    Array.windowed size xs |> Array.map NonEmpty.assume
+    Array.windowed size xs |> Array.map NonEmpty
 
   /// <summary>
   /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
