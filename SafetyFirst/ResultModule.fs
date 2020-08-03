@@ -18,8 +18,8 @@ module ResultExpression =
   ///
   /// Code wrapped in a Result monad is known to potentially fail with specific errors.
   /// 
-  /// Accessing Result<'a> values with let!, do!, return!, etc. methods in the computation expression
-  /// will use the value of the result if Ok, or terminate early if the Result is Error e.
+  /// Accessing <c>Result</c>'s value with <c>let!</c>, <c>do!</c>, <c>return!</c>, etc. methods in the computation expression
+  /// will use the value of the Result if the Result is <c>Ok x</c>, or terminate early if the Result is <c>Error e</c>.
   /// </summary>
   let result = new ResultExpression ()
 
