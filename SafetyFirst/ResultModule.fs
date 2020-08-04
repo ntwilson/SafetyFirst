@@ -14,7 +14,12 @@ type ResultExpression () =
 [<AutoOpen>]
 module ResultExpression =
   /// <summary>
-  /// Create a computation expression for Results
+  /// The computation expression to manage the Result monad.
+  ///
+  /// Code wrapped in a Result monad is known to potentially fail with specific errors.
+  /// 
+  /// Accessing <c>Result</c>'s value with <c>let!</c>, <c>do!</c>, <c>return!</c>, etc. methods in the computation expression
+  /// will use the value of the Result if the Result is <c>Ok x</c>, or terminate early if the Result is <c>Error e</c>.
   /// </summary>
   let result = new ResultExpression ()
 
