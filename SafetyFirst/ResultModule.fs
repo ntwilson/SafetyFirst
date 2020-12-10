@@ -113,8 +113,8 @@ module Result =
   /// If all of the Results are Ok, returns an Ok of the sequence of contained values.  
   /// If any of the Results are Error, returns the first Error encountered, and does not
   /// evaluate any of the rest of the sequence.
-  /// <c>collect [Ok 1; Ok 2; Ok 3]</c> would return <c>Ok [1; 2; 3]</c>, but 
-  /// <c>collect [Ok 1; Error "err"; Error "fail"]</c> would return <c>Error "err"</c>
+  /// <c>sequence [Ok 1; Ok 2; Ok 3]</c> would return <c>Ok [1; 2; 3]</c>, but 
+  /// <c>sequence [Ok 1; Error "err"; Error "fail"]</c> would return <c>Error "err"</c>
   /// </summary>
   [<CompiledName("$notForC#_sequence")>]
   let sequence (results : Result<_,_> seq) =
@@ -375,16 +375,29 @@ module Result =
         result3.Bind(fun r3 -> 
           result4.Bind(fun r4 -> onOk.Invoke (r1, r2, r3, r4)))))
 
-  let private concatResultsCs results =
-    let rec concat state rs =
-      match rs with
-      | head::tail -> 
-        match head with 
-        | Ok x -> concat (x::state) tail
-        | Error err -> Error err
-      | [] -> Ok (state |> Seq.ofList |> Seq.rev)
-
-    concat [] (results |> Seq.toList)
+  /// <summary>
+  /// Collects a sequence of Results into a single Result of the sequence of values.
+  /// If all of the Results are Ok, returns an Ok of the sequence of contained values.  
+  /// If any of the Results are Error, returns the first Error encountered, and does not
+  /// evaluate any of the rest of the sequence.
+  /// <c>Result.Sequence [Ok(1), Ok(2), Ok(3)]</c> would return <c>Ok([1, 2, 3])</c>, but 
+  /// <c>Result.Sequence [Ok(1), Error("err"), Error("fail")]</c> would return <c>Error("err")</c>
+  /// </summary>
+  [<CompilerMessage(message="not for use from F#", messageNumber=32121, IsHidden=true)>]
+  let Sequence (results:Result<_,_> seq) =
+    let enum = results.GetEnumerator ()
+    let mutable err = None
+    let okVals = 
+      [
+        while err = None && enum.MoveNext () do
+          match enum.Current with
+          | Error e -> err <- Some e
+          | Ok o -> yield o
+      ]
+    
+    match err with 
+    | Some e -> Error e
+    | None -> Ok okVals
 
   /// <summary>
   /// If all the Results are ok, "unwraps" the ok values and passes them
@@ -393,7 +406,7 @@ module Result =
   /// </summary>
   [<CompilerMessage(message="not for use from F#", messageNumber=32121, IsHidden=true)>]
   let BindAll onOk results = 
-    (concatResultsCs results).Bind onOk
+    (Sequence results).Bind onOk
 
   /// <summary>
   /// If all the Results are ok, "unwraps" the ok values and passes it
@@ -439,7 +452,7 @@ module Result =
   /// </summary>
   [<CompilerMessage(message="not for use from F#", messageNumber=32121, IsHidden=true)>]
   let MapAll onOk results = 
-    (concatResultsCs results).Map onOk
+    (Sequence results).Map onOk
 
   /// <summary>
   /// Creates a new ok Result with the value given. 
