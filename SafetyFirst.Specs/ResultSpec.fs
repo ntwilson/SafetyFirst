@@ -374,6 +374,8 @@ let ``Can tell if a Result is Ok or Error`` () =
       Ok 5 |> Result.isError = false
     @>
 
+let flip f a b = f b a
+
 [<Test>]
 let ``collects sequences of Results into a Result of a sequence of values`` () =
   test
@@ -382,6 +384,38 @@ let ``collects sequences of Results into a Result of a sequence of values`` () =
       &&
       Result.collect [Ok 1; Error "didn't"; Error "work"] |> Result.mapError Seq.toList = (Error ["didn't"; "work"])
     @>
+
+  test 
+    <@ 
+      Result.traverse (flip Array.item' [|1..4|]) [1;2;3] = Ok [2;3;4]
+      &&
+      Result.traverse (flip Array.item' [|1..4|]) [1;5;2] |> Result.isError
+    @>
+
+  test 
+    <@
+      Result.sequence [Ok 1; Ok 2; Ok 3] = (Ok [1; 2; 3])
+      &&
+      Result.sequence [Ok 1; Error "didn't"; Error "work"] = Error "didn't"
+      &&
+      Result.sequence [] = Ok []
+    @>
+
+  let mutable x = 0
+  let ans = 
+    Result.sequence (seq { 
+      for i in 1 .. 3 do 
+        x <- x + 1
+        yield Ok x 
+      
+      yield Error "failed in the middle"
+
+      for i in 4 .. 6 do
+        x <- x + 1
+        yield Ok x
+    })
+    
+  test <@ ans = Error "failed in the middle" && x = 3 @>
 
 type PretendError = PretendError
 
