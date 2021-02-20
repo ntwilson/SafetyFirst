@@ -12,8 +12,8 @@ type ResultExpectedException<'T> (msg:string, err:'T) =
 
   new (err:'T) =
     ResultExpectedException 
-      (sprintf "Result returned with error.  %s" (formatExceptionMessage "" err), 
-       err)
+      ( sprintf "Result returned with error.  %s" (formatExceptionMessage "" err), 
+        err)
   member this.ErrorDetails = err
 
 type ErrorWithContext<'a, 'b> = { Error : 'a; Context : 'b list }
@@ -36,7 +36,7 @@ type Result<'tVal, 'tErr> =
   | Ok of 'tVal
   | Error of 'tErr
 
-   
+  
   /// <summary>
   /// "Unwraps" the ok value or the error object and passes it 
   /// to the function passed in.
