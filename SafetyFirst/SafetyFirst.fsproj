@@ -5,6 +5,16 @@
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
     <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <PackageId>SafetyFirst</PackageId>
+    <Title>SafetyFirst</Title>
+    <PackageVersion>4.0.2</PackageVersion>
+    <Authors>nathan wilson</Authors>
+    <Description>Total functions made convenient for F# and C#</Description>
+    <PackageReleaseNotes>Add traverse and sequence functions for Results and Options.</PackageReleaseNotes>
+    <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ntwilson/SafetyFirst</PackageProjectUrl>
+    <PackageTags>result safety collections functional-programming</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Option.fs" />
@@ -31,6 +41,9 @@
     <Compile Include="String.fs" />
     <Compile Include="IEnumerable.fs" />
     <Compile Include="IDictionaryExtensions.fs" />
+
+    <Content Include="../README.md" />
+    <Content Include="../v4.0_UpgradeGuide.md" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.5.0" />

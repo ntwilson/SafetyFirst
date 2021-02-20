@@ -1,0 +1,1 @@
+dotnet pack --include-source -c Release -o .\
