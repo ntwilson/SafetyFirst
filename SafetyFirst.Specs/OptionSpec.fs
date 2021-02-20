@@ -16,6 +16,8 @@ let ``Converts NaNs to Nones, but any other float to Some`` () =
       Option.ofFloat 5. = Some 5.
     @>
 
+let flip f a b = f b a
+
 [<Test>]
 let ``Collects multiple Options such that any None will make the whole thing None`` () =
   test
@@ -27,6 +29,22 @@ let ``Collects multiple Options such that any None will make the whole thing Non
       Option.collect [ Some 1; None; Some 3; Some 4 ] = None
       &&
       Option.collect [ Some 1; Some 2; Some 3; None ] = None      
+    @>
+
+  test 
+    <@ 
+      Option.traverse (flip Array.tryItem [|1..4|]) [1;2;3] = Some [2;3;4]
+      &&
+      Option.traverse (flip Array.tryItem [|1..4|]) [1;5;2] = None
+    @>
+
+  test 
+    <@
+      Option.sequence [Some 1; Some 2; Some 3] = (Some [1; 2; 3])
+      &&
+      Option.sequence [Some 1; None; None] = None
+      &&
+      Option.sequence [] = Some []
     @>
   
 let expectException act = 
