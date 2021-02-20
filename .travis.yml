@@ -3,5 +3,5 @@ solution: SafetyFirst.sln
 mono: none
 dotnet: 2.1.502
 script:
-  - dotnet build -f netcoreapp2.0
-  - dotnet test -f netcoreapp2.0
+  - dotnet build -f net5.0
+  - dotnet test -f net5.0
