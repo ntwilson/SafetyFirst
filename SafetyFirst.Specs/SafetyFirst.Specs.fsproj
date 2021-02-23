@@ -18,6 +18,7 @@
     <Compile Include="Lazy.fs" />
     <Compile Include="ConversionsSpec.fs" />
     <Compile Include="MatchSpec.fs" />
+    <Compile Include="NonEmptySpec.fs" />
     <Compile Include="SeqSpec.fs" />
     <Compile Include="ListSpec.fs" />
     <Compile Include="ArraySpec.fs" />
@@ -31,6 +32,7 @@
   <ItemGroup>
     <PackageReference Include="FsCheck" Version="2.11.0" />
     <PackageReference Include="fsharp.core" Version="4.6.2" />
+    <PackageReference Include="FSharpPlus" Version="1.1.7" />
     <PackageReference Include="microsoft.net.test.sdk" Version="15.7.2" />
     <PackageReference Include="nunit" Version="3.10.1" />
     <PackageReference Include="nunit3TestAdapter" Version="3.10.0" />
