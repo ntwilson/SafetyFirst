@@ -27,7 +27,6 @@
     <Compile Include="ErrorTypes.fs" />
     <Compile Include="Match.fs" />
     <Compile Include="NonEmpty.fs" />
-    <Compile Include="LazyList.fs" />
     <Compile Include="FiniteSeq.fs" />
     <Compile Include="ResultModule.fs" />
     <Compile Include="FiniteSeqModule.fs" />    
@@ -47,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.5.0" />
+    <PackageReference Include="FSharpx.Collections" Version="2.1.3" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 </Project>

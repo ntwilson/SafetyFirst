@@ -1,7 +1,8 @@
 namespace SafetyFirst
+open FSharpx.Collections
+open SafetyFirst
 open SafetyFirst.ErrorTypes  
 open SafetyFirst.Numbers
-open SafetyFirst.FSharpxCopy.Collections
 
 
 module FiniteSeq =
@@ -75,8 +76,8 @@ module FiniteSeq =
   /// </summary>
   let chunksOf (PositiveInt size) (xs : FiniteSeq<_>) : FiniteSeq<NonEmptyArray<_>> = 
     fseq 
-      (Seq.chunkBySize size xs
-       |> Seq.map NonEmpty.assume) 
+      ( Seq.chunkBySize size xs
+        |> Seq.map NonEmpty.assume) 
 
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
@@ -122,7 +123,7 @@ module FiniteSeq =
   /// O(n), where n is count. Return the list which on consumption will remove of at most 'n' elements of
   /// the input list.
   /// </summary>
-  let inline drop n (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.drop n xs)
+  let inline drop (NaturalInt n) (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = fseq (LazyList.drop n xs)
 
   /// <summary>
   /// O(n), where n is count. Return the seq which will remove at most 'n' elements of
@@ -263,7 +264,7 @@ module FiniteSeq =
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
-  let tryHead (FSeq xs : FiniteSeq<_>) = LazyList.head xs
+  let tryHead (FSeq xs : FiniteSeq<_>) = LazyList.tryHead xs
 
   /// <summary>
   /// Returns the first element of the sequence.
@@ -471,7 +472,7 @@ module FiniteSeq =
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
   let reduceSafe f (FSeq xs : FiniteSeq<_>) = 
-    match LazyList.uncons xs with
+    match LazyList.tryUncons xs with
     | Some (head, tail) -> Ok <| LazyList.fold f head tail
     | None -> Error reduceErr
 
@@ -570,7 +571,7 @@ module FiniteSeq =
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
-  let trySkip n (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.skip n xs)
+  let trySkip n (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.trySkip n xs)
 
   /// <summary>
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
@@ -642,7 +643,7 @@ module FiniteSeq =
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
-  let tryTail (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.tail xs)
+  let tryTail (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.tryTail xs)
   
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
@@ -660,7 +661,7 @@ module FiniteSeq =
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   /// </summary>
-  let tryTake n (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.take n xs)
+  let tryTake n (FSeq xs : FiniteSeq<_>) : Option<FiniteSeq<_>> = Option.map fseq (LazyList.tryTake n xs)
 
   /// <summary>
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
@@ -733,7 +734,7 @@ module FiniteSeq =
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
   let unconsSafe (FSeq xs : FiniteSeq<_>) : Result<(_ * FiniteSeq<_>), _> =
-    match LazyList.uncons xs with
+    match LazyList.tryUncons xs with
     | Some (head, tail) -> Ok (head, fseq tail)
     | None -> Error unconsErr
 
