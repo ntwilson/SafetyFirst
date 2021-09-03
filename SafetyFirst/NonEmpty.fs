@@ -19,37 +19,37 @@ type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with
 
 /// <summary>
 /// A seq constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a seq, 'a></c>.
+/// An alias for <c>NonEmpty&lt;'a seq, 'a&gt;</c>.
 /// </summary>
 type NonEmptySeq<'a> = NonEmpty<'a seq, 'a>
 
 /// <summary>
 /// An array constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a[], 'a></c>.
+/// An alias for <c>NonEmpty&lt;'a[], 'a&gt;</c>.
 /// </summary>
 type NonEmptyArray<'a> = NonEmpty<'a[], 'a>
 
 /// <summary>
 /// A list constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a list, 'a></c>.
+/// An alias for <c>NonEmpty&lt;'a list, 'a&gt;</c>.
 /// </summary>
 type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 
 /// <summary>
 /// A set constrained to be non-empty. 
-/// An alias for <c>NonEmpty<Set<'a>, 'a></c>.
+/// An alias for <c>NonEmpty&lt;Set&lt;'a&gt;, 'a&gt;</c>.
 /// </summary>
 type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
 
 /// <summary>
 /// A map constrained to be non-empty. 
-/// An alias for <c>NonEmpty<Map<'a, 'b>, KeyValuePair<'a, 'b>></c>.
+/// An alias for <c>NonEmpty&lt;Map&lt;'a, 'b&gt;, KeyValuePair&lt;'a, 'b&gt;&gt;</c>.
 /// </summary>
 type NonEmptyMap<'a, 'b when 'a : comparison> = NonEmpty<Map<'a, 'b>, KeyValuePair<'a, 'b>>
 
 /// <summary>
 /// An IDictionary constrained to be non-empty. 
-/// An alias for <c>NonEmpty<IDictionary<'a, 'b>, KeyValuePair<'a, 'b>></c>.
+/// An alias for <c>NonEmpty&lt;IDictionary&lt;'a, 'b&gt;, KeyValuePair&lt;'a, 'b&gt;&gt;</c>.
 /// </summary>
 type NonEmptyDictionary<'a, 'b when 'a : comparison> = NonEmpty<IDictionary<'a, 'b>, KeyValuePair<'a, 'b>>
 

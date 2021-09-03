@@ -1,0 +1,23 @@
+name: Run Tests (.NET 5.0)
+
+on: 
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.x'
+      - name: Restore
+        run: dotnet restore SafetyFirst.sln
+      - name: Build with dotnet
+        run: dotnet build SafetyFirst.sln -f net5.0 -c Release --no-restore
+      - name: Test with dotnet
+        run: dotnet test SafetyFirst.sln -f net5.0 -c Release --no-build

@@ -95,7 +95,7 @@ type 'a fseq = FiniteSeq<'a>
 
 /// <summary>
 /// A seq constrained to be finite and non-empty. 
-/// An alias for <c>NonEmpty<'a fseq, 'a></c>
+/// An alias for <c>NonEmpty&lt;'a fseq, 'a&gt;</c>
 /// </summary>
 type NonEmptyFSeq<'a> = NonEmpty<'a fseq, 'a>
 

@@ -1,7 +1,0 @@
-language: csharp
-solution: SafetyFirst.sln
-mono: none
-dotnet: 5.0.103
-script:
-  - dotnet build -f net5.0
-  - dotnet test -f net5.0
