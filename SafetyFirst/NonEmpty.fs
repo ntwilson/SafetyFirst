@@ -19,25 +19,25 @@ type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with
 
 /// <summary>
 /// A seq constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a seq, 'a></c>.
+/// An alias for <c>NonEmpty&lt;'a seq, 'a&gt;</c>.
 /// </summary>
 type NonEmptySeq<'a> = NonEmpty<'a seq, 'a>
 
 /// <summary>
 /// An array constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a[], 'a></c>.
+/// An alias for <c>NonEmpty&lt;'a[], 'a&gt;</c>.
 /// </summary>
 type NonEmptyArray<'a> = NonEmpty<'a[], 'a>
 
 /// <summary>
 /// A list constrained to be non-empty. 
-/// An alias for <c>NonEmpty<'a list, 'a></c>.
+/// An alias for <c>NonEmpty&lt;'a list, 'a&gt;</c>.
 /// </summary>
 type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 
 /// <summary>
 /// A set constrained to be non-empty. 
-/// An alias for <c>NonEmpty<Set<'a>, 'a></c>.
+/// An alias for <c>NonEmpty&lt;Set&lt;'a&gt;, 'a&gt;</c>.
 /// </summary>
 type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
 

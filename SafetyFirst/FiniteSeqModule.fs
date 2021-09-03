@@ -203,14 +203,14 @@ module FiniteSeq =
   /// <summary>
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
-  /// <summary/>
+  /// </summary>
   let findBackSafe predicate (xs : FiniteSeq<_>) = 
     Seq.tryFindBack predicate xs |> Result.ofOption findErr
 
   /// <summary>
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
-  /// <summary/>
+  /// </summary>
   let inline findBack' predicate xs = findBackSafe predicate xs
 
   /// <summary>
@@ -1200,13 +1200,13 @@ module FSeq =
   /// <summary>
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
-  /// <summary/>
+  /// </summary>
   let findBackSafe predicate (xs : _ fseq) = FiniteSeq.findBackSafe predicate xs
 
   /// <summary>
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
-  /// <summary/>
+  /// </summary>
   let inline findBack' predicate xs = findBackSafe predicate xs
 
   /// <summary>
@@ -1593,12 +1593,12 @@ module FSeq =
     
     /// <summary>
     /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
-    /// </summary
+    /// </summary>
     let min (NonEmptyFSeq xs) = Seq.min xs
 
     /// <summary>
     /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
-    /// </summary
+    /// </summary>
     let max (NonEmptyFSeq xs) = Seq.max xs
 
     /// <summary>

@@ -167,7 +167,7 @@ module InfiniteSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Each chunk is guaranteed to contain <c>chunkSize</c> elements.
   /// Same as <c>InfiniteSeq.chunksOf</c>, but allows a regular int as input.
-  /// CAUTION: This function will THROW for a chunkSize <= 0
+  /// CAUTION: This function will THROW for a chunkSize &lt;= 0
   /// </summary>
   let chunkBySizeUnsafe chunkSize xs =
     chunksOf (PositiveInt.assume chunkSize) xs 
