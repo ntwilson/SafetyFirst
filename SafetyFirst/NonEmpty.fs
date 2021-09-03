@@ -43,13 +43,13 @@ type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
 
 /// <summary>
 /// A map constrained to be non-empty. 
-/// An alias for <c>NonEmpty<Map<'a, 'b>, KeyValuePair<'a, 'b>></c>.
+/// An alias for <c>NonEmpty&lt;Map&lt;'a, 'b&gt;, KeyValuePair&lt;'a, 'b&gt;&gt;</c>.
 /// </summary>
 type NonEmptyMap<'a, 'b when 'a : comparison> = NonEmpty<Map<'a, 'b>, KeyValuePair<'a, 'b>>
 
 /// <summary>
 /// An IDictionary constrained to be non-empty. 
-/// An alias for <c>NonEmpty<IDictionary<'a, 'b>, KeyValuePair<'a, 'b>></c>.
+/// An alias for <c>NonEmpty&lt;IDictionary&lt;'a, 'b&gt;, KeyValuePair&lt;'a, 'b&gt;&gt;</c>.
 /// </summary>
 type NonEmptyDictionary<'a, 'b when 'a : comparison> = NonEmpty<IDictionary<'a, 'b>, KeyValuePair<'a, 'b>>
 
