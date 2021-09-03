@@ -41,6 +41,18 @@ type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 /// </summary>
 type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
 
+/// <summary>
+/// A map constrained to be non-empty. 
+/// An alias for <c>NonEmpty<Map<'a, 'b>, KeyValuePair<'a, 'b>></c>.
+/// </summary>
+type NonEmptyMap<'a, 'b when 'a : comparison> = NonEmpty<Map<'a, 'b>, KeyValuePair<'a, 'b>>
+
+/// <summary>
+/// An IDictionary constrained to be non-empty. 
+/// An alias for <c>NonEmpty<IDictionary<'a, 'b>, KeyValuePair<'a, 'b>></c>.
+/// </summary>
+type NonEmptyDictionary<'a, 'b when 'a : comparison> = NonEmpty<IDictionary<'a, 'b>, KeyValuePair<'a, 'b>>
+
 [<AutoOpen>]
 module NonEmptySeqMatcher = 
   let (|Empty|NotEmpty|) (xs:#seq<'a>) = 
@@ -68,3 +80,80 @@ module NonEmpty =
     match xs with
     | Empty -> failwith "Expecting a sequence containing one or more values, but got an empty sequence"
     | NotEmpty result -> result
+
+
+type NonEmpty<'a, 'b when 'a :> 'b seq> with
+
+  // --- Functor ---
+  
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmptyList can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty xs, fn) : NonEmptyList<_> = NonEmpty (List.map fn xs)
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmptyArray can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty xs, fn) : NonEmptyArray<_> = NonEmpty (Array.map fn xs)
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmptySet can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty xs, fn) : NonEmptySet<_> = NonEmpty (Set.map fn xs)
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmptyMap can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty xs, fn) : NonEmptyMap<_,_> = NonEmpty (Map.map (fun k v -> fn v) xs)
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmptyDictionary can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty (xs:IDictionary<_,_>), fn) : NonEmptyDictionary<_,_> = 
+    NonEmpty (dict [ for (KeyValue (k, v)) in xs -> (k, fn v) ])
+
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmptyDictionary can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty (xs:Dictionary<_,_>), fn) : NonEmpty<Dictionary<_,_>, _> = 
+    NonEmpty (Dictionary (dict [ for (KeyValue (k, v)) in xs -> (k, fn v) ]))
+
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmptySeq can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty (xs:_ seq), fn) : NonEmptySeq<_> = NonEmpty (Seq.map fn xs)
+
+  /// <summary>
+  /// Map compatible with FSharpPlus, so a NonEmpty ResizeArray can be mapped via the |>> operator, for example
+  /// </summary>
+  static member Map (NonEmpty (xs:ResizeArray<_>), fn) : NonEmpty<ResizeArray<_>, _> = 
+    NonEmpty (ResizeArray (Seq.map fn xs))
+
+
+  // --- Semigroup ---
+  
+  /// <summary>
+  /// Append compatible with FSharpPlus, so NonEmptyLists can be appended via the ++ operator, for example
+  /// </summary>
+  static member (+) (NonEmpty xs, NonEmpty ys) : NonEmptyList<_> = NonEmpty (xs @ ys)
+  /// <summary>
+  /// Append compatible with FSharpPlus, so NonEmptyArrays can be appended via the ++ operator, for example
+  /// </summary>
+  static member (+) (NonEmpty xs, NonEmpty ys) : NonEmptyArray<_> = NonEmpty (Array.append xs ys)
+  /// <summary>
+  /// Append compatible with FSharpPlus, so NonEmptySets can be appended via the ++ operator, for example
+  /// </summary>
+  static member (+) (NonEmpty xs, NonEmpty ys) : NonEmptySet<_> = NonEmpty (Set.union xs ys)
+
+  /// <summary>
+  /// Append compatible with FSharpPlus, so NonEmptySeqs can be appended via the ++ operator, for example
+  /// </summary>
+  static member (+) (NonEmpty (xs:_ seq), NonEmpty (ys:_ seq)) : NonEmptySeq<_> = NonEmpty (Seq.append xs ys)
+
+  /// <summary>
+  /// Append compatible with FSharpPlus, so NonEmpty ResizeArrays can be appended via the ++ operator, for example
+  /// </summary>
+  static member (+) (NonEmpty (xs:ResizeArray<_>), NonEmpty (ys:ResizeArray<_>)) : NonEmpty<ResizeArray<_>, _> = 
+    NonEmpty (ResizeArray (Seq.append xs ys))
+
+  // We will not be including semigroup instances for Maps/Dictionaries, since the behavior can be unclear.
+  // Possible behoviors when there is a key collision include left-biased (keep the value from the left map),
+  // right-biased (keep the value from the right map) and unbiased (values must be semigroups, and you append the two values).
+  // At this time, we don't wish to choose a particular behavior.
+  
