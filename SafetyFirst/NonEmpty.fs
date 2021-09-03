@@ -2,7 +2,9 @@ namespace SafetyFirst
 
 open System.Collections.Generic
 
+/// <summary>
 /// A sequence that is constrained to have at least one element.
+/// </summary>
 [<Struct>]
 type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with 
 
@@ -15,20 +17,28 @@ type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with
       let (NonEmpty xs) = this
       in upcast ((xs :> _ seq).GetEnumerator ())
 
+/// <summary>
 /// A seq constrained to be non-empty. 
-/// An alias for `NonEmpty<'a seq, 'a>`.
+/// An alias for <c>NonEmpty&lt;'a seq, 'a&gt;</c>.
+/// </summary>
 type NonEmptySeq<'a> = NonEmpty<'a seq, 'a>
 
+/// <summary>
 /// An array constrained to be non-empty. 
-/// An alias for `NonEmpty<'a[], 'a>`.
+/// An alias for <c>NonEmpty&lt;'a[], 'a&gt;</c>.
+/// </summary>
 type NonEmptyArray<'a> = NonEmpty<'a[], 'a>
 
+/// <summary>
 /// A list constrained to be non-empty. 
-/// An alias for `NonEmpty<'a list, 'a>`.
+/// An alias for <c>NonEmpty&lt;'a list, 'a&gt;</c>.
+/// </summary>
 type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 
+/// <summary>
 /// A set constrained to be non-empty. 
-/// An alias for `NonEmpty<Set<'a>, 'a>`.
+/// An alias for <c>NonEmpty&lt;Set&lt;'a&gt;, 'a&gt;</c>.
+/// </summary>
 type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
 
 [<AutoOpen>]
@@ -41,15 +51,19 @@ module NonEmptySeqMatcher =
   let (|NonEmpty|) (NonEmpty xs) = xs
 
 module NonEmpty = 
+  /// <summary>
   /// Attempt to convert the given sequence to a NonEmpty sequence.  Returns None if the 
   /// given sequence is empty. 
+  /// </summary>
   let verify (xs:#seq<_>) =
     match xs with
     | Empty -> None
     | NotEmpty result -> Some result 
 
+  /// <summary>
   /// Attempt to convert the given sequence to a NonEmpty sequence.  Throws if the 
   /// given sequence is empty. 
+  /// </summary>
   let assume (xs:#seq<_>) = 
     match xs with
     | Empty -> failwith "Expecting a sequence containing one or more values, but got an empty sequence"
