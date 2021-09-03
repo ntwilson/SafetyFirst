@@ -18,6 +18,6 @@ jobs:
       - name: Restore
         run: dotnet restore SafetyFirst.sln
       - name: Build with dotnet
-        run: dotnet build SafetyFirst.sln --configuration Release
+        run: dotnet build SafetyFirst.sln -f net5.0 -c Release
       - name: Test with dotnet
-        run: dotnet test SafetyFirst.sln --configuration Release
+        run: dotnet test SafetyFirst.sln -f net5.0 -c Release --no-build
