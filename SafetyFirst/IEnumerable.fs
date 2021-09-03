@@ -46,8 +46,8 @@ type IEnumerableExtensions () =
 
   /// <summary>
   /// Returns the element at a specified index in a sequence.
-  /// O(1) for any IList<T> or IReadOnlyList<T>.  
-  /// O(n) where n is the <c>index</c> for any other IEnumerable<T>.
+  /// O(1) for any <c>IList&lt;T&gt;</c> or <c>IReadOnlyList&lt;T&gt;</c>.  
+  /// O(n) where n is the <c>index</c> for any other <c>IEnumerable&lt;T&gt;</c>.
   /// </summary>
   [<Extension>]
   static member ElementAtSafe (xs:_ seq, index) = 

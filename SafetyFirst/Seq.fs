@@ -459,12 +459,12 @@ module NonEmpty =
 
   /// <summary>
   /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
-  /// </summary
+  /// </summary>
   let min (NonEmpty xs) = Seq.min xs
 
   /// <summary>
   /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
-  /// </summary
+  /// </summary>
   let max (NonEmpty xs) = Seq.max xs
 
   /// <summary>

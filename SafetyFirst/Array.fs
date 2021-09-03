@@ -275,6 +275,7 @@ let lastSafe xs = Array.tryLast xs |> Result.ofOption lastErr
 /// <summary>
 /// Returns the last element of the array.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
+/// </summary>
 let inline last' xs = lastSafe xs
 
 /// <summary>
@@ -686,12 +687,12 @@ module NonEmpty =
 
   /// <summary>
   /// Returns the lowest of all elements of the sequence, compared via <c>Operators.min</c>.
-  /// </summary
+  /// </summary>
   let min (NonEmpty xs : NonEmptyArray<_>) = Array.min xs
 
   /// <summary>
   /// Returns the greatest of all elements of the sequence, compared via <c>Operators.max</c>.
-  /// </summary
+  /// </summary>
   let max (NonEmpty xs : NonEmptyArray<_>) = Array.max xs
 
   /// <summary>

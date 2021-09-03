@@ -85,7 +85,7 @@ module NonEmpty =
   /// <summary>
   /// Tests if all elements of the collection satisfy the given predicate. 
   /// If the input function is <c>p</c> and the elements are <c>i0...iN</c> 
-  /// then computes <c>p i0 && ... && p iN</c>.
+  /// then computes <c>p i0 &amp;&amp; ... &amp;&amp; p iN</c>.
   /// </summary>
   let forall predicate (NonEmpty xs : NonEmptySet<_>) = Set.forall predicate xs
 
