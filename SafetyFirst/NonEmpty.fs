@@ -63,8 +63,6 @@ module NonEmptySeqMatcher =
 
   let (|NonEmpty|) (NonEmpty xs) = xs
 
-open NonEmptySeqMatcher
-
 module NonEmpty = 
   /// <summary>
   /// Attempt to convert the given sequence to a NonEmpty sequence.  Returns None if the 
