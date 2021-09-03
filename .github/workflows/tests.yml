@@ -15,4 +15,9 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '5.x'
-      - run: dotnet test 
+      - name: Restore
+        run: dotnet restore SafetyFirst.sln
+      - name: Build with dotnet
+        run: dotnet build SafetyFirst.sln --configuration Release
+      - name: Test with dotnet
+        run: dotnet test SafetyFirst.sln --configuration Release
