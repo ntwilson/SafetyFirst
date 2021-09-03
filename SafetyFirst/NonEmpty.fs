@@ -41,6 +41,7 @@ type NonEmptyList<'a> = NonEmpty<'a list, 'a>
 /// </summary>
 type NonEmptySet<'a when 'a : comparison> = NonEmpty<Set<'a>, 'a>
 
+[<AutoOpen>]
 module NonEmptySeqMatcher = 
   let (|Empty|NotEmpty|) (xs:#seq<'a>) = 
     if Seq.isEmpty xs
