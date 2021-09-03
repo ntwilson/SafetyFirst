@@ -7,7 +7,7 @@ open FSharpPlus
 /// A sequence that is constrained to have at least one element.
 /// </summary>
 [<Struct>]
-type NonEmpty<'a, 'b when 'a :> 'b seq> = NonEmpty of 'a with 
+type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with 
 
   interface IEnumerable<'b> with
     member this.GetEnumerator () = 
