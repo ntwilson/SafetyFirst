@@ -63,6 +63,8 @@ module NonEmptySeqMatcher =
 
   let (|NonEmpty|) (NonEmpty xs) = xs
 
+open NonEmptySeqMatcher
+
 module NonEmpty = 
   /// <summary>
   /// Attempt to convert the given sequence to a NonEmpty sequence.  Returns None if the 
@@ -156,12 +158,16 @@ type NonEmpty<'a, 'b when 'a :> 'b seq> with
   /// <summary>
   /// Traverse compatible with FSharpPlus, so any NonEmpty sequence can be used in the <c>traverse</c> function.
   /// </summary>
-  static member inline Traverse ((NonEmpty xs), f) = traverse f xs |>> NonEmpty.assume
+  static member inline Traverse (xs, f) = 
+    let xs = NonEmptySeqMatcher.(|NonEmpty|) xs
+    in traverse f xs |>> NonEmpty.assume
 
   /// <summary>
   /// Sequence compatible with FSharpPlus, so any NonEmpty sequence can be used in the <c>sequence</c> function.
   /// </summary>
-  static member inline Sequence (NonEmpty (xs:#seq<_>)) = sequence xs |>> NonEmpty.assume
+  static member inline Sequence xs = 
+    let xs = NonEmptySeqMatcher.(|NonEmpty|) xs
+    in sequence xs |>> NonEmpty.assume
 
   // We will not be including semigroup instances for Maps/Dictionaries, since the behavior can be unclear.
   // Possible behoviors when there is a key collision include left-biased (keep the value from the left map),
