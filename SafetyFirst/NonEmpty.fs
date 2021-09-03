@@ -2,9 +2,7 @@ namespace SafetyFirst
 
 open System.Collections.Generic
 
-/// <summary>
 /// A sequence that is constrained to have at least one element.
-/// </summary>
 [<Struct>]
 type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with 
 
