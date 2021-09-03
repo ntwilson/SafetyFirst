@@ -1,12 +1,13 @@
 namespace SafetyFirst
 
 open System.Collections.Generic
+open FSharpPlus
 
 /// <summary>
 /// A sequence that is constrained to have at least one element.
 /// </summary>
 [<Struct>]
-type NonEmpty<'a, 'b when 'a :> 'b seq> = private NonEmpty of 'a with 
+type NonEmpty<'a, 'b when 'a :> 'b seq> = NonEmpty of 'a with 
 
   interface IEnumerable<'b> with
     member this.GetEnumerator () = 
@@ -152,8 +153,17 @@ type NonEmpty<'a, 'b when 'a :> 'b seq> with
   static member (+) (NonEmpty (xs:ResizeArray<_>), NonEmpty (ys:ResizeArray<_>)) : NonEmpty<ResizeArray<_>, _> = 
     NonEmpty (ResizeArray (Seq.append xs ys))
 
+  /// <summary>
+  /// Traverse compatible with FSharpPlus, so any NonEmpty sequence can be used in the <c>traverse</c> function.
+  /// </summary>
+  static member inline Traverse ((NonEmpty xs), f) = traverse f xs |>> NonEmpty.assume
+
+  /// <summary>
+  /// Sequence compatible with FSharpPlus, so any NonEmpty sequence can be used in the <c>sequence</c> function.
+  /// </summary>
+  static member inline Sequence (NonEmpty (xs:#seq<_>)) = sequence xs |>> NonEmpty.assume
+
   // We will not be including semigroup instances for Maps/Dictionaries, since the behavior can be unclear.
   // Possible behoviors when there is a key collision include left-biased (keep the value from the left map),
   // right-biased (keep the value from the right map) and unbiased (values must be semigroups, and you append the two values).
   // At this time, we don't wish to choose a particular behavior.
-  
