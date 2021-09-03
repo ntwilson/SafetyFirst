@@ -249,6 +249,46 @@ let ``can use computation expressions to bind and map Results`` () =
       resultC = (Ok 15)
     @>
 
+[<Test>]
+let ``can use the applicative CE to combine errors together`` () = 
+  let tryToGetA = Ok 5
+  let tryToGetB = Ok 10
+  let add x y = x + y
+  let add' x y = Ok (x + y)
+
+  let resultA = 
+    validate (+) {
+      let! x = tryToGetA
+      and! y = tryToGetB
+      return add x y 
+    }
+
+  test <@ resultA = (Ok 15) @>
+
+  let resultB = 
+    validate (@) { 
+      let! x = Error [ "x failed" ]
+      and! y = tryToGetA
+      and! z = Error [ "z failed" ]
+      let a = 20
+      return a+x+y+z
+    }
+
+  test <@ resultB = Error ["x failed"; "z failed"] @>
+
+  let (++) sep a b = a + sep + b
+
+  let resultC = 
+    validate ((++) "\n") {
+      let a = 20
+      let! x = Error "x failed"
+      and! y = tryToGetA
+      and! z = Error "z failed"
+      return a+x+y+z
+    }
+
+  test <@ resultC = Error "x failed\nz failed" @>
+
 
 [<Test>]
 let ``can use a default value for a failed result`` () =

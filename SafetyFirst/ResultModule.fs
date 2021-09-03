@@ -11,6 +11,16 @@ type ResultExpression () =
   member this.Return x = Ok x
   member this.ReturnFrom x = x
 
+type ApplicativeResultExpression<'err> (append:'err -> 'err -> 'err) = 
+  member this.MergeSources(t1, t2) = 
+    match t1, t2 with
+    | Ok r1, Ok r2 -> Ok (r1, r2)
+    | Error e1, Error e2 -> Error (append e1 e2)
+    | Error e, _ | _, Error e -> Error e
+
+  member this.BindReturn(x, f) = Result.map f x
+
+
 [<AutoOpen>]
 module ResultExpression =
   /// <summary>
@@ -22,6 +32,20 @@ module ResultExpression =
   /// will use the value of the Result if the Result is <c>Ok x</c>, or terminate early if the Result is <c>Error e</c>.
   /// </summary>
   let result = new ResultExpression ()
+
+  /// <summary>
+  /// The computation expression to manage Result as an Applicative Functor.
+  ///
+  /// Code wrapped in a Result is known to potentially fail with specific errors.
+  /// 
+  /// Use this computation expression in place of <c>result</c> when:
+  /// 1. None of the results depend on each other, and all are independent.
+  /// 2. You wish to keep track of _all_ failures rather than just the _first_ failure. Instead of terminating early,
+  /// this CE will evaluate all <c>let!</c> or <c>and!</c> expressions and combine them together. 
+  /// 
+  /// The first argument to this computation expression is the function used to fold <c>Error</c>s together 
+  /// </summary>
+  let validate (append:'err -> 'err -> 'err) = new ApplicativeResultExpression<'err>(append)
 
 #nowarn "32121"
 
