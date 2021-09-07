@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/ntwilson/SafetyFirst.svg?branch=master)](https://travis-ci.com/ntwilson/SafetyFirst)
+![tests](https://github.com/ntwilson/SafetyFirst/actions/workflows/tests.yml/badge.svg)
 
 ## SafetyFirst
 
@@ -63,7 +63,7 @@ SalesRep VIP(IEnumerable<SalesRep> salesReps) =>
     .Unless("No sales reps have been loaded into the system.  You must provide at least one sales rep");
 ```
 
-This has a higher development cost than using the partial `maxBy` function or `First` method, but if the exception is thrown, it provides a better error message because we now know a lot more about the context of the problem than we would from inside the maxBy function.  We know that specifically our seq of SalesReps is empty, and can reflect that in the error message.  Also this provides a lot more information to the reader of the `vip` function because it's obvious what the assumptions this function makes are (in this case, that the input includes at least one sales rep).
+This has a higher development cost than using the partial `maxBy` function or `First` method, but if the exception is thrown, it provides a better error message because we now know a lot more about the context of the problem than we would from inside the `maxBy` function.  We know that specifically our seq of SalesReps is empty, and can reflect that in the error message.  Also this provides a lot more information to the reader of the `vip` function because it's obvious what the assumptions this function makes are (in this case, that the input includes at least one sales rep).
 
 Since the Result type already contains error information in it, the Result type also has an `expect` function that functions just like `unless` but doesn't require an additional message.  So you could do:
 
@@ -136,6 +136,25 @@ result {
 ```
 
 (note that for `Result<_,_>` expressions, the Error type must be the same for all results used in the expression).
+
+If you're using F#5 or greater, you can take advantage of ["Applicative Computation Expressions"](https://docs.microsoft.com/en-us/dotnet/fsharp/whats-new/fsharp-50#applicative-computation-expressions) which adds `and!` bindings inside a `result` expression. When using `and!` bindings, any errors will be aggregated together (using [F#+'s semigroup append](http://fsprojects.github.io/FSharpPlus/abstraction-semigroup.html)). For example, 
+
+```F#
+result {
+  let! x = Error ["no x value available"]
+  and! y = Error ["no y value available"]
+  return x + y
+} // returns Error ["no x value available"; "no y value available"]
+
+result {
+  let! x = Error ["no x value available"]
+
+  let! y = Error ["no y value available"]
+  and! z = Error ["no z value available"]
+
+  return x + y + z
+} // returns Error ["no x value available"]
+```
 
 ##### C# types
 
