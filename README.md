@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/ntwilson/SafetyFirst.svg?branch=master)](https://travis-ci.com/ntwilson/SafetyFirst)
+![tests](https://github.com/ntwilson/SafetyFirst/actions/workflows/tests.yml/badge.svg)
 
 ## SafetyFirst
 
