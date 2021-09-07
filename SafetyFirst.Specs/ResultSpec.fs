@@ -301,6 +301,27 @@ let ``can use the applicative CE to combine errors together`` () =
   test <@ resultC = Error ["y failed"; "z failed"] @>
 
 
+type CustomError = CustomError of string
+
+[<Test>]
+let ``can still create non applicative result expressions on non semigroup errors but will error for applicatives`` () = 
+  let resultA = 
+    result { 
+      let! x = Ok 5
+      let! y = Error <| CustomError "Failed!"
+      return x + y
+    }
+
+  test <@ resultA = Error (CustomError "Failed!") @>
+
+  // let ``uncomment to observe failure to compile`` = 
+  //   result { 
+  //     let! x = Ok 5
+  //     and! y = Error <| CustomError "Failed!"
+  //     return x + y
+  //   }
+
+
 
 [<Test>]
 let ``can use a default value for a failed result`` () =
