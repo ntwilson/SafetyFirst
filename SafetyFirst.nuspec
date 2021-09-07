@@ -2,12 +2,11 @@
 <package >
   <metadata>
     <id>SafetyFirst</id>
-    <version>4.0.2</version>
+    <version>5.0.0</version>
     <authors>nathan wilson</authors>
     <owners>nathan wilson</owners>
     <description>Total functions made convenient for F# and C#</description>
     <summary>Total functions made convenient for F# and C#</summary>
-    <releaseNotes>Restore the Seq module functions that hang for infinite input.</releaseNotes>
     <license type="expression">CC0-1.0</license>
     <projectUrl>https://github.com/ntwilson/SafetyFirst</projectUrl>
     <tags>result safety collections functional-programming</tags>
@@ -15,6 +14,8 @@
     <dependencies>
       <dependency id="FSharp.Core" version="4.5.0" />
       <dependency id="System.ValueTuple" version="4.5.0" />
+      <dependency id="FSharpx.Collections" version="2.1.3" />
+      <dependency id="FSharpPlus" version="1.0.0" />
     </dependencies>
   </metadata>
   <files>

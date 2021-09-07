@@ -4,7 +4,7 @@ open System
 open System.Collections
 open System.Collections.Generic
 
-open SafetyFirst.FSharpxCopy.Collections
+open FSharpx.Collections
 
 /// <summary>
 /// A lazy sequence constrained to be finite in length.

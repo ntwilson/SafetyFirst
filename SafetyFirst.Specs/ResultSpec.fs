@@ -249,6 +249,79 @@ let ``can use computation expressions to bind and map Results`` () =
       resultC = (Ok 15)
     @>
 
+[<Test>]
+let ``can use the applicative CE to combine errors together`` () = 
+  let tryToGetA = Ok 5
+  let tryToGetB = Ok 10
+  let add x y = x + y
+  let add' x y = Ok (x + y)
+
+  let resultA : Result<_, string> = 
+    result {
+      let! x = tryToGetA
+      and! y = tryToGetB
+      return add x y 
+    }
+
+  test <@ resultA = (Ok 15) @>
+
+  let resultB = 
+    result { 
+      let! x = Error [ "x failed" ]
+      and! y = tryToGetA
+      and! z = Error [ "z failed" ]
+      let a = 20
+      return a+x+y+z
+    }
+
+  test <@ resultB = Error ["x failed"; "z failed"] @>
+
+  let resultC = 
+    result {
+      let! x = Error "x failed"
+
+      let! y = tryToGetA
+      and! z = Error "z failed"
+
+      return x+y+z
+    }
+
+  test <@ resultC = Error "x failed" @>
+
+  let resultC = 
+    result {
+      let! x = tryToGetA
+
+      let! y = Error ["y failed"]
+      and! z = Error ["z failed"]
+
+      return x+y+z
+    }
+
+  test <@ resultC = Error ["y failed"; "z failed"] @>
+
+
+type CustomError = CustomError of string
+
+[<Test>]
+let ``can still create non applicative result expressions on non semigroup errors but will error for applicatives`` () = 
+  let resultA = 
+    result { 
+      let! x = Ok 5
+      let! y = Error <| CustomError "Failed!"
+      return x + y
+    }
+
+  test <@ resultA = Error (CustomError "Failed!") @>
+
+  // let ``uncomment to observe failure to compile`` = 
+  //   result { 
+  //     let! x = Ok 5
+  //     and! y = Error <| CustomError "Failed!"
+  //     return x + y
+  //   }
+
+
 
 [<Test>]
 let ``can use a default value for a failed result`` () =

@@ -2,6 +2,9 @@ namespace SafetyFirst
 
 open System.Runtime.CompilerServices
 
+open FSharpPlus
+open SafetyFirst
+
 /// <summary>
 /// Used for computation expressions.  Use <c>Result.expr</c> or <c>ResultExpression.result</c> 
 /// to create the expression. 
@@ -10,6 +13,13 @@ type ResultExpression () =
   member this.Bind (x, onOk) = Result.bind onOk x
   member this.Return x = Ok x
   member this.ReturnFrom x = x
+  member inline this.MergeSources(t1, t2) = 
+    match t1, t2 with
+    | Ok r1, Ok r2 -> Ok (r1, r2)
+    | Error e1, Error e2 -> Error (e1 ++ e2)
+    | Error e, _ | _, Error e -> Error e
+
+  member this.BindReturn(x, f) = Result.map f x
 
 [<AutoOpen>]
 module ResultExpression =
