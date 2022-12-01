@@ -1,1 +1,1 @@
-dotnet pack --include-source -c Release -o .\
+dotnet pack --include-source -c Release -o .\nugets

@@ -25,6 +25,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 
+nugets/
+
 # Visual Studio Code F# cache
 .ionide/
 .vscode/
