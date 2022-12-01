@@ -191,12 +191,12 @@ module Splitting =
 
     test 
       <@
-        (Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1[2;3;100;100;4;100;5;6]) |> ofNonEmpty)
+        (Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1 [2;3;100;100;4;100;5;6]) |> ofNonEmpty)
           = [[1;2;3;100];[100];[4;100];[5;6]]
 
         &&
 
-        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5]) |> ofNonEmpty)
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1;1;2;3;4;4;4;5]) |> ofNonEmpty)
           = [[0;1];[1;2;3;4];[4];[4;5]]
       @>
   
@@ -208,13 +208,13 @@ module Splitting =
         &&
         (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 5) |> ofNonEmpty) = [[5]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 0[5]) |> ofNonEmpty) = [[0; 5]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 0 [5]) |> ofNonEmpty) = [[0; 5]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5[5]) |> ofNonEmpty) = [[5]; [5]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [5]) |> ofNonEmpty) = [[5]; [5]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5[0]) |> ofNonEmpty) = [[5]; [0]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [0]) |> ofNonEmpty) = [[5]; [0]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5[0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
       @>
 
   [<Test>]
@@ -224,14 +224,14 @@ module Splitting =
       <@
         (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.singleton 0) |> ofNonEmpty) = [[0]]
         &&
-        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0[1]) |> ofNonEmpty) = [[0;1]]
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1]) |> ofNonEmpty) = [[0;1]]
         &&
-        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0[0]) |> ofNonEmpty) = [[0]; [0]]
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [0]) |> ofNonEmpty) = [[0]; [0]]
         &&
-        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1[2;12;13;23;24]) |> ofNonEmpty)
+        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1 [2;12;13;23;24]) |> ofNonEmpty)
           = [[1;2]; [12;13]; [23;24]]
         &&
-        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1[2;12;13;23]) |> ofNonEmpty)
+        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1 [2;12;13;23]) |> ofNonEmpty)
           = [[1;2]; [12;13]; [23]]
       @>
 

@@ -1,5 +1,37 @@
 module SafetyFirst.Set
 
+open SafetyFirst.ErrorTypes
+
+/// <summary>
+/// Returns the lowest element in the set according to the ordering being used for the set.
+/// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
+/// <summary>
+let minElementSafe<'a when 'a : comparison> (xs:Set<'a>) = 
+  if Set.isEmpty xs 
+  then Error minErr
+  else Ok <| Set.minElement xs
+
+/// <summary>
+/// Returns the lowest element in the set according to the ordering being used for the set.
+/// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
+/// <summary>
+let inline minElement'<'a when 'a : comparison> (xs:Set<'a>) = minElementSafe xs
+
+/// <summary>
+/// Returns the highest element in the set according to the ordering being used for the set.
+/// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
+/// <summary>
+let maxElementSafe<'a when 'a : comparison> (xs:Set<'a>) = 
+  if Set.isEmpty xs 
+  then Error maxErr
+  else Ok <| Set.maxElement xs
+
+/// <summary>
+/// Returns the highest element in the set according to the ordering being used for the set.
+/// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
+/// <summary>
+let maxElement'<'a when 'a : comparison> (xs:Set<'a>) = maxElementSafe xs
+
 module NonEmpty = 
 
   /// <summary>
