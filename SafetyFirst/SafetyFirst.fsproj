@@ -8,10 +8,10 @@
 
     <PackageId>SafetyFirst</PackageId>
     <Title>SafetyFirst</Title>
-    <PackageVersion>5.0.1</PackageVersion>
+    <PackageVersion>5.0.2</PackageVersion>
     <Authors>nathan wilson</Authors>
     <Description>Total functions made convenient for F# and C#</Description>
-    <PackageReleaseNotes>Add Set min and max operations.</PackageReleaseNotes>
+    <PackageReleaseNotes>Add the readme to the nuget package.</PackageReleaseNotes>
     <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ntwilson/SafetyFirst</PackageProjectUrl>
     <PackageTags>result safety collections functional-programming</PackageTags>
@@ -42,9 +42,10 @@
     <Compile Include="String.fs" />
     <Compile Include="IEnumerable.fs" />
     <Compile Include="IDictionaryExtensions.fs" />
-
-    <Content Include="../README.md" />
-    <Content Include="../v4.0_UpgradeGuide.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="\"/>
+    <None Include="../v4.0_UpgradeGuide.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.5.0" />
