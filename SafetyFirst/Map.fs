@@ -6,6 +6,7 @@ open SafetyFirst.ErrorTypes
 /// Lookup an element in the map, returning an Ok value if the element is in the domain of the map
 /// and an Error if not.
 /// </summary>
+[<CompiledName("findSafe_F#")>]
 let find' key map = 
   match Map.tryFind key map with
   | Some value -> Ok value
@@ -24,6 +25,7 @@ let private duplicates xs =
 /// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
+[<CompiledName("ofListSafe_F#")>]
 let ofList' xs = 
   let result = Map.ofList xs
   if List.length xs <> Map.count result
@@ -40,6 +42,7 @@ let inline ofListSafe xs = ofList' xs
 /// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
+[<CompiledName("ofArraySafe_F#")>]
 let ofArray' xs =
   let result = Map.ofArray xs
   if Array.length xs <> Map.count result
@@ -56,6 +59,7 @@ let inline ofArraySafe xs = ofArray' xs
 /// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
+[<CompiledName("ofSeqSafe_F#")>]
 let inline ofSeq' xs = ofArray' (Seq.toArray xs)
 
 /// <summary>

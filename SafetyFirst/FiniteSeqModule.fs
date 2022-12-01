@@ -27,6 +27,7 @@ module FiniteSeq =
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
+  [<CompiledName("averageSafe_F#")>]
   let inline average' xs = averageSafe xs  
 
   /// <summary>
@@ -44,6 +45,7 @@ module FiniteSeq =
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the generated type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
+  [<CompiledName("averageBySafe_F#")>]
   let inline averageBy' projection xs = averageBySafe projection xs  
 
   /// <summary>
@@ -68,6 +70,7 @@ module FiniteSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
   /// </summary>
+  [<CompiledName("chunkBySizeSafe_F#")>]
   let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
   /// <summary>
@@ -199,6 +202,7 @@ module FiniteSeq =
   /// Returns the first element for which the given function returns True.
   /// Returns a NoMatchingElement Error if no such element is found.
   /// </summary>
+  [<CompiledName("findSafe_F#")>]
   let inline find' predicate xs = findSafe predicate xs
 
   /// <summary>
@@ -212,6 +216,7 @@ module FiniteSeq =
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
+  [<CompiledName("findBackSafe_F#")>]
   let inline findBack' predicate xs = findBackSafe predicate xs
 
   /// <summary>
@@ -223,6 +228,7 @@ module FiniteSeq =
   /// <summary>
   /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
   /// </summary>
+  [<CompiledName("findIndexSafe_F#")>]
   let inline findIndex' predicate (xs : FiniteSeq<_>) = findIndexSafe predicate xs
 
   /// <summary>
@@ -236,6 +242,7 @@ module FiniteSeq =
   /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
+  [<CompiledName("findIndexBackSafe_F#")>]
   let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
   /// <summary>
@@ -274,6 +281,7 @@ module FiniteSeq =
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
+  [<CompiledName("headSafe_F#")>]
   let inline head' xs = headSafe xs
 
   /// <summary>
@@ -304,6 +312,7 @@ module FiniteSeq =
   /// <summary>
   /// Returns the last element of the sequence. Return an Error if no such element exists.
   /// </summary>
+  [<CompiledName("lastSafe_F#")>]
   let inline last' xs = lastSafe xs
 
   /// <summary>
@@ -355,6 +364,7 @@ module FiniteSeq =
   /// to the corresponding elements of the two collections pairwise.  
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
+  [<CompiledName("map2Safe_F#")>]
   let inline map2' f xs ys = map2Safe f xs ys
 
   /// <summary>
@@ -393,6 +403,7 @@ module FiniteSeq =
   /// Returns the greatest of all elements of the sequence, compared via Operators.max.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("maxSafe_F#")>]
   let inline max'<'a when 'a : comparison> (xs : FiniteSeq<'a>) = maxSafe xs
 
   /// <summary>
@@ -408,6 +419,7 @@ module FiniteSeq =
   /// Returns the greatest of all elements of the sequence, compared via Operators.max on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("maxBySafe_F#")>]
   let inline maxBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : FiniteSeq<'a>) = maxBySafe projection xs
 
   /// <summary>
@@ -423,6 +435,7 @@ module FiniteSeq =
   /// Returns the lowest of all elements of the sequence, compared via Operators.min.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("minSafe_F#")>]
   let inline min'<'a when 'a : comparison> (xs : FiniteSeq<'a>) = minSafe xs
 
   /// <summary>
@@ -438,6 +451,7 @@ module FiniteSeq =
   /// Returns the lowest of all elements of the sequence, compared via Operators.min on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("minBySafe_F#")>]
   let inline minBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : FiniteSeq<'a>) = minBySafe projection xs
 
   /// <summary>
@@ -484,6 +498,7 @@ module FiniteSeq =
   /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f (f (...(f i0 i1)) iN-1) iN</c>.
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("reduceSafe_F#")>]
   let inline reduce' f xs = reduceSafe f xs   
 
   /// <summary>
@@ -513,6 +528,7 @@ module FiniteSeq =
   /// This function consumes the whole input sequence before returning the result.
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("reduceBackSafe_F#")>]
   let inline reduceBack' f xs = reduceBackSafe f xs
 
   /// <summary>
@@ -585,6 +601,7 @@ module FiniteSeq =
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
+  [<CompiledName("skipSafe_F#")>]
   let inline skip' n xs = skipSafe n xs  
 
   /// <summary>
@@ -625,6 +642,7 @@ module FiniteSeq =
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// Returns an Error if <c>count</c> is zero or negative.
   /// </summary>
+  [<CompiledName("splitIntoSafe_F#")>]
   let inline splitInto' n xs = splitIntoSafe n xs
 
   /// <summary>
@@ -655,6 +673,7 @@ module FiniteSeq =
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
+  [<CompiledName("tailSafe_F#")>]
   let inline tail' xs = tailSafe xs
 
   /// <summary>
@@ -675,6 +694,7 @@ module FiniteSeq =
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   /// </summary>
+  [<CompiledName("takeSafe_F#")>]
   let inline take' n xs = takeSafe n xs 
 
   /// <summary>
@@ -723,6 +743,7 @@ module FiniteSeq =
   /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
   /// the input sequences differ in length. 
   /// </summary>
+  [<CompiledName("transposeSafe_F#")>]
   let inline transpose' xs = transposeSafe xs
 
   /// <summary>
@@ -741,6 +762,7 @@ module FiniteSeq =
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
+  [<CompiledName("unconsSafe_F#")>]
   let inline uncons' xs = unconsSafe xs
 
   /// <summary>
@@ -768,6 +790,7 @@ module FiniteSeq =
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Returns a NegativeInput Error if the size is zero or negative.
   /// </summary>
+  [<CompiledName("windowedSafe_F#")>]
   let inline windowed' size xs = windowedSafe size xs
 
   /// <summary>
@@ -790,6 +813,7 @@ module FiniteSeq =
   /// Combines the two sequences into a list of pairs. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
+  [<CompiledName("zipSafe_F#")>]
   let inline zip' xs ys = zipSafe xs ys  
 
   /// <summary>
@@ -817,6 +841,7 @@ module FiniteSeq =
   /// Combines the three sequences into a list of triples. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
+  [<CompiledName("zip3Safe_F#")>]
   let inline zip3' xs ys zs = zip3Safe xs ys zs 
 
   /// <summary>
@@ -838,6 +863,7 @@ module FSeq =
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
+  [<CompiledName("averageSafe_F#")>]
   let inline average' (xs : _ fseq) = FiniteSeq.average' xs
 
   /// <summary>
@@ -852,6 +878,7 @@ module FSeq =
   /// The elements are averaged using the <c>+</c> operator, <c>DivideByInt</c> method and <c>Zero</c> property associated with the generated type.
   /// Returns an Error if the input sequence is empty.
   /// </summary>
+  [<CompiledName("averageBySafe_F#")>]
   let inline averageBy' projection xs = averageBySafe projection xs
 
   /// <summary>
@@ -885,6 +912,7 @@ module FSeq =
   /// <summary>
   /// Returns the last element of the sequence. Return an Error if no such element exists.
   /// </summary>
+  [<CompiledName("lastSafe_F#")>]
   let inline last' xs = lastSafe xs
 
   /// <summary>
@@ -908,6 +936,7 @@ module FSeq =
   /// Return the final result.  
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("reduceSafe_F#")>]
   let inline reduce' f xs = reduceSafe f xs
 
   /// <summary>
@@ -933,6 +962,7 @@ module FSeq =
   /// This function consumes the whole input sequence before returning the result.
   /// Returns a SeqIsEmpty Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("reduceBackSafe_F#")>]
   let inline reduceBack' f xs = reduceBackSafe f xs
 
   /// <summary>
@@ -987,6 +1017,7 @@ module FSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
   /// </summary>
+  [<CompiledName("chunkBySizeSafe_F#")>]
   let inline chunkBySize' size xs : Result<_ fseq, _> = chunkBySizeSafe size xs
 
   /// <summary>
@@ -1186,6 +1217,7 @@ module FSeq =
   /// Returns the first element for which the given function returns True.
   /// Returns a NoMatchingElement Error if no such element is found.
   /// </summary>
+  [<CompiledName("findSafe_F#")>]
   let inline find' predicate xs = findSafe predicate xs
 
   /// <summary>
@@ -1196,6 +1228,7 @@ module FSeq =
   /// <summary>
   /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
   /// </summary>
+  [<CompiledName("findIndexSafe_F#")>]
   let inline findIndex' predicate (xs : _ fseq) = FiniteSeq.findIndex' predicate xs
 
   /// <summary>
@@ -1208,6 +1241,7 @@ module FSeq =
   /// Returns the last element for which the given function returns True. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
+  [<CompiledName("findBackSafe_F#")>]
   let inline findBack' predicate xs = findBackSafe predicate xs
 
   /// <summary>
@@ -1220,6 +1254,7 @@ module FSeq =
   /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists.
   /// This function digests the whole initial sequence as soon as it is called. 
   /// </summary>
+  [<CompiledName("findIndexBackSafe_F#")>]
   let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
   /// <summary>
@@ -1253,6 +1288,7 @@ module FSeq =
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
+  [<CompiledName("headSafe_F#")>]
   let inline head' xs = headSafe xs
 
   /// <summary>
@@ -1289,6 +1325,7 @@ module FSeq =
   /// to the corresponding elements of the two collections pairwise.  
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
+  [<CompiledName("map2Safe_F#")>]
   let inline map2' f xs ys = map2Safe f xs ys
 
   /// <summary>
@@ -1317,6 +1354,7 @@ module FSeq =
   /// Returns the greatest of all elements of the sequence, compared via Operators.max.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("maxSafe_F#")>]
   let inline max'<'a when 'a : comparison> (xs : 'a fseq) = FiniteSeq.max' xs
 
   /// <summary>
@@ -1329,6 +1367,7 @@ module FSeq =
   /// Returns the greatest of all elements of the sequence, compared via Operators.max on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("maxBySafe_F#")>]
   let inline maxBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : 'a fseq) = FiniteSeq.maxBy' projection xs
 
   /// <summary>
@@ -1341,6 +1380,7 @@ module FSeq =
   /// Returns the lowest of all elements of the sequence, compared via Operators.min.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("minSafe_F#")>]
   let inline min'<'a when 'a : comparison> (xs : 'a fseq) = FiniteSeq.min' xs
 
   /// <summary>
@@ -1353,6 +1393,7 @@ module FSeq =
   /// Returns the lowest of all elements of the sequence, compared via Operators.min on the function result.
   /// Returns an Error if the sequence is empty.
   /// </summary>
+  [<CompiledName("minBySafe_F#")>]
   let inline minBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs : 'a fseq) = FiniteSeq.minBy' projection xs
 
   /// <summary>
@@ -1371,6 +1412,7 @@ module FSeq =
   /// O(n), where n is count. Return the list which skips the first 'n' elements of
   /// the input list.
   /// </summary>
+  [<CompiledName("skipSafe_F#")>]
   let inline skip' n xs = skipSafe n xs
 
   /// <summary>
@@ -1397,6 +1439,7 @@ module FSeq =
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// Returns an Error if <c>count</c> is zero or negative.
   /// </summary>
+  [<CompiledName("splitIntoSafe_F#")>]
   let inline splitInto' n xs = splitIntoSafe n xs
 
   /// <summary>
@@ -1433,6 +1476,7 @@ module FSeq =
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
   /// Forces the evaluation of the first cell of the list if it is not already evaluated.
   /// </summary>
+  [<CompiledName("tailSafe_F#")>]
   let inline tail' xs = tailSafe xs
 
   /// <summary>
@@ -1451,6 +1495,7 @@ module FSeq =
   /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
   /// the input list.
   /// </summary>
+  [<CompiledName("takeSafe_F#")>]
   let inline take' n xs = takeSafe n xs
 
   /// <summary>
@@ -1470,6 +1515,7 @@ module FSeq =
   /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
   /// the input sequences differ in length. 
   /// </summary>
+  [<CompiledName("transposeSafe_F#")>]
   let inline transpose' xs = transposeSafe xs
 
   /// <summary>
@@ -1485,6 +1531,7 @@ module FSeq =
   /// <summary>
   /// O(1). Returns tuple of head element and tail of the list.
   /// </summary>
+  [<CompiledName("unconsSafe_F#")>]
   let inline uncons' xs = unconsSafe xs
 
   /// <summary>
@@ -1503,6 +1550,7 @@ module FSeq =
   /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
   /// Returns a NegativeInput Error if the size is zero or negative.
   /// </summary>
+  [<CompiledName("windowedSafe_F#")>]
   let inline windowed' size xs = windowedSafe size xs
 
   /// <summary>
@@ -1521,6 +1569,7 @@ module FSeq =
   /// Combines the two sequences into a list of pairs. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
+  [<CompiledName("zipSafe_F#")>]
   let inline zip' xs ys = zipSafe xs ys
 
   /// <summary>
@@ -1552,6 +1601,7 @@ module FSeq =
   /// Combines the three sequences into a list of triples. 
   /// Returns a DifferingLengths Error if the sequences are different lengths.
   /// </summary>
+  [<CompiledName("zip3Safe_F#")>]
   let inline zip3' xs ys zs = zip3Safe xs ys zs
 
   /// <summary>
@@ -1766,6 +1816,7 @@ module FSeq =
     /// <summary>
     /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
     /// </summary>
+    [<CompiledName("findSafe_F#")>]
     let inline find' predicate xs = findSafe predicate xs 
 
     /// <summary>
@@ -1776,6 +1827,7 @@ module FSeq =
     /// <summary>
     /// Returns the index of the first element in the sequence that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
     /// </summary>
+    [<CompiledName("findIndexSafe_F#")>]
     let inline findIndex' predicate xs = findIndexSafe predicate xs
 
     /// <summary>
@@ -1786,6 +1838,7 @@ module FSeq =
     /// <summary>
     /// Returns the last element for which the given function returns True. Return an Error if no such element exists. This function digests the whole initial sequence as soon as it is called.
     /// </summary>
+    [<CompiledName("findBackSafe_F#")>]
     let inline findBack' predicate xs = findBackSafe predicate xs
 
     /// <summary>
@@ -1796,6 +1849,7 @@ module FSeq =
     /// <summary>
     /// Returns the index of the last element in the sequence that satisfies the given predicate. Return an Error if no such element exists. This function digests the whole initial sequence as soon as it is called.
     /// </summary>
+    [<CompiledName("findIndexBackSafe_F#")>]
     let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
     /// <summary>
@@ -1836,6 +1890,7 @@ module FSeq =
     /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
     /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
     /// </summary>
+    [<CompiledName("ofFSeqSafe_F#")>]
     let inline ofFSeq' xs = ofFSeqSafe xs
 
     /// <summary>
@@ -1944,6 +1999,7 @@ module FSeq =
     /// Returns the transpose of the given sequence of sequences. Returns a DifferingLengths Error if
     /// the input sequences differ in length. 
     /// </summary>
+    [<CompiledName("transposeSafe_F#")>]
     let inline transpose' xs = transposeSafe xs    
 
     /// <summary>
@@ -2001,6 +2057,7 @@ module FSeq =
     /// Returns a sequence that yields sliding windows containing elements drawn from the input sequence. Each window is returned as a fresh fseq.
     /// Returns a NegativeInput Error if the size is zero or negative.
     /// </summary>
+    [<CompiledName("windowedSafe_F#")>]
     let inline windowed' n (NonEmptyFSeq xs) = windowed' n xs
 
     /// <summary>
@@ -2027,6 +2084,7 @@ module FSeq =
     /// Combines the two sequences into a list of pairs. 
     /// Returns a DifferingLengths Error if the sequences are different lengths.
     /// </summary>
+    [<CompiledName("zipSafe_F#")>]
     let inline zip' xs ys = zipSafe xs ys
 
     /// <summary>
@@ -2054,6 +2112,7 @@ module FSeq =
     /// Combines the three sequences into a list of triples. 
     /// Returns a DifferingLengths Error if the sequences are different lengths.
     /// </summary>
+    [<CompiledName("zip3Safe_F#")>]
     let inline zip3' xs ys zs = zip3Safe xs ys zs
 
     /// <summary>

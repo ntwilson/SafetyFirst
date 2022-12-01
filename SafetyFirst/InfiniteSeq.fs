@@ -73,6 +73,7 @@ module InfiniteSeq =
   /// Computes the element at the specified index in the collection.  Returns
   /// an error if the sequence hung (produced too many elements).
   /// </summary>
+  [<CompiledName("itemSafe_F#")>]
   let item' (NaturalInt i) (InfiniteSeq xs) = 
     Seq.item' i xs |> Result.mapError (always hung)
 
@@ -88,6 +89,7 @@ module InfiniteSeq =
   /// <c>takeLazy</c> instead.  Returns
   /// an error if the sequence hung (produced too many elements).
   /// </summary>
+  [<CompiledName("takeSafe_F#")>]
   let take' n (InfiniteSeq xs) = 
     Seq.take' n xs |> Result.mapError (always hung)
 
@@ -121,6 +123,7 @@ module InfiniteSeq =
   /// <c>takeWhileLazy</c> instead.  Returns
   /// an error if the sequence hung (produced too many elements).
   /// </summary>
+  [<CompiledName("takeWhileSafe_F#")>]
   let takeWhile' predicate (InfiniteSeq xs) = 
     let xs = Seq.cache xs
     Seq.find' (not << predicate) xs 
@@ -188,6 +191,7 @@ module InfiniteSeq =
   /// Returns the first element of the sequence.  Returns an error if 
   /// the sequence hung (produced too many elements).
   /// </summary>
+  [<CompiledName("headSafe_F#")>]
   let head' (InfiniteSeq xs) = Seq.head' xs |> Result.mapError (always hung)
 
   /// <summary>
@@ -200,6 +204,7 @@ module InfiniteSeq =
   /// Returns tuple of head element and tail of the list.
   /// Returns an error if the sequence hung (produced too many elements).
   /// </summary>
+  [<CompiledName("unconsSafe_F#")>]
   let uncons' xs = 
     result { 
       let! h = head' xs 
@@ -267,6 +272,7 @@ module InfiniteSeq =
   /// Returns an error if the infinite sequence hung 
   /// while trying to find a matching element.
   /// </summary>
+  [<CompiledName("findSafe_F#")>]
   let find' predicate (InfiniteSeq xs) = Seq.find' predicate xs |> Result.mapError (always hung)
 
   /// <summary>
