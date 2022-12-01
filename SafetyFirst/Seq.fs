@@ -16,6 +16,7 @@ let inline averageSafe source =
 /// Returns the average of the elements in the sequence.
 /// Returns a SeqIsEmpty error if <c>source</c> has no elements.
 /// </summary>
+[<CompiledName("averageSafe_F#")>]
 let inline average' source = averageSafe source 
 
 /// <summary>
@@ -33,6 +34,7 @@ let inline averageBySafe selector xs =
 /// of the sequence.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("averageBySafe_F#")>]
 let inline averageBy' selector xs = averageBySafe selector xs
 
 /// <summary>
@@ -48,6 +50,7 @@ let chunkBySizeSafe size xs : Result<NonEmptyArray<_> seq, _> =
 /// Divides the input sequence into chunks of size at most <c>size</c>.
 /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
+[<CompiledName("chunkBySizeSafe_F#")>]
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
 /// <summary>
@@ -72,6 +75,7 @@ let exactlyOneSafe xs =
 /// If the input sequence has only one element, returns that element.
 /// If the input sequence has more or less than one element, returns a WrongNumberOfElements Error.  
 /// </summary>
+[<CompiledName("exactlyOneSafe_F#")>]
 let inline exactlyOne' xs = exactlyOneSafe xs
 
 /// <summary>
@@ -86,6 +90,7 @@ let findSafe predicate xs =
 /// Returns the first element for which the given function returns True.
 /// Returns a NoMatchingElement Error if no such element is found.
 /// </summary>
+[<CompiledName("findSafe_F#")>]
 let inline find' predicate xs = findSafe predicate xs
 
 /// <summary>
@@ -100,6 +105,7 @@ let findBackSafe predicate xs =
 /// Returns the last element for which the given function returns True.
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("findBackSafe_F#")>]
 let inline findBack' predicate xs = findBackSafe predicate xs
 
 /// <summary>
@@ -116,6 +122,7 @@ let findIndexSafe predicate xs =
 /// that satisfies the given predicate.
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("findIndexSafe_F#")>]
 let inline findIndex' predicate xs = findIndexSafe predicate xs
 
 /// <summary>
@@ -132,6 +139,7 @@ let findIndexBackSafe predicate xs =
 /// that satisfies the given predicate.
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("findIndexBackSafe_F#")>]
 let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
 /// <summary>
@@ -155,6 +163,7 @@ let headSafe xs =
 /// Returns the first element of the sequence.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("headSafe_F#")>]
 let inline head' xs = headSafe xs
 
 /// <summary>
@@ -174,6 +183,7 @@ let itemSafe index xs =
 /// Computes the element at the specified index in the collection.
 /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the collection.
 /// </summary>
+[<CompiledName("itemSafe_F#")>]
 let inline item' index xs = itemSafe index xs
 
 /// <summary>
@@ -186,6 +196,7 @@ let lastSafe xs = Seq.tryLast xs |> Result.ofOption lastErr
 /// Returns the last element of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("lastSafe_F#")>]
 let inline last' xs = lastSafe xs
 
 /// <summary>
@@ -201,6 +212,7 @@ let maxSafe<'a when 'a : comparison> (xs:'a seq) =
 /// Returns the greatest of all elements of the sequence, compared via Operators.max.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("maxSafe_F#")>]
 let inline max'<'a when 'a : comparison> (xs:'a seq) = maxSafe xs
 
 /// <summary>
@@ -216,6 +228,7 @@ let maxBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a seq) =
 /// Returns the greatest of all elements of the sequence, compared via Operators.max on the function result.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("maxBySafe_F#")>]
 let inline maxBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a seq) = maxBySafe projection xs
 
 /// <summary>
@@ -231,6 +244,7 @@ let minSafe<'a when 'a : comparison> (xs:'a seq) =
 /// Returns the lowest of all elements of the sequence, compared via Operators.min.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("minSafe_F#")>]
 let inline min'<'a when 'a : comparison> (xs:'a seq) = minSafe xs
 
 /// <summary>
@@ -246,6 +260,7 @@ let minBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a seq) =
 /// Returns the lowest of all elements of the sequence, compared via Operators.min on the function result.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("minBySafe_F#")>]
 let inline minBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a seq) = minBySafe projection xs
 
 /// <summary>
@@ -262,6 +277,7 @@ let pickSafe chooser xs =
 /// result where the function returns "Some(x)".
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("pickSafe_F#")>]
 let inline pick' chooser xs = pickSafe chooser xs
 
 /// <summary>
@@ -283,6 +299,7 @@ let reduceSafe reduction xs =
 /// Return the final result.
 /// Returns a SeqIsEmpty Error if the sequence is empty.
 /// </summary>
+[<CompiledName("reduceSafe_F#")>]
 let inline reduce' reduction xs = reduceSafe reduction xs
 
 /// <summary>
@@ -302,6 +319,7 @@ let reduceBackSafe reduction xs =
 /// then computes <c>f i0 (...(f iN-1 iN))</c>.
 /// Returns a SeqIsEmpty Error if the sequence is empty.
 /// </summary>
+[<CompiledName("reduceBackSafe_F#")>]
 let inline reduceBack' reduction xs = reduceBackSafe reduction xs 
 
 /// <summary>
@@ -333,6 +351,7 @@ let skipSafe count (xs:_ seq) =
 /// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
 /// calling this function.
 /// </summary>
+[<CompiledName("skipSafe_F#")>]
 let inline skip' count xs = skipSafe count xs
 
 /// <summary>
@@ -364,6 +383,7 @@ let splitIntoSafe count xs =
 /// Splits the input sequence into at most count chunks.
 /// Returns a NegativeInput Error if <c>count</c> is not positive.
 /// </summary>
+[<CompiledName("splitIntoSafe_F#")>]
 let inline splitInto' count xs = splitIntoSafe count xs
 
 /// <summary>
@@ -387,6 +407,7 @@ let tailSafe xs =
 /// remaining elements of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
 /// </summary>
+[<CompiledName("tailSafe_F#")>]
 let inline tail' xs = tailSafe xs
 
 /// <summary>
@@ -403,6 +424,7 @@ let takeSafe count xs =
 /// Returns the first N elements of the sequence.
 /// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
 /// </summary>
+[<CompiledName("takeSafe_F#")>]
 let inline take' count xs = takeSafe count xs
 
 /// <summary>
@@ -420,6 +442,7 @@ let windowedSafe size xs : Result<NonEmptyArray<_> seq, _> =
 /// sequence. Each window is returned as a fresh array.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
+[<CompiledName("windowedSafe_F#")>]
 let inline windowed' size xs = windowedSafe size xs
 
 /// <summary>
@@ -607,6 +630,7 @@ module NonEmpty =
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
   /// </summary>
+  [<CompiledName("ofSeqSafe_F#")>]
   let inline ofSeq' xs = ofSeqSafe xs
 
   /// <summary>

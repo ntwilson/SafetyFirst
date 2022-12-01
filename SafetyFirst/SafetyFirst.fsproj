@@ -10,10 +10,10 @@
   <PropertyGroup>
     <PackageId>SafetyFirst</PackageId>
     <Title>SafetyFirst</Title>
-    <PackageVersion>5.0.3</PackageVersion>
+    <PackageVersion>5.0.6</PackageVersion>
     <Authors>nathan wilson</Authors>
     <Description>Total functions made convenient for F# and C#</Description>
-    <PackageReleaseNotes>Package XML documentation.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fix XML documentation for functions with apostrophes in all modules.</PackageReleaseNotes>
     <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ntwilson/SafetyFirst</PackageProjectUrl>
     <PackageTags>result safety collections functional-programming</PackageTags>

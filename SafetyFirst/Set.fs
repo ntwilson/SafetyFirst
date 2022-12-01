@@ -11,10 +11,9 @@ let minElementSafe<'a when 'a : comparison> (xs:Set<'a>) =
   then Error minErr
   else Ok <| Set.minElement xs
 
-/// <summary>
 /// Returns the lowest element in the set according to the ordering being used for the set.
-/// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
-/// </summary>
+/// Returns a SeqIsEmpty error if `xs` has no elements.
+[<CompiledName("minElementSafe_F#")>]
 let inline minElement'<'a when 'a : comparison> (xs:Set<'a>) = minElementSafe xs
 
 /// <summary>
@@ -26,10 +25,9 @@ let maxElementSafe<'a when 'a : comparison> (xs:Set<'a>) =
   then Error maxErr
   else Ok <| Set.maxElement xs
 
-/// <summary>
 /// Returns the highest element in the set according to the ordering being used for the set.
-/// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
-/// </summary>
+/// Returns a SeqIsEmpty error if `xs` has no elements.
+[<CompiledName("maxElementSafe_F#")>]
 let maxElement'<'a when 'a : comparison> (xs:Set<'a>) = maxElementSafe xs
 
 module NonEmpty = 
@@ -226,6 +224,7 @@ module NonEmpty =
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySet.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
   /// </summary>
+  [<CompiledName("ofArraySafe_F#")>]
   let inline ofArray' xs = ofArraySafe xs 
 
   /// <summary>
@@ -247,6 +246,7 @@ module NonEmpty =
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySet.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
   /// </summary>
+  [<CompiledName("ofSeqSafe_F#")>]
   let inline ofSeq' xs = ofSeqSafe xs 
 
   /// <summary>
@@ -268,6 +268,7 @@ module NonEmpty =
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySet.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
   /// </summary>
+  [<CompiledName("ofListSafe_F#")>]
   let inline ofList' xs = ofListSafe xs 
 
   /// <summary>

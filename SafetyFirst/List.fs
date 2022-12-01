@@ -16,6 +16,7 @@ let inline averageSafe source =
 /// Returns the average of the elements in the list.
 /// Returns a SeqIsEmpty error if <c>source</c> has no elements.
 /// </summary>
+[<CompiledName("averageSafe_F#")>]
 let inline average' source = averageSafe source 
 
 /// <summary>
@@ -33,6 +34,7 @@ let inline averageBySafe selector xs =
 /// of the list.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("averageBySafe_F#")>]
 let inline averageBy' selector xs = averageBySafe selector xs
 
 /// <summary>
@@ -48,6 +50,7 @@ let chunkBySizeSafe size xs : Result<NonEmptyList<_> list, _> =
 /// Divides the input list into chunks of size at most <c>size</c>.
 /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
+[<CompiledName("chunkBySizeSafe_F#")>]
 let inline chunkBySize' size xs = chunkBySizeSafe size xs
 
 /// <summary>
@@ -70,6 +73,7 @@ let exactlyOneSafe xs =
 /// If the input list has only one element, returns that element.
 /// If the input list has more or less than one element, returns a WrongNumberOfElements Error.  
 /// </summary>
+[<CompiledName("exactlyOneSafe_F#")>]
 let inline exactlyOne' xs = exactlyOneSafe xs
 
 /// <summary>
@@ -84,6 +88,7 @@ let findSafe predicate xs =
 /// Returns the first element for which the given function returns True.
 /// Returns a NoMatchingElement Error if no such element is found.
 /// </summary>
+[<CompiledName("findSafe_F#")>]
 let inline find' predicate xs = findSafe predicate xs
 
 /// <summary>
@@ -98,6 +103,7 @@ let findBackSafe predicate xs =
 /// Returns the last element for which the given function returns True.
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("findBackSafe_F#")>]
 let inline findBack' predicate xs = findBackSafe predicate xs
 
 /// <summary>
@@ -114,6 +120,7 @@ let findIndexSafe predicate xs =
 /// that satisfies the given predicate.
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("findIndexSafe_F#")>]
 let inline findIndex' predicate xs = findIndexSafe predicate xs
 
 /// <summary>
@@ -130,6 +137,7 @@ let findIndexBackSafe predicate xs =
 /// that satisfies the given predicate.
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("findIndexBackSafe_F#")>]
 let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
 /// <summary>
@@ -151,6 +159,7 @@ let fold2Safe folder initialState xs ys =
 /// then computes f (... (f s i0 j0)...) iN jN.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("fold2Safe_F#")>]
 let inline fold2' folder initialState xs ys = fold2Safe folder initialState xs ys
 
 /// <summary>
@@ -172,6 +181,7 @@ let foldBack2Safe folder xs ys initialState =
 /// then computes f i0 j0 (...(f iN jN s)).
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("foldBack2Safe_F#")>]
 let inline foldBack2' folder xs ys initialState = foldBack2Safe folder xs ys initialState
 
 /// <summary>
@@ -194,6 +204,7 @@ let forall2Safe predicate xs ys =
 /// <c>Ok false</c> even if the lists have different lengths.  This behavior mimics when 
 /// <c>List.forall2</c> will throw.
 /// </summary>
+[<CompiledName("forall2Safe_F#")>]
 let forall2' predicate xs ys = forall2Safe predicate xs ys
 
 /// <summary>
@@ -216,6 +227,7 @@ let headSafe xs =
 /// Returns the first element of the list.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("headSafe_F#")>]
 let inline head' xs = headSafe xs
 
 /// <summary>
@@ -234,6 +246,7 @@ let itemSafe index xs =
 /// Computes the element at the specified index in the collection.
 /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the collection.
 /// </summary>
+[<CompiledName("itemSafe_F#")>]
 let inline item' index xs = itemSafe index xs
 
 /// <summary>
@@ -249,6 +262,7 @@ let iter2Safe action xs ys =
 /// Applies the given function to two collections simultaneously. The collections must have identical size.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("iter2Safe_F#")>]
 let inline iter2' action xs ys = iter2Safe action xs ys
 
 /// <summary>
@@ -268,6 +282,7 @@ let iteri2Safe action xs ys =
 /// function indicates the index of element.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("iteri2Safe_F#")>]
 let inline iteri2' action xs ys = iteri2Safe action xs ys 
 
 /// <summary>
@@ -280,6 +295,7 @@ let lastSafe xs = List.tryLast xs |> Result.ofOption lastErr
 /// Returns the last element of the list.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("lastSafe_F#")>]
 let inline last' xs = lastSafe xs
 
 /// <summary>
@@ -297,6 +313,7 @@ let map2Safe f xs ys =
 /// to the corresponding elements of the two collections pairwise.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("map2Safe_F#")>]
 let inline map2' f xs ys = map2Safe f xs ys
 
 /// <summary>
@@ -312,6 +329,7 @@ let mapi2Safe f xs ys =
 /// Like mapi, but mapping corresponding elements from two lists of equal length.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("mapi2Safe_F#")>]
 let inline mapi2' f xs ys = mapi2Safe f xs ys
 
 /// <summary>
@@ -329,6 +347,7 @@ let map3Safe f xs ys zs =
 /// to the corresponding elements of the three collections simultaneously.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("map3Safe_F#")>]
 let inline map3' f xs ys zs = map3Safe f xs ys zs
 
 /// <summary>
@@ -344,6 +363,7 @@ let maxSafe<'a when 'a : comparison> (xs:'a list) =
 /// Returns the greatest of all elements of the list, compared via Operators.max.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("maxSafe_F#")>]
 let inline max'<'a when 'a : comparison> (xs:'a list) = maxSafe xs
 
 /// <summary>
@@ -359,6 +379,7 @@ let maxBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a list) =
 /// Returns the greatest of all elements of the list, compared via Operators.max on the function result.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("maxBySafe_F#")>]
 let inline maxBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a list) = maxBySafe projection xs
 
 /// <summary>
@@ -374,6 +395,7 @@ let minSafe<'a when 'a : comparison> (xs:'a list) =
 /// Returns the lowest of all elements of the list, compared via Operators.min.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("minSafe_F#")>]
 let inline min'<'a when 'a : comparison> (xs:'a list) = minSafe xs
 
 /// <summary>
@@ -389,6 +411,7 @@ let minBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a list) =
 /// Returns the lowest of all elements of the list, compared via Operators.min on the function result.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
+[<CompiledName("minBySafe_F#")>]
 let inline minBy'<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a list) = minBySafe projection xs
 
 /// <summary>
@@ -405,6 +428,7 @@ let pickSafe chooser xs =
 /// result where the function returns "Some(x)".
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
+[<CompiledName("pickSafe_F#")>]
 let inline pick' chooser xs = pickSafe chooser xs
 
 /// <summary>
@@ -428,6 +452,7 @@ let reduceSafe reduction xs =
 /// If the input function is <c>f</c> and the elements are <c>i0...iN</c> then computes <c>f (f (...(f i0 i1)) iN-1) iN</c>.
 /// Returns a SeqIsEmpty Error if the list is empty.
 /// </summary>
+[<CompiledName("reduceSafe_F#")>]
 let inline reduce' reduction xs = reduceSafe reduction xs
 
 /// <summary>
@@ -447,6 +472,7 @@ let reduceBackSafe reduction xs =
 /// then computes <c>f i0 (...(f iN-1 iN))</c>.
 /// Returns a SeqIsEmpty Error if the list is empty.
 /// </summary>
+[<CompiledName("reduceBackSafe_F#")>]
 let inline reduceBack' reduction xs = reduceBackSafe reduction xs 
 
 /// <summary>
@@ -464,6 +490,7 @@ let skipSafe count xs =
 /// remaining elements of the list.
 /// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
 /// </summary>
+[<CompiledName("skipSafe_F#")>]
 let inline skip' count xs = skipSafe count xs
 
 /// <summary>
@@ -493,6 +520,7 @@ let splitAtSafe index xs =
 /// Returns an IndexOutOfBounds Error when split index exceeds 
 /// the number of elements in the list.
 /// </summary>
+[<CompiledName("splitAtSafe_F#")>]
 let inline splitAt' index xs = splitAtSafe index xs 
 
 /// <summary>
@@ -508,6 +536,7 @@ let splitIntoSafe count xs : Result<NonEmptyList<_> list, _> =
 /// Splits the input list into at most count chunks.
 /// Returns a NegativeInput Error if <c>count</c> is not positive.
 /// </summary>
+[<CompiledName("splitIntoSafe_F#")>]
 let inline splitInto' count xs = splitIntoSafe count xs
 
 /// <summary>
@@ -532,6 +561,7 @@ let tailSafe xs =
 /// remaining elements of the list.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
 /// </summary>
+[<CompiledName("tailSafe_F#")>]
 let inline tail' xs = tailSafe xs
 
 /// <summary>
@@ -547,6 +577,7 @@ let takeSafe count xs =
 /// Returns the first N elements of the list.
 /// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
 /// </summary>
+[<CompiledName("takeSafe_F#")>]
 let inline take' count xs = takeSafe count xs
 
 /// <summary>
@@ -564,6 +595,7 @@ let windowedSafe size xs : Result<NonEmptyList<_> list, _> =
 /// list. Each window is returned as a fresh list.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
+[<CompiledName("windowedSafe_F#")>]
 let inline windowed' size xs = windowedSafe size xs
 
 /// <summary>
@@ -587,6 +619,7 @@ let zipSafe xs ys =
 /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("zipSafe_F#")>]
 let inline zip' xs ys = zipSafe xs ys
 
 /// <summary>
@@ -602,6 +635,7 @@ let zip3Safe xs ys zs =
 /// Combines the three lists into a list of triples. The lists must have equal lengths.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
 /// </summary>
+[<CompiledName("zip3Safe_F#")>]
 let inline zip3' xs ys zs = zip3Safe xs ys zs
 
 /// <summary>
@@ -621,6 +655,7 @@ let transposeSafe xs =
 /// Returns the transpose of the given sequence of lists.  Returns a DifferingLengths Error if
 /// the input lists differ in length. 
 /// </summary>
+[<CompiledName("transposeSafe_F#")>]
 let inline transpose' xs = transposeSafe xs
 
 /// <summary>
@@ -780,6 +815,7 @@ module NonEmpty =
   /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
   /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
   /// </summary>
+  [<CompiledName("map2Safe_F#")>]
   let map2' f (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) : Result<NonEmptyList<_>,_> = 
     NonEmpty <!> map2' f xs ys
 
@@ -886,6 +922,7 @@ module NonEmpty =
   /// <summary>
   /// Returns the first element for which the given function returns True. Returns a NoMatchingElement Error if no such element is found.
   /// </summary>
+  [<CompiledName("findSafe_F#")>]
   let inline find' predicate xs = findSafe predicate xs
 
   /// <summary>
@@ -896,6 +933,7 @@ module NonEmpty =
   /// <summary>
   /// Returns the last element for which the given function returns True. Return a NoMatchingElement Error if no such element exists.
   /// </summary>
+  [<CompiledName("findBackSafe_F#")>]
   let inline findBack' predicate xs = findBackSafe predicate xs
 
   /// <summary>
@@ -906,6 +944,7 @@ module NonEmpty =
   /// <summary>
   /// Returns the index of the first element in the list that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
   /// </summary>
+  [<CompiledName("findIndexSafe_F#")>]
   let inline findIndex' predicate xs = findIndexSafe predicate xs
 
   /// <summary>
@@ -916,6 +955,7 @@ module NonEmpty =
   /// <summary>
   /// Returns the index of the last element in the list that satisfies the given predicate. Return a NoMatchingElement Error if no such element exists.
   /// </summary>
+  [<CompiledName("findIndexBackSafe_F#")>]
   let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 
   /// <summary>
@@ -931,6 +971,7 @@ module NonEmpty =
   /// Asserts that <c>xs</c> is not empty, creating a NonEmpty FSeq.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
   /// </summary>
+  [<CompiledName("ofListSafe_F#")>]
   let inline ofList' xs = ofListSafe xs
 
   /// <summary>
@@ -1015,6 +1056,7 @@ module NonEmpty =
   /// Returns the transpose of the given sequence of lists. Returns a DifferingLengths Error if
   /// the input lists differ in length. 
   /// </summary>
+  [<CompiledName("transposeSafe_F#")>]
   let inline transpose' xs = transposeSafe xs
 
   /// <summary>
@@ -1068,6 +1110,7 @@ module NonEmpty =
   /// list. Each window is returned as a fresh list.
   /// Returns a NegativeInput Error when <c>size</c> is not positive.
   /// </summary>
+  [<CompiledName("windowedSafe_F#")>]
   let inline windowed' size xs = windowedSafe size xs
 
   /// <summary>
@@ -1088,6 +1131,7 @@ module NonEmpty =
   /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
   /// Returns a DifferingLengths Error if the input lists have a different number of elements.
   /// </summary>
+  [<CompiledName("zipSafe_F#")>]
   let inline zip' xs ys = zipSafe xs ys
 
   /// <summary>
@@ -1101,6 +1145,7 @@ module NonEmpty =
   /// Combines the three lists into a list of triples. The lists must have equal lengths.
   /// Returns a DifferingLengths Error if the input lists have a different number of elements.
   /// </summary>
+  [<CompiledName("zip3Safe_F#")>]
   let inline zip3' xs ys zs = zip3Safe xs ys zs
 
   /// <summary>
