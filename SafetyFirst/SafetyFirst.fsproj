@@ -5,7 +5,9 @@
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
     <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 
+  <PropertyGroup>
     <PackageId>SafetyFirst</PackageId>
     <Title>SafetyFirst</Title>
     <PackageVersion>5.0.2</PackageVersion>
@@ -17,6 +19,7 @@
     <PackageTags>result safety collections functional-programming</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Option.fs" />
@@ -44,8 +47,8 @@
     <Compile Include="IDictionaryExtensions.fs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="../README.md" Pack="true" PackagePath="\"/>
-    <None Include="../v4.0_UpgradeGuide.md" Pack="true" PackagePath="\"/>
+    <Content Include="../README.md" Pack="true" PackagePath="\"/>
+    <Content Include="../v4.0_UpgradeGuide.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.5.0" />
