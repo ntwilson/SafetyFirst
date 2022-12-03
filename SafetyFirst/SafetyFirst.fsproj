@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0;net5.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
     <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
@@ -10,10 +10,10 @@
   <PropertyGroup>
     <PackageId>SafetyFirst</PackageId>
     <Title>SafetyFirst</Title>
-    <PackageVersion>5.0.6</PackageVersion>
+    <PackageVersion>5.1.0</PackageVersion>
     <Authors>nathan wilson</Authors>
     <Description>Total functions made convenient for F# and C#</Description>
-    <PackageReleaseNotes>Fix XML documentation for functions with apostrophes in all modules.</PackageReleaseNotes>
+    <PackageReleaseNotes>Add missing `try` functions to collection modules.</PackageReleaseNotes>
     <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ntwilson/SafetyFirst</PackageProjectUrl>
     <PackageTags>result safety collections functional-programming</PackageTags>
