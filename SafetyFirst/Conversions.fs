@@ -21,7 +21,7 @@ module Conversions =
   /// Functions very similarly to the regular <c>string</c> function, but safely handles ValueNone,
   /// or lists containing ValueNone.  Since the <c>string</c> function can 
   /// raise an exception when given a ValueOption or a list containing a ValueOption.
-  /// Note that this is only a problem in older versions of F#, and is unnecessary in current code.
+  /// Note that this is only a problem in older versions of F#, and is unnecessary in F# >= 5.0.
   /// </summary>
   let inline str x = 
     if isNull (box x) then string x
@@ -34,6 +34,7 @@ module Conversions =
   /// An alias for the regular <c>string</c> function.  Since the <c>string</c> function can 
   /// raise an exception when given a ValueOption or a list containing a ValueOption, it is 
   /// marked Unsafe.  Use the safe <c>str</c> function to safely convert any value to a string.
+  /// Note that this is only a problem in older versions of F#, and is unnecessary in F# >= 5.0.
   /// </summary>
   let inline stringUnsafe x = string x
 
