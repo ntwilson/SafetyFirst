@@ -462,9 +462,7 @@ let skipLenient count xs =
 /// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
 /// calling this function.
 /// </summary>
-let drop count xs = 
-  skip' count xs
-  |> Result.defaultValue Seq.empty
+let inline drop count xs = skipLenient count xs
 
 /// <summary>
 /// Splits the input sequence into at most count chunks.

@@ -91,7 +91,7 @@ module FiniteSeq =
   /// Divides the input sequence into chunks of size at most <c>size</c>.
   /// Returns None if the <c>size</c> is less than or equal to zero.
   /// </summary>
-  let inline tryChunkBySize size xs = chunkBySizeSafe size xs
+  let inline tryChunkBySize size xs = chunkBySizeSafe size xs |> Result.toOption
 
   /// <summary>
   /// Divides the input sequence into chunks of size at most <c>size</c>.

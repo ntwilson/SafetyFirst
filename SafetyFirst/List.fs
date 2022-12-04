@@ -642,9 +642,7 @@ let skipLenient count xs =
 /// remaining elements of the list.
 /// Returns an empty list if <c>count</c> exceeds the length of <c>xs</c> 
 /// </summary>
-let drop count xs = 
-  skip' count xs
-  |> Result.defaultValue []
+let inline drop count xs = skipLenient count xs
 
 /// <summary>
 /// Splits a list into two lists, at the given index.
@@ -1011,8 +1009,7 @@ module NonEmpty =
   /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
   /// </summary>
   [<CompiledName("map2Safe_F#")>]
-  let map2' f (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) : Result<NonEmptyList<_>,_> = 
-    NonEmpty <!> map2' f xs ys
+  let map2' f xs ys = map2Safe f xs ys
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
