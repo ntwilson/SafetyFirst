@@ -14,10 +14,10 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.x'
+          dotnet-version: '6.x'
       - name: Restore
         run: dotnet restore SafetyFirst.sln
       - name: Build with dotnet
-        run: dotnet build SafetyFirst.sln -f net5.0 -c Release --no-restore
+        run: dotnet build SafetyFirst.sln -f net6.0 -c Release --no-restore
       - name: Test with dotnet
-        run: dotnet test SafetyFirst.sln -f net5.0 -c Release --no-build
+        run: dotnet test SafetyFirst.sln -f net6.0 -c Release --no-build
