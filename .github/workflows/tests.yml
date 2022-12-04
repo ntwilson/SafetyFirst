@@ -1,10 +1,10 @@
-name: Run Tests (.NET 5.0)
+name: Run Tests (.NET 6.0)
 
 on: 
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   test:
@@ -18,6 +18,6 @@ jobs:
       - name: Restore
         run: dotnet restore SafetyFirst.sln
       - name: Build with dotnet
-        run: dotnet build SafetyFirst.sln -f net6.0 -c Release --no-restore
+        run: dotnet build SafetyFirst.sln -c Release --no-restore
       - name: Test with dotnet
         run: dotnet test SafetyFirst.sln -f net6.0 -c Release --no-build
