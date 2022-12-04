@@ -40,6 +40,12 @@ let inline ofListSafe xs = ofList' xs
 
 /// <summary>
 /// Returns a new map made from the given bindings, provided all keys are unique.
+/// Returns None if any duplicate keys were found.
+/// </summary>
+let inline tryOfList xs = ofList' xs |> Result.toOption
+
+/// <summary>
+/// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
 [<CompiledName("ofArraySafe_F#")>]
@@ -57,6 +63,12 @@ let inline ofArraySafe xs = ofArray' xs
 
 /// <summary>
 /// Returns a new map made from the given bindings, provided all keys are unique.
+/// Returns None if any duplicate keys were found.
+/// </summary>
+let inline tryOfArray xs = ofArray' xs |> Result.toOption
+
+/// <summary>
+/// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
 [<CompiledName("ofSeqSafe_F#")>]
@@ -67,3 +79,9 @@ let inline ofSeq' xs = ofArray' (Seq.toArray xs)
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
 let inline ofSeqSafe xs = ofSeq' xs
+
+/// <summary>
+/// Returns a new map made from the given bindings, provided all keys are unique.
+/// Returns None if any duplicate keys were found.
+/// </summary>
+let inline tryOfSeq xs = ofSeq' xs |> Result.toOption

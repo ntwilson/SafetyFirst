@@ -84,6 +84,12 @@ module InfiniteSeq =
   let itemSafe i xs = item' i xs
 
   /// <summary>
+  /// Computes the element at the specified index in the collection.  Returns
+  /// None if the sequence hung (produced too many elements).
+  /// </summary>
+  let tryItem i xs = item' i xs |> Result.toOption
+
+  /// <summary>
   /// Returns the first N elements of the sequence.  Note that this will happen
   /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
   /// <c>takeLazy</c> instead.  Returns
@@ -100,6 +106,14 @@ module InfiniteSeq =
   /// an error if the sequence hung (produced too many elements).
   /// </summary>
   let takeSafe n xs = take' n xs
+
+  /// <summary>
+  /// Returns the first N elements of the sequence.  Note that this will happen
+  /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
+  /// <c>truncate</c> instead.  Returns
+  /// an error if the sequence hung (produced too many elements).
+  /// </summary>
+  let tryTake n xs = take' n xs |> Result.toOption
 
   /// <summary>
   /// Lazily returns up to the first N elements of the sequence.  
@@ -129,6 +143,17 @@ module InfiniteSeq =
     Seq.find' (not << predicate) xs 
     |> Result.map (fun _ -> Seq.takeWhile predicate xs)
     |> Result.mapError (always hung)
+
+  /// <summary>
+  /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
+  /// given predicate returns True, and then returns no further elements.  Note that the resulting
+  /// sequence is evaluated eagerly to ensure that a hang does not occur when iterated.  If you
+  /// expect to possibly receive an infinite result from this function, consider using 
+  /// <c>takeWhileLazy</c> instead.  Returns
+  /// None if the sequence hung (produced too many elements).
+  /// </summary>
+  let tryTakeWhile predicate xs = takeWhile' predicate xs |> Result.toOption
+
 
   /// <summary>
   /// Lazily returns elements of the underlying sequence while the given predicate returns True, and 
@@ -195,6 +220,12 @@ module InfiniteSeq =
   let head' (InfiniteSeq xs) = Seq.head' xs |> Result.mapError (always hung)
 
   /// <summary>
+  /// Returns the first element of the sequence.  Returns None if 
+  /// the sequence hung (produced too many elements).
+  /// </summary>
+  let inline tryHead xs = head' xs |> Result.toOption
+
+  /// <summary>
   /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
   /// remaining elements of the sequence. 
   /// </summary>
@@ -211,6 +242,12 @@ module InfiniteSeq =
       let t = tail xs
       return (h, t)
     }
+
+  /// <summary>
+  /// Returns tuple of head element and tail of the list.
+  /// Returns None if the sequence hung (produced too many elements).
+  /// </summary>
+  let tryUncons xs = uncons' xs |> Result.toOption
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
@@ -252,6 +289,16 @@ module InfiniteSeq =
   /// to the corresponding elements of the two collections pairwise.  Truncates the 
   /// infinite sequence to the same length as the finite sequence.  The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
+  /// needed are left lazy).  Returns None if the infinite sequence hung 
+  /// while trying to produce as many elements as the finite sequence.
+  /// </summary>
+  let inline tryMap2L f xs ys = map2L f xs ys |> Result.toOption
+
+  /// <summary>
+  /// Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  Truncates the 
+  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// is computed eagerly (though of course the elements of the infinite sequence that aren't
   /// needed are left lazy).  Returns an error if the infinite sequence hung 
   /// while trying to produce as many elements as the finite sequence.
   /// </summary>
@@ -260,6 +307,16 @@ module InfiniteSeq =
     if FSeq.length result = FSeq.length xs
     then Ok result
     else Error hung
+
+  /// <summary>
+  /// Build a new collection whose elements are the results of applying the given function
+  /// to the corresponding elements of the two collections pairwise.  Truncates the 
+  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// is computed eagerly (though of course the elements of the infinite sequence that aren't
+  /// needed are left lazy).  Returns None if the infinite sequence hung 
+  /// while trying to produce as many elements as the finite sequence.
+  /// </summary>
+  let inline tryMap2R f xs ys = map2R f xs ys |> Result.toOption
 
   /// <summary>
   /// Returns a sequence of each element in the input sequence and its predecessor, with the
@@ -274,6 +331,13 @@ module InfiniteSeq =
   /// </summary>
   [<CompiledName("findSafe_F#")>]
   let find' predicate (InfiniteSeq xs) = Seq.find' predicate xs |> Result.mapError (always hung)
+  
+  /// <summary>
+  /// Searches the sequence until an element matching the predicate is found.
+  /// Returns None if the infinite sequence hung 
+  /// while trying to find a matching element.
+  /// </summary>
+  let inline tryFind predicate xs = find' predicate xs |> Result.toOption
 
   /// <summary>
   /// Combines the two sequences into a list of pairs. 
@@ -299,6 +363,16 @@ module InfiniteSeq =
   /// Truncates the infinite sequence to the same length as the finite sequence.  
   /// The resulting sequence is computed eagerly (though of course the elements
   /// of the infinite sequence that aren't needed are left lazy).  
+  /// Returns None if the infinite sequence hung while trying 
+  /// to produce as many elements as the finite sequence.
+  /// </summary>
+  let tryZipL xs ys = zipL xs ys |> Result.toOption
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. 
+  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// The resulting sequence is computed eagerly (though of course the elements
+  /// of the infinite sequence that aren't needed are left lazy).  
   /// Returns an error if the infinite sequence hung while trying 
   /// to produce as many elements as the finite sequence.
   /// </summary>
@@ -307,6 +381,16 @@ module InfiniteSeq =
     if FSeq.length result = FSeq.length xs
     then Ok result
     else Error hung
+
+  /// <summary>
+  /// Combines the two sequences into a list of pairs. 
+  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// The resulting sequence is computed eagerly (though of course the elements
+  /// of the infinite sequence that aren't needed are left lazy).  
+  /// Returns None if the infinite sequence hung while trying 
+  /// to produce as many elements as the finite sequence.
+  /// </summary>
+  let inline tryZipR xs ys = zipR xs ys |> Result.toOption
 
   /// <summary>
   /// Like fold, but computes on-demand and returns the sequence of intermediary and final results.

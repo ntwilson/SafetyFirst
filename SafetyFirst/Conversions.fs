@@ -21,6 +21,7 @@ module Conversions =
   /// Functions very similarly to the regular <c>string</c> function, but safely handles ValueNone,
   /// or lists containing ValueNone.  Since the <c>string</c> function can 
   /// raise an exception when given a ValueOption or a list containing a ValueOption.
+  /// Note that this is only a problem in older versions of F#, and is unnecessary in current code.
   /// </summary>
   let inline str x = 
     if isNull (box x) then string x
