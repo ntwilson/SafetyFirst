@@ -16,6 +16,10 @@ let minElementSafe<'a when 'a : comparison> (xs:Set<'a>) =
 [<CompiledName("minElementSafe_F#")>]
 let inline minElement'<'a when 'a : comparison> (xs:Set<'a>) = minElementSafe xs
 
+/// Returns the lowest element in the set according to the ordering being used for the set.
+/// Returns None if `xs` has no elements.
+let inline tryMinElement<'a when 'a : comparison> (xs:Set<'a>) = minElementSafe xs |> Result.toOption
+
 /// <summary>
 /// Returns the highest element in the set according to the ordering being used for the set.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
@@ -29,6 +33,10 @@ let maxElementSafe<'a when 'a : comparison> (xs:Set<'a>) =
 /// Returns a SeqIsEmpty error if `xs` has no elements.
 [<CompiledName("maxElementSafe_F#")>]
 let maxElement'<'a when 'a : comparison> (xs:Set<'a>) = maxElementSafe xs
+
+/// Returns the highest element in the set according to the ordering being used for the set.
+/// Returns None if `xs` has no elements.
+let tryMaxElement<'a when 'a : comparison> (xs:Set<'a>) = maxElementSafe xs |> Result.toOption
 
 module NonEmpty = 
 
@@ -228,6 +236,12 @@ module NonEmpty =
   let inline ofArray' xs = ofArraySafe xs 
 
   /// <summary>
+  /// Asserts that <c>xs</c> is not empty, creating a NonEmptySet.
+  /// Returns None if <c>xs</c> is empty.
+  /// </summary>
+  let inline tryOfArray xs = ofArraySafe xs |> Result.toOption
+
+  /// <summary>
   /// Builds a NonEmptySet that contains the same elements as the given NonEmptyArray.
   /// </summary>
   let ofNonEmptyArray (NonEmpty xs : NonEmptyArray<_>) : NonEmptySet<_> = 
@@ -250,6 +264,12 @@ module NonEmpty =
   let inline ofSeq' xs = ofSeqSafe xs 
 
   /// <summary>
+  /// Asserts that <c>xs</c> is not empty, creating a NonEmptySet.
+  /// Returns None if <c>xs</c> is empty.
+  /// </summary>
+  let inline tryOfSeq xs = ofSeqSafe xs |> Result.toOption
+
+  /// <summary>
   /// Builds a NonEmptySet that contains the same elements as the given NonEmptySeq.
   /// </summary>
   let ofNonEmptySeq (NonEmpty xs : NonEmptySeq<_>) : NonEmptySet<_> = 
@@ -270,6 +290,12 @@ module NonEmpty =
   /// </summary>
   [<CompiledName("ofListSafe_F#")>]
   let inline ofList' xs = ofListSafe xs 
+
+  /// <summary>
+  /// Asserts that <c>xs</c> is not empty, creating a NonEmptySet.
+  /// Returns None if <c>xs</c> is empty.
+  /// </summary>
+  let inline tryOfList xs = ofListSafe xs |> Result.toOption
 
   /// <summary>
   /// Builds a NonEmptySet that contains the same elements as the given NonEmptyList.

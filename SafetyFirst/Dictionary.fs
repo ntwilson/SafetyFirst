@@ -1,6 +1,7 @@
 module SafetyFirst.Dictionary
 
 open System.Collections.Generic
+open System.Linq
 
 open SafetyFirst.ErrorTypes
 
@@ -13,6 +14,15 @@ let find' key (map:IDictionary<_,_>) =
   match map.TryGetValue key with
   | (true, value) -> Ok value
   | (false, _) -> Error (mapFindErr key)
+
+/// <summary>
+/// Lookup an element in the map, returning an value if the element is in the domain of the map
+/// and None if not.
+/// </summary>
+let tryFind key (map:IDictionary<_,_>) = 
+  match map.TryGetValue key with
+  | (true, value) -> Some value
+  | (false, _) -> None
 
 /// <summary>
 /// Lookup an element in the map, returning an Ok value if the element is in the domain of the map
@@ -44,6 +54,17 @@ let values (map:IDictionary<_,_>) = map.Values
 let containsKey key (map:IDictionary<_,_>) = map.ContainsKey key
 
 /// <summary>
+/// Builds a new collection whose elements are the results of applying the given 
+/// function to each of the elements of the collection. 
+/// The key passed to the function indicates the key of element being transformed.
+/// </summary>
+let map fn (xs:IDictionary<_,_>) = 
+  xs.ToDictionary (
+    keySelector = (fun (KeyValue (k, v)) -> k),
+    elementSelector = (fun (KeyValue (k, v)) -> fn k v)
+  )
+
+/// <summary>
 /// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
@@ -59,6 +80,12 @@ let ofList' xs =
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
 let inline ofListSafe xs = ofList' xs 
+
+/// <summary>
+/// Returns a new map made from the given bindings, provided all keys are unique.
+/// Returns None if any duplicate keys were found.
+/// </summary>
+let inline tryOfList xs = ofList' xs |> Result.toOption
 
 /// <summary>
 /// Returns a new map made from the given bindings, provided all keys are unique.
@@ -79,6 +106,12 @@ let inline ofArraySafe xs = ofArray' xs
 
 /// <summary>
 /// Returns a new map made from the given bindings, provided all keys are unique.
+/// Returns None if any duplicate keys were found.
+/// </summary>
+let inline tryOfArray xs = ofArray' xs |> Result.toOption
+
+/// <summary>
+/// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
 [<CompiledName("ofSeqSafe_F#")>]
@@ -89,3 +122,9 @@ let inline ofSeq' xs = ofArray' (Seq.toArray xs)
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
 let inline ofSeqSafe xs = ofSeq' xs
+
+/// <summary>
+/// Returns a new map made from the given bindings, provided all keys are unique.
+/// Returns None if any duplicate keys were found.
+/// </summary>
+let inline tryOfSeq xs = ofSeq' xs |> Result.toOption
