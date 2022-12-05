@@ -1,3 +1,26 @@
+# Version 5.2.0
+
+## New features:
+- Adds `try...with`, `try...finally`, `use`, and `use!` functionality to the `option` and `result` computation expressions. ([#89](https://github.com/ntwilson/SafetyFirst/issues/89))
+
+# Version 5.1.0
+
+## New features:
+- Adds any missing `try...` functions to match any `Result` returning functions in all the collection modules.
+
+# Versions 5.0.3 - 5.0.6
+
+These releases just fix broken XML documentation in the nuget package and include no code changes.
+
+# Version 5.0.2
+
+This release just adds the README properly to the nuget package and includes no code changes.
+
+# Version 5.0.1
+
+## New features:
+- Adds `minElement'` and `maxElement'` functions to the `Set` module.
+
 # Version 5.0.0
 
 This is a small release, but technically breaking because it adds some dependencies on other libraries. 

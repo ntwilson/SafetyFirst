@@ -1,5 +1,6 @@
 module SafetyFirst.Specs.OptionExpressionSpec 
 
+open System
 open NUnit.Framework
 open Swensen.Unquote
 
@@ -11,7 +12,7 @@ let ``Returns Some value for multiple options`` () =
     option {
       let! x = Some 5
       let! y = Some 10
-      return x + y      
+      return x + y
     }
 
   test <@ result = Some 15 @>
@@ -74,3 +75,40 @@ let ``Returns from a given option`` () =
         return! None
       } = None
     @>
+
+[<Test>]
+let ``disposes anything that is used`` () =
+  let mutable bareUseDisposed = false
+  let mutable wrappedUseDisposed = false
+  let result = option { 
+    use a = { new IDisposable with member this.Dispose () = bareUseDisposed <- true }
+    use! b = Some { new IDisposable with member this.Dispose () = wrappedUseDisposed <- true }
+    let! c = None
+    return 5
+  }
+
+  test <@ result = None && bareUseDisposed && wrappedUseDisposed @>
+
+[<Test>]
+let ``catches exceptions`` () = 
+  let mutable exceptionCaught = false
+  let mutable cleanedUp = false
+
+  let result = 
+    try
+      option {
+        try
+          try 
+            failwith "this threw"
+            return 5
+          with
+          | e -> 
+            exceptionCaught <- true
+            return raise e
+        finally
+          cleanedUp <- true
+      }
+    with 
+    | e -> None
+
+  test <@ result = None && exceptionCaught && cleanedUp @>

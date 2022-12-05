@@ -12,6 +12,26 @@ type OptionExpression () =
   member this.ReturnFrom x = 
     x
 
+  member this.Delay f = f
+  member this.Run f = f ()
+
+  member this.TryWith(body, handler) =
+    try this.ReturnFrom(body()) with
+    | e -> handler e
+
+  member this.TryFinally(body, compensation) =
+    try this.ReturnFrom(body())
+    finally
+      compensation()
+
+  member this.Using(disposable:#System.IDisposable, body) =
+    let body' = fun () -> body disposable
+    this.TryFinally(body', fun () ->
+      match disposable with
+      | null -> ()
+      | disp -> disp.Dispose()
+    )
+
 
 [<AutoOpen>]
 module OptionExpression =
