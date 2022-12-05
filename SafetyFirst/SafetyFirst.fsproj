@@ -10,16 +10,18 @@
   <PropertyGroup>
     <PackageId>SafetyFirst</PackageId>
     <Title>SafetyFirst</Title>
-    <PackageVersion>5.1.0</PackageVersion>
+    <PackageVersion>5.2.0</PackageVersion>
     <Authors>nathan wilson</Authors>
     <Description>Total functions made convenient for F# and C#</Description>
-    <PackageReleaseNotes>Add missing `try` functions to collection modules.</PackageReleaseNotes>
+    <PackageReleaseNotes>See release notes in github at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md</PackageReleaseNotes>
     <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ntwilson/SafetyFirst</PackageProjectUrl>
     <PackageTags>result safety collections functional-programming</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/ntwilson/SafetyFirst</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Option.fs" />

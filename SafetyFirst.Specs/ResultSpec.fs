@@ -321,7 +321,43 @@ let ``can still create non applicative result expressions on non semigroup error
   //     return x + y
   //   }
 
+[<Test>]
+let ``disposes anything that is used`` () =
+  let mutable bareUseDisposed = false
+  let mutable wrappedUseDisposed = false
+  let result = result { 
+    use a = { new IDisposable with member this.Dispose () = bareUseDisposed <- true }
+    use! b = Ok { new IDisposable with member this.Dispose () = wrappedUseDisposed <- true }
+    let! c = Error "hit an error"
+    return 5
+  }
 
+  test <@ Result.isError result && bareUseDisposed && wrappedUseDisposed @>
+
+
+[<Test>]
+let ``catches exceptions`` () = 
+  let mutable exceptionCaught = false
+  let mutable cleanedUp = false
+
+  let result = 
+    try
+      result {
+        try
+          try 
+            failwith "this threw"
+            return 5
+          with
+          | e -> 
+            exceptionCaught <- true
+            return raise e
+        finally
+          cleanedUp <- true
+      }
+    with 
+    | e -> Error "hit a failure"
+
+  test <@ Result.isError result && exceptionCaught && cleanedUp @>
 
 [<Test>]
 let ``can use a default value for a failed result`` () =
