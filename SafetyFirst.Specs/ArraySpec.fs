@@ -1,7 +1,7 @@
 module SafetyFirst.Specs.ArraySpec
 
 open NUnit.Framework
-open FsCheck
+open Swensen.Unquote
 
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
@@ -88,3 +88,18 @@ let ``Safe Array functions always produce the same output as unsafe versions for
   alwaysProduceSameOutput2ExceptNonEmpty  Array.splitInto'    Array.splitInto
   alwaysProduceSameOutput2ExceptNonEmpty  Array.windowed'     Array.windowed
 
+[<Test>]
+let ``zips multiple arrays together via computation expression`` () =
+  let xs = [|1;2;3;4;5|]
+  let ys = [|10;20;30;40;50;60|]
+  let zs = [|0 .. 100|]
+
+  let result = 
+    Array.zipper {
+      let! x = xs
+      and! y = ys 
+      and! z = zs 
+      return x + y + z
+    }
+
+  test <@ result = [|11;23;35;47;59|] @>

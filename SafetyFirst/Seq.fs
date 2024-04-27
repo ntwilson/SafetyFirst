@@ -929,3 +929,15 @@ module NonEmpty =
       )
 
     splitPairwise' (NonEmpty <| toSeq xs)    
+
+type ZipperExpression() = 
+  member inline this.MergeSources(t1, t2) = 
+    Seq.zip t1 t2
+
+  member this.BindReturn(x, f) = Seq.map f x
+
+/// <summary>
+/// A zipper computation expression to zip any number of sequences together.
+/// </summary>
+let zipper = new ZipperExpression ()
+
