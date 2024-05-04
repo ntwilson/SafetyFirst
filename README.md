@@ -1,10 +1,10 @@
 ![tests](https://github.com/ntwilson/SafetyFirst/actions/workflows/tests.yml/badge.svg)
 
-## SafetyFirst
+# SafetyFirst
 
 This is an opinionated library for avoiding partial functions primarily for F# (also for C#).  This library aims to provide alternative options for using partial functions, but doesn't prevent the use of partial functions.  If you want compiler help to disallow partial functions from F#, you might be interested in the add-on package, [SafetyFirst.Strict](https://www.nuget.org/packages/SafetyFirst.Strict/).
 
-### Overview
+## Overview
 
 Partial functions are functions that are undefined for only _some_ of their inputs, throwing
 an exception for invalid inputs.  Making a partial function total involves one of 
@@ -104,9 +104,9 @@ let salesReps : NonEmptyArray<SalesRep> =
 
 Now we have one failure spot for an empty set of sales reps that occurs just where it's read in from the database, and from then on, the compiler keeps track of the fact that it isn't empty.  This is analogous to checking for null when first loading the data, instead of including null checks in every function (now possible in C# too with the new nullable reference types).
 
-#### Monadic error handling
+### Monadic error handling
 
-##### F# types
+#### F# types
 
 This library adds computation expressions for `Option<_>` and `Result<_,_>` types.  For example:
 ```F#
@@ -156,7 +156,7 @@ result {
 } // returns Error ["no x value available"]
 ```
 
-##### C# types
+#### C# types
 
 This library adds the `Result<_,_>` type for C#, and even includes LINQ extensions so that the Result type can be used from a LINQ expression.  When using LINQ, you can think of a Result a bit like a collection of length 1 if it contains an "Ok" value, or like a collection of length 0 if it contains an "Error" value.  It's easiest to understand by seeing it in action:
 
@@ -187,7 +187,7 @@ string pricePerUnitForDisplay(Invoice invoice) =>
 (note that for `Result<_,_>` expressions, the Error type must be the same for all results used in the expression).
 You may also want to take a look at the `Option<_>` type introduced by [LanguageExt](https://github.com/louthy/language-ext#null-reference-problem) which is similar to the `Result<_,_>` type, but doesn't carry with it any error information.
 
-#### F# Functions
+### F# Functions
 
 Below is the set of partial F# functions in FSharp.Core that this library provides total versions of by returning a `Result<_,_>` instead of throwing. 
 
@@ -230,7 +230,37 @@ Below is the set of partial F# functions in FSharp.Core that this library provid
 - `Map.ofList`
 - `Map.ofArray`
 
-#### LINQ Functions
+#### Zipping
+
+SafetyFirst also adds a few other safe forms of zipping collections:
+- `List/Array.zipShortest` will discard any extra elements if the lists or arrays have different lengths.
+- `Map.zipIntersection` will discard any extra keys if the maps have different keys.
+- `Map.map2Intersection` will discard any extra keys if the maps have different keys.
+- `Map.zipSafe` will return an error if the maps have different keys.
+- `Map.map2Safe` will return an error if the maps have different keys.
+
+##### Zipper computation expression
+
+In addition, all collections provide a `zipper` computation expression that can be used to zip n collections together without the need for a `zipN` function. The `zipper` computation expression always discards any extra elements in the event of mismatching lengths or keys.
+
+```F#
+let xs = [1;2;3;4;5]
+let ys = [10;20;30;40;50;60]
+let zs = [0 .. 100]
+
+let result = 
+  List.zipper {
+    let! x = xs
+    and! y = ys 
+    and! z = zs 
+    return x + y + z
+  }
+
+test <@ result = [11;23;35;47;59] @>
+```
+
+
+### LINQ Functions
 
 Below is the set of C# LINQ partial functions that this library provides total versions of by returning a `Result<_,_>` instead of throwing.
 
@@ -257,13 +287,13 @@ Below is the set of C# LINQ partial functions that this library provides total v
 > 4) IO code is necessarily imperative rather than functional.  Exceptions have proven themselves as the optimal solution for imperative code.
 
 
-### Restricted Types
+## Restricted Types
 
 These are types that this library creates to have a restricted set of possible values than it's parent type. We've already explored the NonEmpty set of collections briefly, which restricts a collection type to only allow values that contain at least one value.  This library provides several, but the technique is fairly straightforward, so you are also encouraged to create your own when necessary.  The [Numbers module](https://github.com/ntwilson/SafetyFirst/blob/master/SafetyFirst/Numbers.fs) (described below) is a good example if you want to create similar types in your own codebase.
 
-#### Collections
+### Collections
 
-##### `FiniteSeq`
+#### `FiniteSeq`
 
 This one is unique in that there is no runtime check we can do to verify that a sequence is finite, so it's entirely based on developer assertions that the seq is finite.  Marking a sequence finite is an important distinction since some functions can be safely called on any infinite list, but would be partial for finite lists (like `take` or `skip` or indexing).  Conversely there are some functions that can be safely called on any finite list, but would diverge for infinite lists (like `fold` and everything that derives from `fold` like `max`/`min`, `last`, `reduce`, `sum`, `length`, `exists`, `forall`, etc.) (interestingly, `forall` and `exists` can return in some circumstances from an infinite list, but `forall` can never produce the value `true`, only `false`, and `exists` can never produce the value `false`, only `true`, so applying them to an infinite list is senseless).
 
@@ -294,7 +324,7 @@ if (ts = someOtherTimeSeries) then ...
 ```
 
 
-##### `InfiniteSeq`
+#### `InfiniteSeq`
 
 To go along with FiniteSeq, it's helpful to have a type for representing a sequence that's known to be infinite.  Some functions are excluded from the InfiniteSeq module (like `fold`), while others are known to be safe for use (like `head`).  An InfiniteSeq can be created with the `InfiniteSeq.init` function (which behaves exactly like `Seq.initInfinite`), and the functions in the `InfiniteSeq` module are safe to use for infinite sequences (well, as safe as you can be.  You can certainly construct a sequence that will hang forever as soon as you try to do anything useful with it, e.g., the sequence: 
 
@@ -303,7 +333,7 @@ To go along with FiniteSeq, it's helpful to have a type for representing a seque
 Note that from C#, you can use the InfiniteSeq module directly, but InfiniteSeq doesn't add much benefit if you're using LINQ style syntax.  Since InfiniteSeq is an `IEnumerable`, you'll still see all of the regular LINQ extension methods, which will include all of the methods that should never be called on an infinite sequence.
 
 
-##### `NonEmpty`
+#### `NonEmpty`
 
 We've already been introduced to the `NonEmpty` type.  It's actually a wrapper for _any_ type of sequence, but the necessary type signature is a bit ugly (e.g., `NonEmpty<seq<int>, int>`) which is needed to satisfy .NET's type system, so there are aliases for many common types: `NonEmptySeq<'a>`, `NonEmptyArray<'a>`, `NonEmptyFSeq<'a>`, and `NonEmptyList<'a>` (that's an F# list).  Feel free to use it with any other type of collection however.  We also add modules `Seq.NonEmpty`, `Array.NonEmpty`, `FSeq.NonEmpty`, and `List.NonEmpty` for functions that take in a `NonEmpty` and have their signatures modified to reflect that.  (There's also `InfiniteSeq.asNonEmpty` which returns a `NonEmpty<InfiniteSeq<'a>, 'a>` in case you need to pass an infinite seq to a function taking a `NonEmpty`). There are two ways to get a `NonEmpty`.  One is a pattern matcher with any seq:
 
@@ -319,7 +349,7 @@ The other is to construct it with a head and tail
 let nes = List.NonEmpty.create 0 [1 .. 10]
 ```
 
-#### Number Types
+### Number Types
 
 Several functions rely on an integer being >= 0 or > 0.  This library defines types for these numbers.  A `NaturalInt` is an int constrained to be >= 0.  A `PositiveInt` is constrained to be > 0.  A `NegativeInt` is constrained to be < 0.  Several functions will offer one version that will return a `Result<_,_>` if given a negative input, and another version that only accepts either a `PositiveInt` or `NaturalInt` (depending on the function's needs).  You can create these types in a variety of ways.
 1) pattern matching:

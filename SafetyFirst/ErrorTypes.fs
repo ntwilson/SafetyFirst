@@ -2,13 +2,22 @@ namespace SafetyFirst
 
 open System
 
-type SeqIsEmpty = SeqIsEmpty of string
-type NotEnoughElements = NotEnoughElements of string
-type NoMatchingElement = NoMatchingElement of string
-type DifferingLengths = DifferingLengths of string
-type NegativeInput = NegativeInput of string
-type IndexOutOfRange = IndexOutOfRange of string
-type DuplicateKeys = DuplicateKeys of string
+type SeqIsEmpty = SeqIsEmpty of string with
+  override this.ToString() = let (SeqIsEmpty s) = this in s
+type NotEnoughElements = NotEnoughElements of string with
+  override this.ToString() = let (NotEnoughElements s) = this in s
+type NoMatchingElement = NoMatchingElement of string with
+  override this.ToString() = let (NoMatchingElement s) = this in s
+type DifferingLengths = DifferingLengths of string with
+  override this.ToString() = let (DifferingLengths s) = this in s
+type NegativeInput = NegativeInput of string with
+  override this.ToString() = let (NegativeInput s) = this in s
+type IndexOutOfRange = IndexOutOfRange of string with
+  override this.ToString() = let (IndexOutOfRange s) = this in s
+type DuplicateKeys = DuplicateKeys of string with
+  override this.ToString() = let (DuplicateKeys s) = this in s
+type MismatchingKeys = MismatchingKeys of string with
+  override this.ToString() = let (MismatchingKeys s) = this in s
 
 type WrongNumberOfElements = 
   | TooManyElements of string
@@ -40,6 +49,7 @@ module internal ErrorTypes =
   let inline avgErr () = SeqIsEmpty "Cannot get the average value of an empty sequence"
   let chunkErr = NegativeInput "Cannot chunkBySize with a negative size"
   let duplicateKeysErr duplicates = DuplicateKeys (sprintf "Keys for the Map contain duplicate values: %A" duplicates)
+  let mismatchingKeysErr fName = MismatchingKeys (sprintf "Cannot call %s with two maps that have different keys" fName)
   let moreThanOneErr = TooManyElements "Sequence was expected to have a single element, but has more than one"
   let lessThanOneErr = NotEnoughElements "Sequence was expected to have a single element, but was empty"
   let findErr = NoMatchingElement "Cannot find an element in the input collection matching the input predicate"
