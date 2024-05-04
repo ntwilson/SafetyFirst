@@ -360,5 +360,37 @@ module SafeFunctions =
     alwaysProduceSameOutputForFSeq2 fseqSplitIntoComparable Seq.splitInto
     alwaysProduceSameOutputForSeq1  fseqTransposeComparable seqTransposeComparable
 
+module Zipping = 
+
+  [<Test>]
+  let ``zips multiple sequences together via computation expression`` () =
+    let xs = fseq [1;2;3;4;5]
+    let ys = fseq [|10;20;30;40;50;60|]
+    let zs = fseq [0 .. 100]
+
+    let result = 
+      FSeq.zipper {
+        let! x = xs
+        and! y = ys 
+        and! z = zs 
+        return x + y + z
+      }
+
+    test <@ result = fseq [11;23;35;47;59] @>
+
+    let xs: NonEmptyFSeq<_> = NonEmpty.assume (fseq [1;2;3;4;5])
+    let ys: NonEmptyFSeq<_> = NonEmpty.assume (fseq [10;20;30;40;50;60])
+    let zs: NonEmptyFSeq<_> = NonEmpty.assume (fseq [0 .. 100])
+
+    let result = 
+      FSeq.NonEmpty.zipper {
+        let! x = xs
+        and! y = ys 
+        and! z = zs 
+        return x + y + z
+      }
+
+    test <@ result = NonEmpty.assume (fseq [11;23;35;47;59]) @>
+
 
 
