@@ -9,7 +9,7 @@ env:
   NUGET_KEY: ${{ secrets.NUGET_KEY }}
 
 jobs:
-  deploy:
+  deploy-to-nuget:
     runs-on: ubuntu-latest
 
     - uses: actions/checkout@v4
