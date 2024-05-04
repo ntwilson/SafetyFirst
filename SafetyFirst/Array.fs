@@ -839,6 +839,21 @@ let window (PositiveInt size) xs : NonEmptyArray<_>[] =
   Array.windowed size xs |> Array.map NonEmpty
 
 /// <summary>
+/// Combines the two arrays into an array of pairs. If the two arrays have different lengths,
+/// the resulting array will have the length of the shorter array.
+/// </summary>
+let zipShortest xs ys = 
+  let (xs, ys) = 
+    if Array.length xs = Array.length ys then 
+      (xs, ys)
+    elif Array.length xs < Array.length ys then 
+      (xs, Array.truncate (Array.length xs) ys)
+    else 
+      (Array.truncate (Array.length ys) xs, ys)
+
+  Array.zip xs ys
+
+/// <summary>
 /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
 /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
 /// </summary>
@@ -1377,6 +1392,13 @@ module NonEmpty =
     Array.windowed size xs |> Array.map NonEmpty
 
   /// <summary>
+  /// Combines the two arrays into an array of pairs. If the two arrays have different lengths,
+  /// the resulting array will have the length of the shorter array.
+  /// </summary>
+  let zipShortest (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) : NonEmptyArray<_> = 
+    NonEmpty (zipShortest xs ys)
+
+  /// <summary>
   /// Combines the two arrays into an array of pairs. The two arrays must have equal lengths.
   /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
   /// </summary>
@@ -1444,3 +1466,26 @@ module NonEmpty =
     FSeq.NonEmpty.splitPairwise splitBetween (toNonEmptyFSeq xs)
     |> FSeq.NonEmpty.map FSeq.NonEmpty.toNonEmptyArray
     |> FSeq.NonEmpty.toNonEmptyArray
+
+  type ZipperExpression() = 
+    member inline this.MergeSources(t1, t2) = 
+      zipShortest t1 t2
+
+    member this.BindReturn(x, f) = map f x
+
+  /// <summary>
+  /// A zipper computation expression to zip any number of arrays together.
+  /// </summary>
+  let zipper = new ZipperExpression ()
+
+type ZipperExpression() = 
+  member inline this.MergeSources(t1, t2) = 
+    zipShortest t1 t2
+
+  member this.BindReturn(x, f) = Array.map f x
+
+/// <summary>
+/// A zipper computation expression to zip any number of arrays together.
+/// </summary>
+let zipper = new ZipperExpression ()
+

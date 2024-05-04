@@ -1,3 +1,9 @@
+# Version 5.3.0
+
+## New features:
+- Adds `zipper` computation expressions for all collection types that will zip any number of sequences together.
+- Adds several zipping functions to the Map module.
+
 # Version 5.2.0
 
 ## New features:

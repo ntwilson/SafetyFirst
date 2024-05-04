@@ -1,7 +1,7 @@
 module SafetyFirst.Specs.ListSpec
 
 open NUnit.Framework
-open FsCheck
+open Swensen.Unquote
 
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
@@ -94,3 +94,33 @@ let ``Safe List functions always produce the same output as unsafe versions for 
   alwaysProduceSameOutput2ExceptNonEmpty  List.splitInto'    List.splitInto
   alwaysProduceSameOutput2ExceptNonEmpty  List.windowed'     List.windowed
 
+
+[<Test>]
+let ``zips multiple lists together via computation expression`` () =
+  let xs = [1;2;3;4;5]
+  let ys = [10;20;30;40;50;60]
+  let zs = [0 .. 100]
+
+  let result = 
+    List.zipper {
+      let! x = xs
+      and! y = ys 
+      and! z = zs 
+      return x + y + z
+    }
+
+  test <@ result = [11;23;35;47;59] @>
+
+  let xs = NonEmpty.assume [1;2;3;4;5]
+  let ys = NonEmpty.assume [10;20;30;40;50;60]
+  let zs = NonEmpty.assume [0 .. 100]
+
+  let result = 
+    List.NonEmpty.zipper {
+      let! x = xs
+      and! y = ys 
+      and! z = zs 
+      return x + y + z
+    }
+
+  test <@ result = NonEmpty.assume [11;23;35;47;59] @>

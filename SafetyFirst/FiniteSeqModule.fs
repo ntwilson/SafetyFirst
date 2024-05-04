@@ -921,6 +921,18 @@ module FiniteSeq =
   /// </summary>
   let tryZip3 xs ys zs = zip3Safe xs ys zs |> Result.toOption
 
+  type ZipperExpression() = 
+    member inline this.MergeSources(t1, t2) = 
+      zip t1 t2
+
+    member this.BindReturn(x, f) = map f x
+
+  /// <summary>
+  /// A zipper computation expression to zip any number of sequences together.
+  /// </summary>
+  let zipper = new ZipperExpression ()
+
+
 module FSeq =
   /// <summary>
   /// Returns the average of the elements in the sequence.
@@ -1747,6 +1759,11 @@ module FSeq =
   let inline zip3' xs ys zs = zip3Safe xs ys zs
 
   /// <summary>
+  /// A zipper computation expression to zip any number of sequences together.
+  /// </summary>
+  let zipper = new FiniteSeq.ZipperExpression ()
+
+  /// <summary>
   /// Functions for manipulating NonEmpty FSeqs 
   /// </summary>
   module NonEmpty =
@@ -2341,6 +2358,17 @@ module FSeq =
 
       let (head, tail) = uncons xs
       split' tail head (singleton head) (fseq [])
+
+    type ZipperExpression() = 
+      member inline this.MergeSources(t1, t2) = 
+        zip t1 t2
+
+      member this.BindReturn(x, f) = map f x
+
+    /// <summary>
+    /// A zipper computation expression to zip any number of sequences together.
+    /// </summary>
+    let zipper = new ZipperExpression ()
 
 open System.Runtime.CompilerServices
 

@@ -781,6 +781,20 @@ let inline tryWindowed size xs = windowedSafe size xs |> Result.toOption
 let window (PositiveInt size) xs : NonEmptyList<_> list = 
   List.windowed size xs |> List.map NonEmpty.assume
 
+// Not sure why this annotation throws compile errors
+// [<TailCall>]
+let rec private zipInner acc xs ys = 
+  match xs, ys with
+  | x::xs, y::ys -> zipInner ((x, y) :: acc) xs ys
+  | _ -> List.rev acc
+
+/// <summary>
+/// Combines the two lists into a list of pairs. If the two lists have different lengths,
+/// the resulting list will have the length of the shorter list.
+/// </summary>
+let zipShortest xs ys = zipInner [] xs ys
+
+
 /// <summary>
 /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
 /// Returns a DifferingLengths Error if the input lists have a different number of elements.
@@ -1339,6 +1353,13 @@ module NonEmpty =
   let window size (NonEmpty xs : NonEmptyList<_>) = window size xs
 
   /// <summary>
+  /// Combines the two lists into a list of pairs. If the two lists have different lengths,
+  /// the resulting list will have the length of the shorter list.
+  /// </summary>
+  let zipShortest (NonEmpty xs: NonEmptyList<_>) (NonEmpty ys: NonEmptyList<_>) : NonEmptyList<_> = 
+    NonEmpty (zipShortest xs ys)
+
+  /// <summary>
   /// Combines the two lists into a list of pairs. The two lists must have equal lengths.
   /// Returns a DifferingLengths Error if the input lists have a different number of elements.
   /// </summary>
@@ -1406,3 +1427,28 @@ module NonEmpty =
     FSeq.NonEmpty.splitPairwise splitBetween (toNonEmptyFSeq xs)
     |> FSeq.NonEmpty.map FSeq.NonEmpty.toNonEmptyList
     |> FSeq.NonEmpty.toNonEmptyList
+
+
+  type ZipperExpression() = 
+    member inline this.MergeSources(t1, t2) = 
+      zipShortest t1 t2
+
+    member this.BindReturn(x, f) = map f x
+
+  /// <summary>
+  /// A zipper computation expression to zip any number of lists together.
+  /// </summary>
+  let zipper = new ZipperExpression ()
+
+
+type ZipperExpression() = 
+  member inline this.MergeSources(t1, t2) = 
+    zipShortest t1 t2
+
+  member this.BindReturn(x, f) = List.map f x
+
+/// <summary>
+/// A zipper computation expression to zip any number of lists together.
+/// </summary>
+let zipper = new ZipperExpression ()
+

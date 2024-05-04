@@ -235,3 +235,32 @@ module Splitting =
           = [[1;2]; [12;13]; [23]]
       @>
 
+[<Test>]
+let ``zips multiple sequences together via computation expression`` () =
+  let xs = [1;2;3;4;5]
+  let ys = [|10;20;30;40;50;60|]
+  let zs = Seq.initInfinite id
+
+  let result = 
+    Seq.zipper {
+      let! x = xs
+      and! y = ys 
+      and! z = zs 
+      return x + y + z
+    }
+
+  test <@ List.ofSeq result = [11;23;35;47;59] @>
+
+  let xs: NonEmptySeq<_> = NonEmpty.assume [1;2;3;4;5]
+  let ys: NonEmptySeq<_> = NonEmpty.assume [|10;20;30;40;50;60|]
+  let zs: NonEmptySeq<_> = NonEmpty.assume <| Seq.initInfinite id
+
+  let result = 
+    Seq.NonEmpty.zipper {
+      let! x = xs
+      and! y = ys 
+      and! z = zs 
+      return x + y + z
+    }
+
+  test <@ List.ofSeq result = [11;23;35;47;59] @>

@@ -1,0 +1,33 @@
+name: Run Tests (.NET 6.0)
+
+on: 
+  workflow_dispatch:
+
+env:
+  # Official NuGet Feed settings
+  NUGET_FEED: https://api.nuget.org/v3/index.json
+  NUGET_KEY: ${{ secrets.NUGET_KEY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    - uses: actions/checkout@v4
+
+    - name: Set up .net
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0
+
+    - name: Build
+      shell: bash
+      run: |
+        dotnet pack -c Release --include-symbols --include-source -o nugets
+
+    - name: Deploy
+      shell: bash
+      run: |
+        dotnet nuget push ./nugets/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
+
+
