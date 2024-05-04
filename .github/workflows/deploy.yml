@@ -1,4 +1,4 @@
-name: Run Tests (.NET 6.0)
+name: Deploy SafetyFirst to NuGet
 
 on: 
   workflow_dispatch:
