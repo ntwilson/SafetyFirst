@@ -10,19 +10,34 @@
   <PropertyGroup>
     <PackageId>SafetyFirst</PackageId>
     <Title>SafetyFirst</Title>
-    <PackageVersion>5.2.0</PackageVersion>
+    <PackageVersion>5.3.0</PackageVersion>
     <Authors>nathan wilson</Authors>
     <Description>Total functions made convenient for F# and C#</Description>
     <PackageReleaseNotes>See release notes in github at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md</PackageReleaseNotes>
     <PackageLicenseExpression>CC0-1.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ntwilson/SafetyFirst</PackageProjectUrl>
     <PackageTags>result safety collections functional-programming</PackageTags>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/ntwilson/SafetyFirst</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <DebugType>portable</DebugType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- <SymbolPackageFormat>snupkg</SymbolPackageFormat> -->
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+
+    <!-- SourceLink settings -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="Option.fs" />
     <Compile Include="OptionExpression.fs" />
@@ -49,13 +64,17 @@
     <Compile Include="IDictionaryExtensions.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="../README.md" Pack="true" PackagePath="\"/>
-    <Content Include="../v4.0_UpgradeGuide.md" Pack="true" PackagePath="\"/>
+    <Content Include="../README.md" Pack="true" PackagePath="\" />
+    <Content Include="../v4.0_UpgradeGuide.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.5.0" />
     <PackageReference Include="FSharpPlus" Version="1.0.0" />
     <PackageReference Include="FSharpx.Collections" Version="2.1.3" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 </Project>
