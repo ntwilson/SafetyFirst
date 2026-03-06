@@ -24,12 +24,12 @@ module StructuralEquality =
     let y = FSeq.ofArray [| 0 .. 10 |]
     test <@ x <> y @>
 
-    let x = fseq {0 .. 10}
-    let y = FSeq.ofSeq {0 .. 12}
+    let x = fseq (seq {0 .. 10})
+    let y = FSeq.ofSeq (seq {0 .. 12})
     test <@ x <> y @>
 
-    let x = fseq {0 .. 12}
-    let y = FSeq.ofSeq {0 .. 10}
+    let x = fseq (seq {0 .. 12})
+    let y = FSeq.ofSeq (seq {0 .. 10})
     test <@ x <> y @>
 
   [<Test>]
@@ -38,8 +38,8 @@ module StructuralEquality =
     let y = FSeq.ofArray [| 1 .. 11 |]
     test <@ x <> y @>
 
-    let x = FSeq.ofSeq {0 .. 10}
-    let y = FSeq.ofSeq {1 .. 11}
+    let x = FSeq.ofSeq (seq {0 .. 10})
+    let y = FSeq.ofSeq (seq {1 .. 11})
     test <@ x <> y @>
 
   [<Test>]
@@ -48,16 +48,16 @@ module StructuralEquality =
     let y = FSeq.ofArray [| 0 .. 10 |]
     test <@ x = y @>
 
-    let x = FSeq.ofSeq (ResizeArray {0 .. 10})
+    let x = FSeq.ofSeq (ResizeArray (seq {0 .. 10}))
     let y = FSeq.ofList [0 .. 10]
     test <@ x = y @>
 
-    let x = FSeq.ofSeq {0 .. 10}
+    let x = FSeq.ofSeq (seq {0 .. 10})
     let y = FSeq.ofArray [| 0 .. 10 |]
     test <@ x = y @>
 
     //same x
-    let y = fseq {0 .. 10}
+    let y = fseq (seq {0 .. 10})
     test <@ x = y @>
 
     let x = FSeq.ofList [ 0 .. 10 ]
@@ -80,8 +80,8 @@ module StructuralEquality =
 
   [<Test>]
   let ``doesn't change comparison value when the length is calculated`` () =
-    let x = FSeq.ofSeq {0 .. 10}
-    let y = FSeq.ofSeq {1 .. 9}
+    let x = FSeq.ofSeq (seq {0 .. 10})
+    let y = FSeq.ofSeq (seq {1 .. 9})
 
     let initialCompare = compare x y
     ignore x.Length
@@ -204,11 +204,11 @@ let ``(code coverage test) uses a predefined length if available on many differe
     <@
       (FSeq.ofList [1 .. 10]).Length = 10
       &&
-      (FSeq.ofSeq {1 .. 10}).Length = 10
+      (FSeq.ofSeq (seq {1 .. 10})).Length = 10
       &&
       (FSeq.ofArray [|1 .. 10|]).Length = 10
       &&
-      (FSeq.ofSeq (ResizeArray {1 .. 10})).Length = 10
+      (FSeq.ofSeq (ResizeArray (seq {1 .. 10}))).Length = 10
     @>
 
 [<Test>]
