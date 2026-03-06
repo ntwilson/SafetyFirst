@@ -1,6 +1,6 @@
 name: Deploy SafetyFirst to NuGet
 
-on: 
+on:
   workflow_dispatch:
 
 env:
@@ -12,22 +12,20 @@ jobs:
   deploy-to-nuget:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up .net
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: |
-          8.0
+      - name: Set up .net
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            10.0
 
-    - name: Build
-      shell: bash
-      run: |
-        dotnet pack -c Release --include-symbols --include-source -o nugets
+      - name: Build
+        shell: bash
+        run: |
+          dotnet pack -c Release --include-symbols --include-source -o nugets
 
-    - name: Deploy
-      shell: bash
-      run: |
-        dotnet nuget push ./nugets/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
-
-
+      - name: Deploy
+        shell: bash
+        run: |
+          dotnet nuget push ./nugets/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY

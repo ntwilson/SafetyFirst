@@ -57,9 +57,9 @@ let ``ElementAtSafe errors whenever ElementAt throws`` () =
       &&
       testFor (fun lower upper -> upcast [| lower .. upper |])
       &&
-      testFor (fun lower upper -> upcast ResizeArray { lower .. upper })
+      testFor (fun lower upper -> upcast ResizeArray (seq { lower .. upper }))
       &&
-      testFor (fun lower upper -> upcast System.Collections.Generic.LinkedList { lower .. upper })
+      testFor (fun lower upper -> upcast System.Collections.Generic.LinkedList (seq { lower .. upper }))
     @>    
 
 [<Test>]
@@ -73,9 +73,9 @@ let ``ElementAtSafe returns the same answer as ElementAt`` () =
       &&
       testFor (fun lower upper -> upcast [| lower .. upper |])
       &&
-      testFor (fun lower upper -> upcast ResizeArray { lower .. upper })
+      testFor (fun lower upper -> upcast ResizeArray (seq { lower .. upper }))
       &&
-      testFor (fun lower upper -> upcast System.Collections.Generic.LinkedList { lower .. upper })
+      testFor (fun lower upper -> upcast System.Collections.Generic.LinkedList (seq { lower .. upper }))
     @>
 
 [<Test>]

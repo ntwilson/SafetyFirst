@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;net6.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
@@ -31,13 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FsCheck" Version="2.11.0" />
-    <PackageReference Include="fsharp.core" Version="4.6.2" />
-    <PackageReference Include="FSharpPlus" Version="1.1.7" />
-    <PackageReference Include="microsoft.net.test.sdk" Version="15.7.2" />
-    <PackageReference Include="nunit" Version="3.10.1" />
-    <PackageReference Include="nunit3TestAdapter" Version="3.10.0" />
-    <PackageReference Include="unquote" Version="4.0.0" />
+    <PackageReference Include="FsCheck" Version="3.3.2" />
+    <PackageReference Include="fsharp.core" Version="10.0.103" />
+    <PackageReference Include="FSharpPlus" Version="1.9.1" />
+    <PackageReference Include="microsoft.net.test.sdk" Version="18.3.0" />
+    <PackageReference Include="nunit" Version="4.5.1" />
+    <PackageReference Include="nunit3TestAdapter" Version="6.1.0" />
+    <PackageReference Include="unquote" Version="7.0.1" />
   </ItemGroup>
 
   <ItemGroup>
