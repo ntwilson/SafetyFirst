@@ -1,6 +1,6 @@
-name: Run Tests (.NET 6.0)
+name: Run Tests
 
-on: 
+on:
   pull_request:
   push:
     branches:
@@ -21,10 +21,10 @@ jobs:
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.x'
+          dotnet-version: "10.x"
       - name: Restore
         run: dotnet restore SafetyFirst.sln
       - name: Build with dotnet
         run: dotnet build SafetyFirst.sln -c Release --no-restore
       - name: Test with dotnet
-        run: dotnet test SafetyFirst.sln -f net6.0 -c Release --no-build
+        run: dotnet test SafetyFirst.sln -f net10.0 -c Release --no-build
