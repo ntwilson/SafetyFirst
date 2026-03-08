@@ -196,3 +196,21 @@ module Splitting =
         (List.NonEmpty.splitPairwise (bigDiff) (List.NonEmpty.create 1 [2;12;13;23]) |> toLists)
           = [[1;2]; [12;13]; [23]]
       @>
+
+  [<Test>]
+  let ``splitPairwise passes (previousElement, currentElement) to predicate`` () =
+    // Because the list gets reversed, the logic around the order of arguments to the predicate is a little tricky.
+    // A non-commutative predicate will produce wrong results if the arguments are flipped.
+    let splitOnDescent (a: int) (b: int) = a > b  // split wherever the sequence descends
+    test
+      <@
+        (List.splitPairwise splitOnDescent [1;3;5;2;4] |> toLists) = [[1;3;5]; [2;4]]
+        &&
+        (List.splitPairwise splitOnDescent [5;3;1;2;4] |> toLists) = [[5]; [3]; [1;2;4]]
+        &&
+        (List.NonEmpty.splitPairwise splitOnDescent (List.NonEmpty.create 1 [3;5;2;4]) |> toLists)
+          = [[1;3;5]; [2;4]]
+        &&
+        (List.NonEmpty.splitPairwise splitOnDescent (List.NonEmpty.create 5 [3;1;2;4]) |> toLists)
+          = [[5]; [3]; [1;2;4]]
+      @>
