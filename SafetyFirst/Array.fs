@@ -708,7 +708,7 @@ let splitIntoN (PositiveInt count) xs : NonEmptyArray<_>[] =
 /// </summary>
 let rec splitPairwise splitBetween (xs: array<_>) : array<NonEmptyArray<_>> =
   [|
-    let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+    use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
     let mutable keepGoing = iter.MoveNext()
     while keepGoing do
       yield
@@ -1490,7 +1490,7 @@ module NonEmpty =
   /// </summary>
   let splitPairwise splitBetween (xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
     NonEmpty [|
-      let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+      use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
       let mutable keepGoing = iter.MoveNext()
       while keepGoing do
         yield

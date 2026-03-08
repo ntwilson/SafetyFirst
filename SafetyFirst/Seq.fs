@@ -500,14 +500,16 @@ let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
 /// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
 ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
 /// </code>
+/// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
+/// sequence advances to it. Inner segments are safe to re-enumerate and consume in any order.
 /// </summary>
-let rec splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
+let splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
   seq {
-    let mutable iter = xs.GetEnumerator()
+    use mutable iter = xs.GetEnumerator()
     let mutable keepGoing = iter.MoveNext()
     while keepGoing do
       yield
-        NonEmpty <| seq {
+        NonEmpty ([
           yield iter.Current
           let mutable prevElement = iter.Current
           keepGoing <- iter.MoveNext()
@@ -515,7 +517,7 @@ let rec splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
             yield iter.Current
             prevElement <- iter.Current
             keepGoing <- iter.MoveNext()
-        }
+        ] :> seq<_>)
   }
 
 /// <summary>
@@ -914,14 +916,16 @@ module NonEmpty =
   /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
+  /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
+  /// sequence advances to it. Inner segments are safe to re-enumerate and consume in any order.
   /// </summary>
-  let rec splitPairwise splitBetween (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> =
+  let splitPairwise splitBetween (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> =
     NonEmpty <| seq {
-      let mutable iter = xs.GetEnumerator()
+      use mutable iter = xs.GetEnumerator()
       let mutable keepGoing = iter.MoveNext()
       while keepGoing do
         yield
-          NonEmpty <| seq {
+          NonEmpty ([ 
             yield iter.Current
             let mutable prevElement = iter.Current
             keepGoing <- iter.MoveNext()
@@ -929,7 +933,7 @@ module NonEmpty =
               yield iter.Current
               prevElement <- iter.Current
               keepGoing <- iter.MoveNext()
-          }
+          ] :> seq<_>)
     }
 
   type ZipperExpression() = 

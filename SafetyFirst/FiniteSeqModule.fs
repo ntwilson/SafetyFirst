@@ -713,14 +713,16 @@ module FiniteSeq =
   /// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
+  /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
+  /// sequence advances to it.
   /// </summary>
   let splitPairwise splitBetween (xs: FSeq<_>) : FSeq<NonEmptyFSeq<_>> =
     fseq <| seq {
-      let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+      use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
       let mutable keepGoing = iter.MoveNext()
       while keepGoing do
         yield
-          NonEmpty << fseq <| seq {
+          NonEmpty <| fseq [
             yield iter.Current
             let mutable prevElement = iter.Current
             keepGoing <- iter.MoveNext()
@@ -728,7 +730,7 @@ module FiniteSeq =
               yield iter.Current
               prevElement <- iter.Current
               keepGoing <- iter.MoveNext()
-          }
+          ]
     }
 
   /// <summary>
@@ -1618,6 +1620,8 @@ module FSeq =
   /// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
+  /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
+  /// sequence advances to it.
   /// </summary>
   let splitPairwise splitBetween (xs: FSeq<_>) : FSeq<NonEmptyFSeq<_>> = FiniteSeq.splitPairwise splitBetween xs
 
@@ -2371,16 +2375,16 @@ module FSeq =
     /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
     ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
     /// </code>
+    /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
+    /// sequence advances to it.
     /// </summary>
-    // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
-    // so this should be the default used for any finite sequence (inculding lists and arrays) 
     let splitPairwise splitBetween xs : NonEmptyFSeq<NonEmptyFSeq<_>> =
       NonEmpty << fseq <| seq {
-        let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+        use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
         let mutable keepGoing = iter.MoveNext()
         while keepGoing do
           yield
-            NonEmpty << fseq <| seq {
+            NonEmpty <| fseq [ 
               yield iter.Current
               let mutable prevElement = iter.Current
               keepGoing <- iter.MoveNext()
@@ -2388,7 +2392,7 @@ module FSeq =
                 yield iter.Current
                 prevElement <- iter.Current
                 keepGoing <- iter.MoveNext()
-            }
+             ]
       }
 
     type ZipperExpression() = 

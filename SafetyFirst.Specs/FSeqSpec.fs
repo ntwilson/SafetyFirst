@@ -308,7 +308,51 @@ module Splitting =
           = [[1;2]; [12;13]; [23]]
       @>
 
-module SafeFunctions = 
+  [<Test>]
+  let ``inner segments remain valid after outer sequence is fully materialized`` () =
+    let segments = FSeq.splitPairwise (=) (fseq [0;1;1;2;3;4;4;4;5]) |> Seq.toList
+    test <@ segments |> List.map Seq.toList = [[0;1];[1;2;3;4];[4];[4;5]] @>
+
+    let neSegments = FSeq.NonEmpty.splitPairwise (=) (FSeq.NonEmpty.create 0 (fseq [1;1;2;3;4;4;4;5])) |> Seq.toList
+    test <@ neSegments |> List.map Seq.toList = [[0;1];[1;2;3;4];[4];[4;5]] @>
+
+  [<Test>]
+  let ``inner segments can be re-enumerated`` () =
+    let firstSegment = FSeq.splitPairwise (=) (fseq [0;1;1;2]) |> Seq.toList |> List.head
+    test
+      <@
+        Seq.toList firstSegment = [0;1]
+        && Seq.toList firstSegment = [0;1]
+      @>
+
+    let neFirstSegment = FSeq.NonEmpty.splitPairwise (=) (FSeq.NonEmpty.create 0 (fseq [1;1;2])) |> Seq.toList |> List.head
+    test
+      <@
+        Seq.toList neFirstSegment = [0;1]
+        && Seq.toList neFirstSegment = [0;1]
+      @>
+
+  [<Test>]
+  let ``inner segments can be consumed out of order`` () =
+    let segments = FSeq.splitPairwise (=) (fseq [0;1;1;2;3;4;4;4;5]) |> Seq.toArray
+    test
+      <@
+        Seq.toList segments.[2] = [4]
+        && Seq.toList segments.[0] = [0;1]
+        && Seq.toList segments.[3] = [4;5]
+        && Seq.toList segments.[1] = [1;2;3;4]
+      @>
+
+    let neSegments = FSeq.NonEmpty.splitPairwise (=) (FSeq.NonEmpty.create 0 (fseq [1;1;2;3;4;4;4;5])) |> Seq.toArray
+    test
+      <@
+        Seq.toList neSegments.[2] = [4]
+        && Seq.toList neSegments.[0] = [0;1]
+        && Seq.toList neSegments.[3] = [4;5]
+        && Seq.toList neSegments.[1] = [1;2;3;4]
+      @>
+
+module SafeFunctions =
   open SeqSpec
 
   let averageFloats' (xs:float fseq) = FSeq.average' xs
