@@ -236,14 +236,20 @@ let ``doesn't allow comparison or equality with other types`` () =
   raises <@ ((FSeq.ofList [1 .. 3]) :> IComparable).CompareTo("hello") @>
 
 module Splitting = 
-  let ofNonEmpty (xs:NonEmptyFSeq<NonEmptyFSeq<int>>) = 
-    FSeq.NonEmpty.toList <| FSeq.NonEmpty.map FSeq.NonEmpty.toList xs
+  let ofNonEmpty (xs:seq<NonEmptyFSeq<int>>) = 
+    List.ofSeq <| Seq.map FSeq.NonEmpty.toList xs
 
   let toNonEmpty xs = 
     FSeq.NonEmpty.ofFSeq' (fseq xs) |> Result.expect
 
   [<Test>]
   let ``returns what the documentation says`` () =
+
+    test 
+      <@
+        (FSeq.splitPairwise (=) (fseq [0;1;1;2;3;4;4;4;5]) |> ofNonEmpty)
+          = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
 
     test 
       <@
@@ -254,6 +260,17 @@ module Splitting =
 
         (FSeq.NonEmpty.splitPairwise (=) (toNonEmpty [0;1;1;2;3;4;4;4;5]) |> ofNonEmpty)
           = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
+
+  [<Test>]
+  let ``splits empty and single element sequences`` () = 
+    test 
+      <@
+        (FSeq.splitPairwise (=) (fseq []) |> ofNonEmpty) = []
+        &&
+        (FSeq.splitPairwise (=) (fseq [0]) |> ofNonEmpty) = [[0]]
+        &&
+        (FSeq.splitPairwise (=) (fseq [5; 5]) |> ofNonEmpty) = [[5]; [5]]
       @>
   
   [<Test>]

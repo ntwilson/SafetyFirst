@@ -702,6 +702,36 @@ let splitIntoN (PositiveInt count) xs : NonEmptyList<_> list =
   List.splitInto count xs |> List.map NonEmpty.assume
 
 /// <summary>
+/// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+/// For example:
+/// <code>
+/// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
+///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+/// </code>
+/// </summary>
+let splitPairwise splitBetween xs : List<NonEmptyList<_>> =
+  let rec split' (input:'a list) (previousElement:'a) (NonEmpty currGroupLst as currentGroup: NonEmptyList<'a>) (completedGroups:list<NonEmptyList<'a>>) =
+    match input with
+    | [] -> currentGroup::completedGroups
+    | head::tail -> 
+      let newInput = tail
+      let newPrev = head
+      if splitBetween head previousElement
+      then
+        let newGroup = NonEmpty [head]
+        let newCompletedGroups = currentGroup :: completedGroups
+        split' newInput newPrev newGroup newCompletedGroups
+      else
+        let expandedGroup = NonEmpty (head :: currGroupLst)
+        split' newInput newPrev expandedGroup completedGroups
+
+  match List.rev xs with
+  | [] -> []
+  | prev::input ->
+    let (currGroup, completedGroups) = (NonEmpty [prev], [])
+    split' input prev currGroup completedGroups
+
+/// <summary>
 /// Returns a list that skips 1 element of the underlying list and then yields the
 /// remaining elements of the list.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
@@ -876,7 +906,12 @@ module NonEmpty =
   let create head tail : NonEmptyList<_> = NonEmpty (head :: tail)
 
   /// <summary>
-  /// Returns a NonEmpty array that contains one item only.
+  /// Returns a NonEmpty list with head as its first element and tail as its subsequent elements
+  /// </summary>
+  let cons head (NonEmpty tail: NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (head :: tail)
+
+  /// <summary>
+  /// Returns a NonEmpty list that contains one item only.
   /// </summary>
   let singleton x : NonEmptyList<_> = NonEmpty [x]
  
@@ -1423,10 +1458,25 @@ module NonEmpty =
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
   /// </summary>
-  let splitPairwise splitBetween xs =
-    FSeq.NonEmpty.splitPairwise splitBetween (toNonEmptyFSeq xs)
-    |> FSeq.NonEmpty.map FSeq.NonEmpty.toNonEmptyList
-    |> FSeq.NonEmpty.toNonEmptyList
+  let splitPairwise splitBetween (xs: NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> =
+    let rec split' (input:'a list) (previousElement:'a) (NonEmpty currGroupLst as currentGroup: NonEmptyList<'a>) (completedGroups:list<NonEmptyList<'a>>) =
+      match input with
+      | [] -> create currentGroup completedGroups
+      | head::tail -> 
+        let newInput = tail
+        let newPrev = head
+        if splitBetween head previousElement
+        then
+          let newGroup = singleton head
+          let newCompletedGroups = currentGroup :: completedGroups
+          split' newInput newPrev newGroup newCompletedGroups
+        else
+          let expandedGroup = create head currGroupLst
+          split' newInput newPrev expandedGroup completedGroups
+
+    let prev, input = uncons (rev xs)
+    let (currGroup, completedGroups) = (singleton prev, [])
+    split' input prev currGroup completedGroups
 
 
   type ZipperExpression() = 

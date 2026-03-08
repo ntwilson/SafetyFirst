@@ -1,4 +1,6 @@
 namespace SafetyFirst
+
+open System.Collections.Generic
 open FSharpx.Collections
 open SafetyFirst
 open SafetyFirst.ErrorTypes  
@@ -703,6 +705,31 @@ module FiniteSeq =
   /// Returns None if <c>count</c> is zero or negative.
   /// </summary>
   let inline trySplitInto n xs = splitIntoSafe n xs |> Result.toOption
+
+  /// <summary>
+  /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+  /// For example:
+  /// <code>
+  /// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
+  ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+  /// </code>
+  /// </summary>
+  let splitPairwise splitBetween (xs: FSeq<_>) : FSeq<NonEmptyFSeq<_>> =
+    fseq <| seq {
+      let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+      let mutable keepGoing = iter.MoveNext()
+      while keepGoing do
+        yield
+          NonEmpty << fseq <| seq {
+            yield iter.Current
+            let mutable prevElement = iter.Current
+            keepGoing <- iter.MoveNext()
+            while keepGoing && not (splitBetween prevElement iter.Current) do
+              yield iter.Current
+              prevElement <- iter.Current
+              keepGoing <- iter.MoveNext()
+          }
+    }
 
   /// <summary>
   /// Returns the sum of the elements in the sequence.
@@ -1585,6 +1612,16 @@ module FSeq =
   let inline trySplitInto n xs = splitIntoSafe n xs |> Result.toOption
 
   /// <summary>
+  /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+  /// For example:
+  /// <code>
+  /// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
+  ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+  /// </code>
+  /// </summary>
+  let splitPairwise splitBetween (xs: FSeq<_>) : FSeq<NonEmptyFSeq<_>> = FiniteSeq.splitPairwise splitBetween xs
+
+  /// <summary>
   /// Returns the sum of the elements in the sequence.
   /// The elements are summed using the <c>+</c> operator and <c>Zero</c> property associated with the generated type.
   /// </summary>
@@ -2338,26 +2375,21 @@ module FSeq =
     // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
     // so this should be the default used for any finite sequence (inculding lists and arrays) 
     let splitPairwise splitBetween xs : NonEmptyFSeq<NonEmptyFSeq<_>> =
-      let (++) = appendR
-
-      let rec split' (input:'a fseq) (previousElement:'a) (currentGroup:NonEmptyFSeq<'a>) (completedGroups:fseq<NonEmptyFSeq<'a>>) =
-        match input with
-        | Empty -> completedGroups ++ singleton currentGroup
-        | NotEmpty input -> 
-          let (head, tail) = uncons input
-          let newInput = tail
-          let newPrev = head
-          if splitBetween previousElement head
-          then 
-            let newGroup = (singleton head)
-            let newCompletedGroups = (completedGroups ++ singleton currentGroup) 
-            split' newInput newPrev newGroup (fseq newCompletedGroups)
-          else 
-            let expandedGroup = (fseq currentGroup) ++ singleton head
-            split' newInput newPrev expandedGroup completedGroups
-
-      let (head, tail) = uncons xs
-      split' tail head (singleton head) (fseq [])
+      NonEmpty << fseq <| seq {
+        let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+        let mutable keepGoing = iter.MoveNext()
+        while keepGoing do
+          yield
+            NonEmpty << fseq <| seq {
+              yield iter.Current
+              let mutable prevElement = iter.Current
+              keepGoing <- iter.MoveNext()
+              while keepGoing && not (splitBetween prevElement iter.Current) do
+                yield iter.Current
+                prevElement <- iter.Current
+                keepGoing <- iter.MoveNext()
+            }
+      }
 
     type ZipperExpression() = 
       member inline this.MergeSources(t1, t2) = 

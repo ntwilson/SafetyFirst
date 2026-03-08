@@ -117,3 +117,74 @@ let ``zips multiple arrays together via computation expression`` () =
     }
 
   test <@ result = NonEmpty.assume [|11;23;35;47;59|] @>
+
+module Splitting = 
+  let toArrs xs = Seq.map Array.NonEmpty.toArray xs |> Array.ofSeq
+
+  [<Test>]
+
+  let ``returns what the documentation says`` () =
+
+    test 
+      <@
+        (Array.splitPairwise (=) [|0;1;1;2;3;4;4;4;5|] |> toArrs)
+          = [|[|0;1|];[|1;2;3;4|];[|4|];[|4;5|]|]
+      @>
+
+    test 
+      <@
+        (Array.NonEmpty.split ((=) 100) (Array.NonEmpty.create 1 [|2;3;100;100;4;100;5;6|]) |> toArrs)
+          = [|[|1;2;3;100|];[|100|];[|4;100|];[|5;6|]|]
+
+        &&
+
+        (Array.NonEmpty.splitPairwise (=) (Array.NonEmpty.create 0 [|1;1;2;3;4;4;4;5|]) |> toArrs)
+          = [|[|0;1|];[|1;2;3;4|];[|4|];[|4;5|]|]
+      @>
+
+
+  [<Test>]
+  let ``splits empty and single element sequences`` () = 
+    test 
+      <@
+        (Array.splitPairwise (=) [||] |> toArrs) = [||]
+        &&
+        (Array.splitPairwise (=) [|0|] |> toArrs) = [|[|0|]|]
+        &&
+        (Array.splitPairwise (=) [|5; 5|] |> toArrs) = [|[|5|]; [|5|]|]
+      @>
+  
+  [<Test>]
+  let ``splits properly for multiple types of inputs`` () = 
+    test 
+      <@
+        (Array.NonEmpty.split ((=) 5) (Array.NonEmpty.singleton 0) |> toArrs) = [|[|0|]|]
+        &&
+        (Array.NonEmpty.split ((=) 5) (Array.NonEmpty.singleton 5) |> toArrs) = [|[|5|]|]
+        &&
+        (Array.NonEmpty.split ((=) 5) (Array.NonEmpty.create 0 [|5|]) |> toArrs) = [|[|0; 5|]|]
+        &&
+        (Array.NonEmpty.split ((=) 5) (Array.NonEmpty.create 5 [|5|]) |> toArrs) = [|[|5|]; [|5|]|]
+        &&
+        (Array.NonEmpty.split ((=) 5) (Array.NonEmpty.create 5 [|0|]) |> toArrs) = [|[|5|]; [|0|]|]
+        &&
+        (Array.NonEmpty.split ((=) 5) (Array.NonEmpty.create 5 [|0;0;5;5;0;5|]) |> toArrs) = [|[|5|]; [|0;0;5|]; [|5|]; [|0;5|]|]
+      @>
+
+  [<Test>]
+  let ``splits pairwise properly for multiple types of inputs`` () = 
+    let bigDiff i j = abs (i - j) > 5
+    test 
+      <@
+        (Array.NonEmpty.splitPairwise (=) (Array.NonEmpty.singleton 0) |> toArrs) = [|[|0|]|]
+        &&
+        (Array.NonEmpty.splitPairwise (=) (Array.NonEmpty.create 0 [|1|]) |> toArrs) = [|[|0;1|]|]
+        &&
+        (Array.NonEmpty.splitPairwise (=) (Array.NonEmpty.create 0 [|0|]) |> toArrs) = [|[|0|]; [|0|]|]
+        &&
+        (Array.NonEmpty.splitPairwise (bigDiff) (Array.NonEmpty.create 1 [|2;12;13;23;24|]) |> toArrs)
+          = [|[|1;2|]; [|12;13|]; [|23;24|]|]
+        &&
+        (Array.NonEmpty.splitPairwise (bigDiff) (Array.NonEmpty.create 1 [|2;12;13;23|]) |> toArrs)
+          = [|[|1;2|]; [|12;13|]; [|23|]|]
+      @>

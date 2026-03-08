@@ -1,5 +1,6 @@
 module SafetyFirst.Array
 
+open System.Collections.Generic
 open SafetyFirst.ErrorTypes
 open SafetyFirst.Numbers
 open SafetyFirst
@@ -696,6 +697,31 @@ let inline trySplitInto count xs = splitIntoSafe count xs |> Result.toOption
 let splitIntoN (PositiveInt count) xs : NonEmptyArray<_>[] = 
   Array.splitInto count xs
   |> Array.map NonEmpty
+
+/// <summary>
+/// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+/// For example:
+/// <code>
+/// splitPairwise (=) [|0;1;1;2;3;4;4;4;5|]
+///   //returns [|[0;1];[1;2;3;4];[4];[4;5]|]
+/// </code>
+/// </summary>
+let rec splitPairwise splitBetween (xs: array<_>) : array<NonEmptyArray<_>> =
+  [|
+    let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+    let mutable keepGoing = iter.MoveNext()
+    while keepGoing do
+      yield
+        NonEmpty [|
+          yield iter.Current
+          let mutable prevElement = iter.Current
+          keepGoing <- iter.MoveNext()
+          while keepGoing && not (splitBetween prevElement iter.Current) do
+            yield iter.Current
+            prevElement <- iter.Current
+            keepGoing <- iter.MoveNext()
+        |]
+  |]
 
 /// <summary>
 /// Slices an array given a starting index and a count of elements to return.
@@ -1462,10 +1488,22 @@ module NonEmpty =
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
   /// </summary>
-  let splitPairwise splitBetween xs =
-    FSeq.NonEmpty.splitPairwise splitBetween (toNonEmptyFSeq xs)
-    |> FSeq.NonEmpty.map FSeq.NonEmpty.toNonEmptyArray
-    |> FSeq.NonEmpty.toNonEmptyArray
+  let splitPairwise splitBetween (xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
+    NonEmpty [|
+      let mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+      let mutable keepGoing = iter.MoveNext()
+      while keepGoing do
+        yield
+          NonEmpty [|
+            yield iter.Current
+            let mutable prevElement = iter.Current
+            keepGoing <- iter.MoveNext()
+            while keepGoing && not (splitBetween prevElement iter.Current) do
+              yield iter.Current
+              prevElement <- iter.Current
+              keepGoing <- iter.MoveNext()
+          |]
+    |]
 
   type ZipperExpression() = 
     member inline this.MergeSources(t1, t2) = 

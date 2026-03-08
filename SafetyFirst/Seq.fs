@@ -1,5 +1,6 @@
 module SafetyFirst.Seq
 
+open System.Collections.Generic
 open SafetyFirst.ErrorTypes
 open SafetyFirst.Numbers
 
@@ -493,6 +494,31 @@ let inline trySplitInto count xs = splitIntoSafe count xs |> Result.toOption
 let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
 
 /// <summary>
+/// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+/// For example:
+/// <code>
+/// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
+///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+/// </code>
+/// </summary>
+let rec splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
+  seq {
+    let mutable iter = xs.GetEnumerator()
+    let mutable keepGoing = iter.MoveNext()
+    while keepGoing do
+      yield
+        NonEmpty <| seq {
+          yield iter.Current
+          let mutable prevElement = iter.Current
+          keepGoing <- iter.MoveNext()
+          while keepGoing && not (splitBetween prevElement iter.Current) do
+            yield iter.Current
+            prevElement <- iter.Current
+            keepGoing <- iter.MoveNext()
+        }
+  }
+
+/// <summary>
 /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
 /// remaining elements of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
@@ -889,46 +915,22 @@ module NonEmpty =
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
   /// </summary>
-  let rec splitPairwise splitBetween xs : NonEmptySeq<_> =
-    let (++) (NonEmpty xs) ys = NonEmpty <| Seq.append xs ys
-
-    let takeGroup input : NonEmptySeq<_> =
-      let rec takeGroup' previousElement input =  
-        seq { 
-          match input with
-          | SeqOneOrMore (head, tail) ->
-            if not <| splitBetween previousElement head 
-            then 
-              yield head
-              yield! takeGroup' head tail
-          | _ -> ()
-        }
-
-      let head, tail = uncons input
-      singleton head ++ takeGroup' head tail 
-
-    let rec skipGroup input =
-      let firstElement, tail = uncons input
-      match tail with
-      | Empty -> Seq.empty
-      | NotEmpty tail ->
-        let secondElement = head tail
-        if splitBetween firstElement secondElement 
-        then seq tail
-        else skipGroup tail
-
-    let rec splitPairwise' xs = 
-      NonEmpty (
-        seq { 
-          yield takeGroup xs
-
-          match skipGroup xs with
-          | Empty -> ()
-          | NotEmpty elements -> yield! splitPairwise' elements
-        }
-      )
-
-    splitPairwise' (NonEmpty <| toSeq xs)    
+  let rec splitPairwise splitBetween (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> =
+    NonEmpty <| seq {
+      let mutable iter = xs.GetEnumerator()
+      let mutable keepGoing = iter.MoveNext()
+      while keepGoing do
+        yield
+          NonEmpty <| seq {
+            yield iter.Current
+            let mutable prevElement = iter.Current
+            keepGoing <- iter.MoveNext()
+            while keepGoing && not (splitBetween prevElement iter.Current) do
+              yield iter.Current
+              prevElement <- iter.Current
+              keepGoing <- iter.MoveNext()
+          }
+    }
 
   type ZipperExpression() = 
     member inline this.MergeSources(t1, t2) = 

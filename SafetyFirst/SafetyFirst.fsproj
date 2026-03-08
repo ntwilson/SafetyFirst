@@ -10,7 +10,7 @@
   <PropertyGroup>
     <PackageId>SafetyFirst</PackageId>
     <Title>SafetyFirst</Title>
-    <PackageVersion>5.3.0</PackageVersion>
+    <PackageVersion>5.3.1</PackageVersion>
     <Authors>nathan wilson</Authors>
     <Description>Total functions made convenient for F# and C#</Description>
     <PackageReleaseNotes>See release notes in github at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md</PackageReleaseNotes>
