@@ -1,6 +1,5 @@
 module SafetyFirst.Seq
 
-open System.Collections.Generic
 open SafetyFirst.ErrorTypes
 open SafetyFirst.Numbers
 
