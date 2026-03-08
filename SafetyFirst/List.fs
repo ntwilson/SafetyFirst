@@ -702,7 +702,7 @@ let splitIntoN (PositiveInt count) xs : NonEmptyList<_> list =
   List.splitInto count xs |> List.map NonEmpty.assume
 
 /// <summary>
-/// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+/// Splits a list between each pair of adjacent elements that satisfy <c>splitBetween</c>.
 /// For example:
 /// <code>
 /// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
@@ -1435,13 +1435,13 @@ module NonEmpty =
   let inline tryZip3 xs ys zs = zip3Safe xs ys zs |> Result.toOption
 
   /// <summary>
-  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// Splits a list at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
   /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  /// the sequence preceeding the split.
+  /// the list preceeding the split.
   /// For example:
   /// <code>
-  /// split ((=) 100) (FSeq.NonEmpty.create 1[2;3;100;100;4;100;5;6])
+  /// split ((=) 100) (NonEmpty.assume [1;2;3;100;100;4;100;5;6])
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
   /// </code>
   /// </summary>
@@ -1451,10 +1451,10 @@ module NonEmpty =
     |> Seq.NonEmpty.toNonEmptyList
 
   /// <summary>
-  /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+  /// Splits a list between each pair of adjacent elements that satisfy <c>splitBetween</c>.
   /// For example:
   /// <code>
-  /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
+  /// splitPairwise (=) (NonEmpty.assume [0;1;1;2;3;4;4;4;5])
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
   /// </summary>
