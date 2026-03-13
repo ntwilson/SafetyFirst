@@ -2378,22 +2378,8 @@ module FSeq =
     /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
     /// sequence advances to it.
     /// </summary>
-    let splitPairwise splitBetween xs : NonEmptyFSeq<NonEmptyFSeq<_>> =
-      NonEmpty << fseq <| seq {
-        use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
-        let mutable keepGoing = iter.MoveNext()
-        while keepGoing do
-          yield
-            NonEmpty <| fseq [ 
-              yield iter.Current
-              let mutable prevElement = iter.Current
-              keepGoing <- iter.MoveNext()
-              while keepGoing && not (splitBetween prevElement iter.Current) do
-                yield iter.Current
-                prevElement <- iter.Current
-                keepGoing <- iter.MoveNext()
-             ]
-      }
+    let splitPairwise splitBetween (NonEmpty xs) : NonEmptyFSeq<NonEmptyFSeq<_>> =
+      NonEmpty (FiniteSeq.splitPairwise splitBetween xs)
 
     type ZipperExpression() = 
       member inline this.MergeSources(t1, t2) = 

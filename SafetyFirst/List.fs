@@ -714,16 +714,14 @@ let splitPairwise splitBetween xs : List<NonEmptyList<_>> =
     match input with
     | [] -> currentGroup::completedGroups
     | head::tail -> 
-      let newInput = tail
-      let newPrev = head
       if splitBetween head previousElement
       then
         let newGroup = NonEmpty [head]
         let newCompletedGroups = currentGroup :: completedGroups
-        split' newInput newPrev newGroup newCompletedGroups
+        split' tail head newGroup newCompletedGroups
       else
         let expandedGroup = NonEmpty (head :: currGroupLst)
-        split' newInput newPrev expandedGroup completedGroups
+        split' tail head expandedGroup completedGroups
 
   match List.rev xs with
   | [] -> []
@@ -1458,26 +1456,8 @@ module NonEmpty =
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
   /// </summary>
-  let splitPairwise splitBetween (xs: NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> =
-    let rec split' (input:'a list) (previousElement:'a) (NonEmpty currGroupLst as currentGroup: NonEmptyList<'a>) (completedGroups:list<NonEmptyList<'a>>) =
-      match input with
-      | [] -> create currentGroup completedGroups
-      | head::tail -> 
-        let newInput = tail
-        let newPrev = head
-        if splitBetween head previousElement
-        then
-          let newGroup = singleton head
-          let newCompletedGroups = currentGroup :: completedGroups
-          split' newInput newPrev newGroup newCompletedGroups
-        else
-          let expandedGroup = create head currGroupLst
-          split' newInput newPrev expandedGroup completedGroups
-
-    let prev, input = uncons (rev xs)
-    let (currGroup, completedGroups) = (singleton prev, [])
-    split' input prev currGroup completedGroups
-
+  let splitPairwise splitBetween (NonEmpty xs: NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> =
+    NonEmpty (splitPairwise splitBetween xs)
 
   type ZipperExpression() = 
     member inline this.MergeSources(t1, t2) = 

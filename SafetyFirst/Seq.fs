@@ -499,25 +499,32 @@ let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
 /// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
 ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
 /// </code>
-/// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
-/// sequence advances to it. Inner segments are safe to re-enumerate and consume in any order.
+/// Both the outer sequence and each inner segment are lazy.
+/// Inner segments are safe to re-enumerate and consume in any order.
+/// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
+/// segments, due to re-traversal of the lazy chain at each level. If the source sequence
+/// is expensive to evaluate, cache it with Seq.cache before calling this function.
+/// If the source sequence is finite, you can achieve better performance by converting it to 
+/// a list or array first and using <c>List.splitPairwise</c> or <c>Array.splitPairwise</c> instead.
 /// </summary>
 let splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
-  seq {
-    use mutable iter = xs.GetEnumerator()
-    let mutable keepGoing = iter.MoveNext()
-    while keepGoing do
-      yield
-        NonEmpty ([
-          yield iter.Current
-          let mutable prevElement = iter.Current
-          keepGoing <- iter.MoveNext()
-          while keepGoing && not (splitBetween prevElement iter.Current) do
-            yield iter.Current
-            prevElement <- iter.Current
-            keepGoing <- iter.MoveNext()
-        ] :> seq<_>)
-  }
+  let rec generate (remaining: _ seq) =
+    seq {
+      match remaining with
+      | Empty -> ()
+      | NotEmpty _ ->
+        let pairs = Seq.pairwise remaining
+        yield NonEmpty <|
+          seq {
+            match Seq.tryHead pairs with
+            | None -> yield Seq.head remaining
+            | Some (first, _) ->
+              yield first
+              yield! pairs |> Seq.takeWhile (fun (a, b) -> not (splitBetween a b)) |> Seq.map snd
+          }
+        yield! generate (pairs |> Seq.skipWhile (fun (a, b) -> not (splitBetween a b)) |> Seq.map snd)
+    }
+  generate xs
 
 /// <summary>
 /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
@@ -915,25 +922,16 @@ module NonEmpty =
   /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
-  /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
-  /// sequence advances to it. Inner segments are safe to re-enumerate and consume in any order.
+  /// Both the outer sequence and each inner segment are lazy.
+  /// Inner segments are safe to re-enumerate and consume in any order.
+  /// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
+  /// segments, due to re-traversal of the lazy chain at each level. If the source sequence
+  /// is expensive to evaluate, cache it with Seq.cache before calling this function.
+  /// If the source sequence is finite, you can achieve better performance by converting it to 
+  /// a list or array first and using <c>List.splitPairwise</c> or <c>Array.splitPairwise</c> instead.
   /// </summary>
   let splitPairwise splitBetween (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> =
-    NonEmpty <| seq {
-      use mutable iter = xs.GetEnumerator()
-      let mutable keepGoing = iter.MoveNext()
-      while keepGoing do
-        yield
-          NonEmpty ([ 
-            yield iter.Current
-            let mutable prevElement = iter.Current
-            keepGoing <- iter.MoveNext()
-            while keepGoing && not (splitBetween prevElement iter.Current) do
-              yield iter.Current
-              prevElement <- iter.Current
-              keepGoing <- iter.MoveNext()
-          ] :> seq<_>)
-    }
+    NonEmpty <| splitPairwise splitBetween xs
 
   type ZipperExpression() = 
     member inline this.MergeSources(t1, t2) = 

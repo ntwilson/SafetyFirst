@@ -224,7 +224,17 @@ module Splitting =
 
 
   [<Test>]
-  let ``splits empty and single element sequences`` () = 
+  let ``inner segments can be infinite`` () =
+    // [5; 5; 0; 1; 2; 3; ...]: one split at (5,5), then an infinite segment [5; 0; 1; 2; 3; ...]
+    // with no equal adjacent pairs, so it never splits again
+    let infinite = Seq.collect id [ seq [5; 5]; (Seq.initInfinite id |> Seq.truncate 3000); seq { yield failwith "evaluation hung" } ]
+    let neInfinite = NonEmpty.assume infinite
+
+    test <@ (Seq.splitPairwise (=) infinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
+    test <@ (Seq.NonEmpty.splitPairwise (=) neInfinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
+
+  [<Test>]
+  let ``splits empty and single element sequences`` () =
     test 
       <@
         (Seq.splitPairwise (=) Seq.empty |> toLists) = []

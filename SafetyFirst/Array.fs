@@ -1488,22 +1488,8 @@ module NonEmpty =
   ///   //returns ([|[|0;1|];[|1;2;3;4|];[|4|];[|4;5|]|])
   /// </code>
   /// </summary>
-  let splitPairwise splitBetween (xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
-    NonEmpty [|
-      use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
-      let mutable keepGoing = iter.MoveNext()
-      while keepGoing do
-        yield
-          NonEmpty [|
-            yield iter.Current
-            let mutable prevElement = iter.Current
-            keepGoing <- iter.MoveNext()
-            while keepGoing && not (splitBetween prevElement iter.Current) do
-              yield iter.Current
-              prevElement <- iter.Current
-              keepGoing <- iter.MoveNext()
-          |]
-    |]
+  let splitPairwise splitBetween (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
+    NonEmpty (splitPairwise splitBetween xs)
 
   type ZipperExpression() = 
     member inline this.MergeSources(t1, t2) = 
