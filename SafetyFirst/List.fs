@@ -1436,7 +1436,7 @@ module NonEmpty =
   /// Splits a list at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
   /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  /// the list preceeding the split.
+  /// the list preceding the split.
   /// For example:
   /// <code>
   /// split ((=) 100) (NonEmpty.assume [1;2;3;100;100;4;100;5;6])
