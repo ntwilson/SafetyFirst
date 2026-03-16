@@ -1,5 +1,7 @@
 module SafetyFirst.Specs.InfiniteSeqSpec
 
+#nowarn "44"
+
 open NUnit.Framework
 open Swensen.Unquote
 
@@ -54,11 +56,12 @@ let ``eagerly taking while some predicate does not hang`` () =
 
 [<Test>]
 let ``lazily taking while some predicate can return an infinite result and does not hang`` () =
+  let xs = illFormedList |> InfiniteSeq.takeWhileLazy (always true) |> Seq.toList
   test 
     <@
       wellFormedList |> InfiniteSeq.takeWhileLazy (always true) |> Seq.take 10 |> Seq.toList = ([0 .. 9] |> List.map Ok)
       &&
-      illFormedList |> InfiniteSeq.takeWhileLazy (always true) |> Seq.toList = [Error hung]
+      xs = [Error hung]
       &&
       wellFormedList |> InfiniteSeq.takeWhileLazy (fun i -> i < 10) |> Seq.toList = ([0 .. 9] |> List.map Ok)
     @>    
@@ -233,17 +236,96 @@ let ``zipping an infinite sequence with a finite sequence does not hang`` () =
     @>
 
 [<Test>]
-let ``scanning does not hang`` () = 
-  test 
+let ``scanning does not hang`` () =
+  test
     <@
       InfiniteSeq.scan (+) 1 wellFormedList |> take 6 = Ok [1; 1; 2; 4; 7; 11]
       &&
       InfiniteSeq.scan (+) 1 illFormedList |> take 6 |> Result.isError
     @>
 
+[<Test>]
+let ``initUnbounded creates an infinite sequence without a max elements guard`` () =
+  let xs = InfiniteSeq.initUnbounded id
+  test <@ xs |> InfiniteSeq.take 5 |> Seq.toList = [0..4] @>
+
+[<Test>]
+let ``assume wraps an existing sequence as infinite`` () =
+  let xs = InfiniteSeq.assume (Seq.initInfinite id)
+  test <@ xs |> InfiniteSeq.take 5 |> Seq.toList = [0..4] @>
+
+[<Test>]
+let ``append prepends a finite sequence to an infinite sequence`` () =
+  test
+    <@
+      InfiniteSeq.append [10; 20; 30] wellFormedList |> InfiniteSeq.take 5 |> Seq.toList = [10; 20; 30; 0; 1]
+      &&
+      InfiniteSeq.append [10; 20; 30] illFormedList |> take 4 |> Result.isError
+    @>
+
+[<Test>]
+let ``item returns the element at a given index`` () =
+  test <@ wellFormedList |> InfiniteSeq.item (NaturalInt.assume 42) = 42 @>
+
+[<Test>]
+let ``take returns the first N elements`` () =
+  test <@ wellFormedList |> InfiniteSeq.take 5 |> Seq.toList = [0..4] @>
+
+[<Test>]
+let ``takeWhile returns elements while the predicate holds`` () =
+  test <@ wellFormedList |> InfiniteSeq.takeWhile (fun i -> i < 5) |> Seq.toList = [0..4] @>
+
+[<Test>]
+let ``head returns the first element`` () =
+  test <@ wellFormedList |> InfiniteSeq.head = 0 @>
+
+[<Test>]
+let ``uncons returns the head and tail of the sequence`` () =
+  let h, t = InfiniteSeq.uncons wellFormedList
+  test <@ h = 0 && take 3 t = Ok [1..3] @>
+
+[<Test>]
+let ``find returns the first element satisfying the predicate`` () =
+  test <@ InfiniteSeq.find ((=) 42) wellFormedList = 42 @>
+
+[<Test>]
+let ``chunksOf divides the sequence into fixed-size chunks`` () =
+  test
+    <@
+      wellFormedList |> InfiniteSeq.chunksOf (PositiveInt.assume 3) |> take 2
+        = Ok (List.map NonEmpty.assume [ [|0;1;2|]; [|3;4;5|] ])
+      &&
+      illFormedList |> InfiniteSeq.chunksOf (PositiveInt.assume 3) |> take 2 |> Result.isError
+    @>
+
+
+[<Test>]
+let ``item throws when the sequence hangs`` () =
+  raises<InfiniteSequenceEvaluationHung> <@ illFormedList |> InfiniteSeq.item (NaturalInt.assume 1) @>
+
+[<Test>]
+let ``take throws when the sequence hangs`` () =
+  raises<InfiniteSequenceEvaluationHung> <@ illFormedList |> InfiniteSeq.take 1 |> Seq.toList @>
+
+[<Test>]
+let ``takeWhile throws when the sequence hangs`` () =
+  raises<InfiniteSequenceEvaluationHung> <@ illFormedList |> InfiniteSeq.takeWhile (always true) |> Seq.toList @>
+
+[<Test>]
+let ``head throws when the sequence hangs`` () =
+  raises<InfiniteSequenceEvaluationHung> <@ illFormedList |> InfiniteSeq.head @>
+
+[<Test>]
+let ``uncons throws when the sequence hangs`` () =
+  raises<InfiniteSequenceEvaluationHung> <@ illFormedList |> InfiniteSeq.uncons @>
+
+[<Test>]
+let ``find throws when the sequence hangs`` () =
+  raises<InfiniteSequenceEvaluationHung> <@ InfiniteSeq.find ((=) -1) wellFormedList @>
+
 
 // [<Test>]
-// let ``splits infinite sequences without hanging`` () = 
+// let ``splits infinite sequences without hanging`` () =
 //   let alwaysFalse (_:int) = false
 //   test 
 //     <@
