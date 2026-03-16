@@ -1,5 +1,6 @@
 module SafetyFirst.Array
 
+open System.Collections.Generic
 open SafetyFirst.ErrorTypes
 open SafetyFirst.Numbers
 open SafetyFirst
@@ -696,6 +697,31 @@ let inline trySplitInto count xs = splitIntoSafe count xs |> Result.toOption
 let splitIntoN (PositiveInt count) xs : NonEmptyArray<_>[] = 
   Array.splitInto count xs
   |> Array.map NonEmpty
+
+/// <summary>
+/// Splits an array between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+/// For example:
+/// <code>
+/// splitPairwise (=) [|0;1;1;2;3;4;4;4;5|]
+///   //returns [|[|0;1|];[|1;2;3;4|];[|4|];[|4;5|]|]
+/// </code>
+/// </summary>
+let splitPairwise splitBetween (xs: array<_>) : array<NonEmptyArray<_>> =
+  [|
+    use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+    let mutable keepGoing = iter.MoveNext()
+    while keepGoing do
+      yield
+        NonEmpty [|
+          yield iter.Current
+          let mutable prevElement = iter.Current
+          keepGoing <- iter.MoveNext()
+          while keepGoing && not (splitBetween prevElement iter.Current) do
+            yield iter.Current
+            prevElement <- iter.Current
+            keepGoing <- iter.MoveNext()
+        |]
+  |]
 
 /// <summary>
 /// Slices an array given a starting index and a count of elements to return.
@@ -1439,14 +1465,14 @@ module NonEmpty =
   let inline tryZip3 xs ys zs = zip3Safe xs ys zs |> Result.toOption
 
   /// <summary>
-  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// Splits an array at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
   /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  /// the sequence preceeding the split.
+  /// the array preceding the split.
   /// For example:
   /// <code>
-  /// split ((=) 100) (FSeq.NonEmpty.create 1[2;3;100;100;4;100;5;6])
-  ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
+  /// split ((=) 100) (NonEmpty.assume [|1;2;3;100;100;4;100;5;6|])
+  ///   //returns ([|[|1;2;3;100|];[|100|];[|4;100|];[|5;6|]|])
   /// </code>
   /// </summary>
   let split splitAfter xs = 
@@ -1455,17 +1481,15 @@ module NonEmpty =
     |> FSeq.NonEmpty.toNonEmptyArray
 
   /// <summary>
-  /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+  /// Splits an array between each pair of adjacent elements that satisfy <c>splitBetween</c>.
   /// For example:
   /// <code>
-  /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
-  ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+  /// splitPairwise (=) (NonEmpty.assume [|0;1;1;2;3;4;4;4;5|])
+  ///   //returns ([|[|0;1|];[|1;2;3;4|];[|4|];[|4;5|]|])
   /// </code>
   /// </summary>
-  let splitPairwise splitBetween xs =
-    FSeq.NonEmpty.splitPairwise splitBetween (toNonEmptyFSeq xs)
-    |> FSeq.NonEmpty.map FSeq.NonEmpty.toNonEmptyArray
-    |> FSeq.NonEmpty.toNonEmptyArray
+  let splitPairwise splitBetween (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
+    NonEmpty (splitPairwise splitBetween xs)
 
   type ZipperExpression() = 
     member inline this.MergeSources(t1, t2) = 

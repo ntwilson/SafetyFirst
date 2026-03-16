@@ -549,9 +549,9 @@ module InfiniteSeq =
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
   /// For example:
   /// <code>
-  /// NonEmptySeq.splitPairwise (=) (seq { 0;1;1;2;3;4;4;4;5;...})
+  /// InfiniteSeq.splitPairwise (=) (seq { 0;1;1;2;3;4;4;4;5;...})
   ///   //returns seq { [0;1];[1;2;3;4];[4];[4;5];... }
   /// </code>
   /// </summary>
-  // let splitPairwise splitBetween (InfiniteSeq xs) =
-  //   InfiniteSeq (Seq.splitPairwise splitBetween xs)
+  let splitPairwise splitBetween (InfiniteSeq xs) =
+    InfiniteSeq (Seq.splitPairwise splitBetween xs)

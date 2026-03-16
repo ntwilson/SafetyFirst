@@ -323,6 +323,43 @@ let ``find throws when the sequence hangs`` () =
   raises<InfiniteSequenceEvaluationHung> <@ InfiniteSeq.find ((=) -1) wellFormedList @>
 
 
+[<Test>]
+let ``splitPairwise returns what the documentation says`` () =
+  let xs = InfiniteSeq.append [0;1;1;2;3;4;4;4;5;0] (InfiniteSeq.initBounded 100 id)
+  test
+    <@
+      InfiniteSeq.splitPairwise (=) xs |> InfiniteSeq.take 4 |> Seq.map Seq.toList |> Seq.toList
+        = [[0;1];[1;2;3;4];[4];[4;5;0]]
+    @>
+
+[<Test>]
+let ``splitPairwise inner segments can be infinite`` () =
+  let xs = InfiniteSeq.append [5;5] (InfiniteSeq.initBounded 100 id)
+  let secondSeg = InfiniteSeq.splitPairwise (=) xs |> InfiniteSeq.take 2 |> Seq.toList |> List.item 1
+  test <@ secondSeg |> Seq.truncate 4 |> Seq.toList = [5;0;1;2] @>
+
+[<Test>]
+let ``splitPairwise inner segments can be re-enumerated`` () =
+  let xs = InfiniteSeq.append [0;1;1;2] (InfiniteSeq.initBounded 100 id)
+  let firstSegment = InfiniteSeq.splitPairwise (=) xs |> InfiniteSeq.take 1 |> Seq.head
+  test
+    <@
+      Seq.toList firstSegment = [0;1]
+      && Seq.toList firstSegment = [0;1]
+    @>
+
+[<Test>]
+let ``splitPairwise inner segments can be consumed out of order`` () =
+  let xs = InfiniteSeq.append [0;1;1;2;3;4;4;4;5;0] (InfiniteSeq.initBounded 100 id)
+  let segments = InfiniteSeq.splitPairwise (=) xs |> InfiniteSeq.take 4 |> Seq.toArray
+  test
+    <@
+      Seq.toList segments.[2] = [4]
+      && Seq.toList segments.[0] = [0;1]
+      && Seq.toList segments.[3] = [4;5;0]
+      && Seq.toList segments.[1] = [1;2;3;4]
+    @>
+
 // [<Test>]
 // let ``splits infinite sequences without hanging`` () =
 //   let alwaysFalse (_:int) = false
