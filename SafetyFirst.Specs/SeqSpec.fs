@@ -182,7 +182,25 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutputForSeq2ExceptNonEmpty  Seq.chunkBySize'  Seq.chunkBySize
   alwaysProduceSameOutputForSeq2ExceptNonEmpty  Seq.windowed'     Seq.windowed
 
-module Splitting = 
+[<Test>]
+let ``isHungAfter allows elements below the limit`` () =
+  test <@ Seq.initInfinite id |> Seq.isHungAfter 10 |> Seq.take 10 |> Seq.toList = [0..9] @>
+
+[<Test>]
+let ``isHungAfter throws when the limit is exceeded`` () =
+  raises<InfiniteSequenceEvaluationHung>
+    <@ Seq.initInfinite id |> Seq.isHungAfter 10 |> Seq.take 11 |> Seq.toList @>
+
+[<Test>]
+let ``isHungAfter works with finite sequences that stay within the limit`` () =
+  test <@ [1..5] |> Seq.isHungAfter 10 |> Seq.toList = [1..5] @>
+
+[<Test>]
+let ``isHungAfter throws for finite sequences that exceed the limit`` () =
+  raises<InfiniteSequenceEvaluationHung>
+    <@ [1..11] |> Seq.isHungAfter 10 |> Seq.toList @>
+
+module Splitting =
   let ofNonEmpty (xs:seq<#seq<_>>) = 
     Seq.toList <| Seq.map Seq.toList xs
 
