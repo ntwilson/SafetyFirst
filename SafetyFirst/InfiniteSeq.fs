@@ -41,7 +41,7 @@ module InfiniteSeq =
 
   let private toLazyResults (xs: _ seq) = 
     seq {
-      let mutable iter = xs.GetEnumerator()
+      use mutable iter = xs.GetEnumerator()
       let mutable keepGoing = true
       while keepGoing do
         let nextElement = 
@@ -111,7 +111,7 @@ module InfiniteSeq =
   /// the sequence produced that many elements.
   /// </summary>
   [<CompilerMessage(message="not for use from F# - Intended to be used from C# only", messageNumber=17333, IsHidden=true)>]
-  [<Obsolete("Use init instead.")>]
+  [<Obsolete("Use Seq.isHungAfter instead of the InfiniteSeq module.")>]
   let Init maxElements transform = 
     InfiniteSeq (Seq.initInfinite transform |> Seq.isHungAfter maxElements)
 
@@ -133,7 +133,7 @@ module InfiniteSeq =
   /// any InfiniteSeq, this function is mostly for use with
   /// unbounded infinite sequences (created with <c>initUnbounded</c> or <c>assume</c>).
   /// For example, you might not know what a proper upper bound is until after you filter an infinite sequence.
-  /// If used an an already bounded InfiniteSeq, 
+  /// If used on an already bounded InfiniteSeq, 
   /// it will apply a new bound _on top of_ the existing bound, but will not override the existing one.
   /// So <c>InfiniteSeq.initBounded 100 |> InfiniteSeq.isHungAfter 500 |> InfiniteSeq.take 200</c> will throw an exception,
   /// as will <c>InfiniteSeq.initBounded 500 |> InfiniteSeq.isHungAfter 100 |> InfiniteSeq.take 200</c>
@@ -167,7 +167,7 @@ module InfiniteSeq =
 
   /// <summary>
   /// Computes the element at the specified index in the collection.
-  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
   /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use item instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
@@ -201,7 +201,7 @@ module InfiniteSeq =
 
   /// <summary>
   /// Returns the first N elements of the sequence. Note that this will happen eagerly to check for a hang. 
-  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
   /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use take instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
@@ -310,7 +310,8 @@ module InfiniteSeq =
 
   /// <summary>
   /// Returns the first element of the sequence.
-  /// Throws an exception if the sequence hung (produced too many elements).
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
   /// </summary>
   let head (InfiniteSeq xs) = Seq.head xs
 
@@ -339,7 +340,8 @@ module InfiniteSeq =
 
   /// <summary>
   /// Returns tuple of head element and tail of the sequence.
-  /// Throws an exception if the sequence hung (produced too many elements).
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
   /// </summary>
   let uncons xs = head xs, tail xs
 
@@ -388,11 +390,12 @@ module InfiniteSeq =
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Throws an exception if the infinite sequence hung
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let map2L f (InfiniteSeq xs) (ys: _ fseq) =
@@ -400,22 +403,24 @@ module InfiniteSeq =
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Throws an exception if the infinite sequence hung
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryMap2L f xs ys = map2L f xs ys |> Result.toOption
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Throws an exception if the infinite sequence hung
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let map2R f (xs: _ fseq) (InfiniteSeq ys) =
@@ -423,11 +428,12 @@ module InfiniteSeq =
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Throws an exception if the infinite sequence hung
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryMap2R f xs ys = map2R f xs ys |> Result.toOption
@@ -440,14 +446,15 @@ module InfiniteSeq =
   
   /// <summary>
   /// Searches the sequence until an element matching the predicate is found.
-  /// Throws an exception if the infinite sequence hung while trying to find a matching element.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
   /// </summary>
   let find predicate (InfiniteSeq xs) = Seq.find predicate xs
 
   /// <summary>
   /// Searches the sequence until an element matching the predicate is found.
-  /// Throws an exception if the infinite sequence hung
-  /// while trying to find a matching element.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<CompiledName("findSafe_F#")>]
   [<Obsolete("Use find instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
@@ -455,8 +462,8 @@ module InfiniteSeq =
 
   /// <summary>
   /// Searches the sequence until an element matching the predicate is found.
-  /// Throws an exception if the infinite sequence hung
-  /// while trying to find a matching element.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use find instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryFind predicate xs = find' predicate xs |> Result.toOption
@@ -471,8 +478,8 @@ module InfiniteSeq =
   /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
   /// of the infinite sequence that aren't needed are left lazy).
-  /// Throws an exception if the infinite sequence hung while trying
-  /// to produce as many elements as the finite sequence.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let zipL (InfiniteSeq xs) (ys: _ fseq) =
@@ -483,8 +490,8 @@ module InfiniteSeq =
   /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
   /// of the infinite sequence that aren't needed are left lazy).
-  /// Throws an exception if the infinite sequence hung while trying
-  /// to produce as many elements as the finite sequence.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let tryZipL xs ys = zipL xs ys |> Result.toOption
@@ -494,8 +501,8 @@ module InfiniteSeq =
   /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
   /// of the infinite sequence that aren't needed are left lazy).
-  /// Throws an exception if the infinite sequence hung while trying
-  /// to produce as many elements as the finite sequence.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let zipR (xs: _ fseq) (InfiniteSeq ys) =
@@ -506,8 +513,8 @@ module InfiniteSeq =
   /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
   /// of the infinite sequence that aren't needed are left lazy).
-  /// Throws an exception if the infinite sequence hung while trying
-  /// to produce as many elements as the finite sequence.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryZipR xs ys = zipR xs ys |> Result.toOption

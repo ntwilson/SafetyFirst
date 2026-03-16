@@ -56,12 +56,11 @@ let ``eagerly taking while some predicate does not hang`` () =
 
 [<Test>]
 let ``lazily taking while some predicate can return an infinite result and does not hang`` () =
-  let xs = illFormedList |> InfiniteSeq.takeWhileLazy (always true) |> Seq.toList
   test 
     <@
       wellFormedList |> InfiniteSeq.takeWhileLazy (always true) |> Seq.take 10 |> Seq.toList = ([0 .. 9] |> List.map Ok)
       &&
-      xs = [Error hung]
+      illFormedList |> InfiniteSeq.takeWhileLazy (always true) |> Seq.toList = [Error hung]
       &&
       wellFormedList |> InfiniteSeq.takeWhileLazy (fun i -> i < 10) |> Seq.toList = ([0 .. 9] |> List.map Ok)
     @>    
