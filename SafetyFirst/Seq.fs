@@ -201,7 +201,14 @@ let isHungAfter maxElements xs =
   seq {
     for i, x in Seq.indexed xs ->
       if i < maxElements then x
-      else raise (InfiniteSequenceEvaluationHung (sprintf "Program execution is considered to have hung, since this sequence produced more than %i elements." maxElements))
+      else 
+        let message = 
+          if maxElements < 0 then
+            (sprintf "Program execution is considered to have hung, since this sequence produced more than 0 elements (maxElements set to %i)." maxElements)
+          else 
+            (sprintf "Program execution is considered to have hung, since this sequence produced more than %i elements." maxElements)
+
+        raise (InfiniteSequenceEvaluationHung message)
   }
 
 /// <summary>
