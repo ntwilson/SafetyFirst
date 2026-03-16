@@ -1,3 +1,9 @@
+# Version 5.4.0
+
+## New features:
+
+- Adds a `splitPairwise` function for the List/Array/Seq/FSeq modules.
+
 # Version 5.3.0
 
 ## New features:

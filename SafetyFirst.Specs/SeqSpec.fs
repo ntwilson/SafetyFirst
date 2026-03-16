@@ -183,7 +183,7 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutputForSeq2ExceptNonEmpty  Seq.windowed'     Seq.windowed
 
 module Splitting = 
-  let ofNonEmpty (xs:seq<#seq<_>>) = 
+  let toLists (xs:seq<#seq<_>>) = 
     Seq.toList <| Seq.map Seq.toList xs
 
   [<Test>]
@@ -191,30 +191,74 @@ module Splitting =
 
     test 
       <@
-        (Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1 [2;3;100;100;4;100;5;6]) |> ofNonEmpty)
+        (Seq.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> toLists)
+          = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
+
+    test 
+      <@
+        (Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1 [2;3;100;100;4;100;5;6]) |> toLists)
           = [[1;2;3;100];[100];[4;100];[5;6]]
 
         &&
 
-        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1;1;2;3;4;4;4;5]) |> ofNonEmpty)
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1;1;2;3;4;4;4;5]) |> toLists)
           = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
+
+  [<Test>]
+  let ``works with infinite lists`` () =
+    let infinite = Seq.append [0;1;1;2;3;4;4;4;5;0] (Seq.initInfinite id)
+    let neInfinite = NonEmpty.assume infinite
+    test 
+      <@
+        (Seq.splitPairwise (=) infinite |> Seq.truncate 4 |> toLists)
+          = [[0;1];[1;2;3;4];[4];[4;5;0]]
+      @>
+
+    test 
+      <@
+        (Seq.NonEmpty.splitPairwise (=) neInfinite |> Seq.truncate 4 |> toLists)
+          = [[0;1];[1;2;3;4];[4];[4;5;0]]
+      @>
+
+
+  [<Test>]
+  let ``inner segments can be infinite`` () =
+    // [5; 5; 0; 1; 2; 3; ...]: one split at (5,5), then an infinite segment [5; 0; 1; 2; 3; ...]
+    // with no equal adjacent pairs, so it never splits again
+    let infinite = Seq.collect id [ seq [5; 5]; (Seq.initInfinite id |> Seq.truncate 3000); seq { yield failwith "evaluation hung" } ]
+    let neInfinite = NonEmpty.assume infinite
+
+    test <@ (Seq.splitPairwise (=) infinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
+    test <@ (Seq.NonEmpty.splitPairwise (=) neInfinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
+
+  [<Test>]
+  let ``splits empty and single element sequences`` () =
+    test 
+      <@
+        (Seq.splitPairwise (=) Seq.empty |> toLists) = []
+        &&
+        (Seq.splitPairwise (=) (Seq.singleton 0) |> toLists) = [[0]]
+        &&
+        (Seq.splitPairwise (=) [5; 5] |> toLists) = [[5]; [5]]
       @>
   
   [<Test>]
   let ``splits properly for multiple types of inputs`` () = 
     test 
       <@
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 0) |> ofNonEmpty) = [[0]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 0) |> toLists) = [[0]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 5) |> ofNonEmpty) = [[5]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 5) |> toLists) = [[5]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 0 [5]) |> ofNonEmpty) = [[0; 5]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 0 [5]) |> toLists) = [[0; 5]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [5]) |> ofNonEmpty) = [[5]; [5]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [5]) |> toLists) = [[5]; [5]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [0]) |> ofNonEmpty) = [[5]; [0]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [0]) |> toLists) = [[5]; [0]]
         &&
-        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
+        (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [0;0;5;5;0;5]) |> toLists) = [[5]; [0;0;5]; [5]; [0;5]]
       @>
 
   [<Test>]
@@ -222,17 +266,61 @@ module Splitting =
     let bigDiff i j = abs (i - j) > 5
     test 
       <@
-        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.singleton 0) |> ofNonEmpty) = [[0]]
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.singleton 0) |> toLists) = [[0]]
         &&
-        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1]) |> ofNonEmpty) = [[0;1]]
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1]) |> toLists) = [[0;1]]
         &&
-        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [0]) |> ofNonEmpty) = [[0]; [0]]
+        (Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [0]) |> toLists) = [[0]; [0]]
         &&
-        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1 [2;12;13;23;24]) |> ofNonEmpty)
+        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1 [2;12;13;23;24]) |> toLists)
           = [[1;2]; [12;13]; [23;24]]
         &&
-        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1 [2;12;13;23]) |> ofNonEmpty)
+        (Seq.NonEmpty.splitPairwise (bigDiff) (Seq.NonEmpty.create 1 [2;12;13;23]) |> toLists)
           = [[1;2]; [12;13]; [23]]
+      @>
+
+  [<Test>]
+  let ``inner segments remain valid after outer sequence is fully materialized`` () =
+    let segments = Seq.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> Seq.toList
+    test <@ segments |> List.map Seq.toList = [[0;1];[1;2;3;4];[4];[4;5]] @>
+
+    let neSegments = Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1;1;2;3;4;4;4;5]) |> Seq.toList
+    test <@ neSegments |> List.map Seq.toList = [[0;1];[1;2;3;4];[4];[4;5]] @>
+
+  [<Test>]
+  let ``inner segments can be re-enumerated`` () =
+    let firstSegment = Seq.splitPairwise (=) [0;1;1;2] |> Seq.toList |> List.head
+    test
+      <@
+        Seq.toList firstSegment = [0;1]
+        && Seq.toList firstSegment = [0;1]
+      @>
+
+    let neFirstSegment = Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1;1;2]) |> Seq.toList |> List.head
+    test
+      <@
+        Seq.toList neFirstSegment = [0;1]
+        && Seq.toList neFirstSegment = [0;1]
+      @>
+
+  [<Test>]
+  let ``inner segments can be consumed out of order`` () =
+    let segments = Seq.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> Seq.toArray
+    test
+      <@
+        Seq.toList segments.[2] = [4]
+        && Seq.toList segments.[0] = [0;1]
+        && Seq.toList segments.[3] = [4;5]
+        && Seq.toList segments.[1] = [1;2;3;4]
+      @>
+
+    let neSegments = Seq.NonEmpty.splitPairwise (=) (Seq.NonEmpty.create 0 [1;1;2;3;4;4;4;5]) |> Seq.toArray
+    test
+      <@
+        Seq.toList neSegments.[2] = [4]
+        && Seq.toList neSegments.[0] = [0;1]
+        && Seq.toList neSegments.[3] = [4;5]
+        && Seq.toList neSegments.[1] = [1;2;3;4]
       @>
 
 [<Test>]

@@ -493,6 +493,40 @@ let inline trySplitInto count xs = splitIntoSafe count xs |> Result.toOption
 let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
 
 /// <summary>
+/// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
+/// For example:
+/// <code>
+/// splitPairwise (=) [0;1;1;2;3;4;4;4;5]
+///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
+/// </code>
+/// Both the outer sequence and each inner segment are lazy.
+/// Inner segments are safe to re-enumerate and consume in any order.
+/// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
+/// segments, due to re-traversal of the lazy chain at each level. If the source sequence
+/// is expensive to evaluate, cache it with Seq.cache before calling this function.
+/// If the source sequence is finite, you can achieve better performance by converting it to 
+/// a list or array first and using <c>List.splitPairwise</c> or <c>Array.splitPairwise</c> instead.
+/// </summary>
+let splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
+  let rec generate (remaining: _ seq) =
+    seq {
+      match remaining with
+      | Empty -> ()
+      | NotEmpty _ ->
+        let pairs = Seq.pairwise remaining
+        yield NonEmpty <|
+          seq {
+            match Seq.tryHead pairs with
+            | None -> yield Seq.head remaining
+            | Some (first, _) ->
+              yield first
+              yield! pairs |> Seq.takeWhile (fun (a, b) -> not (splitBetween a b)) |> Seq.map snd
+          }
+        yield! generate (pairs |> Seq.skipWhile (fun (a, b) -> not (splitBetween a b)) |> Seq.map snd)
+    }
+  generate xs
+
+/// <summary>
 /// Returns a sequence that skips 1 element of the underlying sequence and then yields the
 /// remaining elements of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
@@ -888,47 +922,16 @@ module NonEmpty =
   /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
+  /// Both the outer sequence and each inner segment are lazy.
+  /// Inner segments are safe to re-enumerate and consume in any order.
+  /// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
+  /// segments, due to re-traversal of the lazy chain at each level. If the source sequence
+  /// is expensive to evaluate, cache it with Seq.cache before calling this function.
+  /// If the source sequence is finite, you can achieve better performance by converting it to 
+  /// a list or array first and using <c>List.splitPairwise</c> or <c>Array.splitPairwise</c> instead.
   /// </summary>
-  let rec splitPairwise splitBetween xs : NonEmptySeq<_> =
-    let (++) (NonEmpty xs) ys = NonEmpty <| Seq.append xs ys
-
-    let takeGroup input : NonEmptySeq<_> =
-      let rec takeGroup' previousElement input =  
-        seq { 
-          match input with
-          | SeqOneOrMore (head, tail) ->
-            if not <| splitBetween previousElement head 
-            then 
-              yield head
-              yield! takeGroup' head tail
-          | _ -> ()
-        }
-
-      let head, tail = uncons input
-      singleton head ++ takeGroup' head tail 
-
-    let rec skipGroup input =
-      let firstElement, tail = uncons input
-      match tail with
-      | Empty -> Seq.empty
-      | NotEmpty tail ->
-        let secondElement = head tail
-        if splitBetween firstElement secondElement 
-        then seq tail
-        else skipGroup tail
-
-    let rec splitPairwise' xs = 
-      NonEmpty (
-        seq { 
-          yield takeGroup xs
-
-          match skipGroup xs with
-          | Empty -> ()
-          | NotEmpty elements -> yield! splitPairwise' elements
-        }
-      )
-
-    splitPairwise' (NonEmpty <| toSeq xs)    
+  let splitPairwise splitBetween (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> =
+    NonEmpty <| splitPairwise splitBetween xs
 
   type ZipperExpression() = 
     member inline this.MergeSources(t1, t2) = 

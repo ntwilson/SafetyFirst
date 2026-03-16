@@ -124,3 +124,93 @@ let ``zips multiple lists together via computation expression`` () =
     }
 
   test <@ result = NonEmpty.assume [11;23;35;47;59] @>
+
+
+module Splitting = 
+  let toLists xs = Seq.map List.NonEmpty.toList xs |> List.ofSeq
+
+  [<Test>]
+
+  let ``returns what the documentation says`` () =
+
+    test 
+      <@
+        (List.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> toLists)
+          = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
+
+    test 
+      <@
+        (List.NonEmpty.split ((=) 100) (List.NonEmpty.create 1 [2;3;100;100;4;100;5;6]) |> toLists)
+          = [[1;2;3;100];[100];[4;100];[5;6]]
+
+        &&
+
+        (List.NonEmpty.splitPairwise (=) (List.NonEmpty.create 0 [1;1;2;3;4;4;4;5]) |> toLists)
+          = [[0;1];[1;2;3;4];[4];[4;5]]
+      @>
+
+
+  [<Test>]
+  let ``splits empty and single element sequences`` () = 
+    test 
+      <@
+        (List.splitPairwise (=) [] |> toLists) = []
+        &&
+        (List.splitPairwise (=) [0] |> toLists) = [[0]]
+        &&
+        (List.splitPairwise (=) [5; 5] |> toLists) = [[5]; [5]]
+      @>
+  
+  [<Test>]
+  let ``splits properly for multiple types of inputs`` () = 
+    test 
+      <@
+        (List.NonEmpty.split ((=) 5) (List.NonEmpty.singleton 0) |> toLists) = [[0]]
+        &&
+        (List.NonEmpty.split ((=) 5) (List.NonEmpty.singleton 5) |> toLists) = [[5]]
+        &&
+        (List.NonEmpty.split ((=) 5) (List.NonEmpty.create 0 [5]) |> toLists) = [[0; 5]]
+        &&
+        (List.NonEmpty.split ((=) 5) (List.NonEmpty.create 5 [5]) |> toLists) = [[5]; [5]]
+        &&
+        (List.NonEmpty.split ((=) 5) (List.NonEmpty.create 5 [0]) |> toLists) = [[5]; [0]]
+        &&
+        (List.NonEmpty.split ((=) 5) (List.NonEmpty.create 5 [0;0;5;5;0;5]) |> toLists) = [[5]; [0;0;5]; [5]; [0;5]]
+      @>
+
+  [<Test>]
+  let ``splits pairwise properly for multiple types of inputs`` () = 
+    let bigDiff i j = abs (i - j) > 5
+    test 
+      <@
+        (List.NonEmpty.splitPairwise (=) (List.NonEmpty.singleton 0) |> toLists) = [[0]]
+        &&
+        (List.NonEmpty.splitPairwise (=) (List.NonEmpty.create 0 [1]) |> toLists) = [[0;1]]
+        &&
+        (List.NonEmpty.splitPairwise (=) (List.NonEmpty.create 0 [0]) |> toLists) = [[0]; [0]]
+        &&
+        (List.NonEmpty.splitPairwise (bigDiff) (List.NonEmpty.create 1 [2;12;13;23;24]) |> toLists)
+          = [[1;2]; [12;13]; [23;24]]
+        &&
+        (List.NonEmpty.splitPairwise (bigDiff) (List.NonEmpty.create 1 [2;12;13;23]) |> toLists)
+          = [[1;2]; [12;13]; [23]]
+      @>
+
+  [<Test>]
+  let ``splitPairwise passes (previousElement, currentElement) to predicate`` () =
+    // Because the list gets reversed, the logic around the order of arguments to the predicate is a little tricky.
+    // A non-commutative predicate will produce wrong results if the arguments are flipped.
+    let splitOnDescent (a: int) (b: int) = a > b  // split wherever the sequence descends
+    test
+      <@
+        (List.splitPairwise splitOnDescent [1;3;5;2;4] |> toLists) = [[1;3;5]; [2;4]]
+        &&
+        (List.splitPairwise splitOnDescent [5;3;1;2;4] |> toLists) = [[5]; [3]; [1;2;4]]
+        &&
+        (List.NonEmpty.splitPairwise splitOnDescent (List.NonEmpty.create 1 [3;5;2;4]) |> toLists)
+          = [[1;3;5]; [2;4]]
+        &&
+        (List.NonEmpty.splitPairwise splitOnDescent (List.NonEmpty.create 5 [3;1;2;4]) |> toLists)
+          = [[5]; [3]; [1;2;4]]
+      @>
