@@ -262,7 +262,7 @@ module SkipUntilIncluding =
     test <@ Seq.initInfinite id |> Seq.skipUntilIncluding ((=) 3) |> Seq.take 4 |> Seq.toList = [4;5;6;7] @>
 
   [<Test>]
-  let ``takeWhileIncluding and skipWhileIncluding partition the sequence`` () =
+  let ``takeWhileIncluding and skipUntilIncluding partition the sequence`` () =
     let xs = [1;2;3;4;5]
     let taken = Seq.takeWhileIncluding ((=) 3) xs |> Seq.toList
     let skipped = Seq.skipUntilIncluding ((=) 3) xs |> Seq.toList
