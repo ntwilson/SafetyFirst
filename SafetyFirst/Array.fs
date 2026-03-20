@@ -840,10 +840,12 @@ let inline tryTake count xs = takeSafe count xs |> Result.toOption
 
 /// <summary>
 /// Returns the array through the first element for which the given function returns True.
-/// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+/// Like <c>takeWhile</c>, but with an inverted predicate and 
+/// also includes the element for which the predicate first returns True.
+/// Like <c>find</c>, but returns the array of intermediary result through the found element.
 /// If the array is exhausted without finding a matching element, the entire array is returned.
 /// </summary>
-let takeWhileIncluding predicate (xs: _ array) =
+let takeUntilIncluding predicate (xs: _ array) =
   match Array.tryFindIndex predicate xs with
   | None -> xs
   | Some i -> xs.[..i]
@@ -1534,12 +1536,13 @@ module NonEmpty =
 
   /// <summary>
   /// Returns the array through the first element for which the given function returns True.
-  /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
-  /// Like <c>find</c>, but computes on-demand and returns the array of intermediary result through the found element.
+  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// also includes the element for which the predicate first returns True.
+  /// Like <c>find</c>, but returns the array of intermediary result through the found element.
   /// If the array is exhausted without finding a matching element, the entire array is returned.
   /// </summary>
-  let takeWhileIncluding predicate (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> =
-    NonEmpty (takeWhileIncluding predicate xs)
+  let takeUntilIncluding predicate (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> =
+    NonEmpty (takeUntilIncluding predicate xs)
 
   type ZipperExpression() =
     member inline this.MergeSources(t1, t2) = 

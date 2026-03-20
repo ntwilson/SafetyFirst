@@ -840,10 +840,12 @@ module FiniteSeq =
 
   /// <summary>
   /// Returns the sequence through the first element for which the given function returns True.
-  /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// also includes the element for which the predicate first returns True.
+  /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
   /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
   /// </summary>
-  let takeWhileIncluding predicate (xs: FiniteSeq<_>) : FiniteSeq<_> =
+  let takeUntilIncluding predicate (xs: FiniteSeq<_>) : FiniteSeq<_> =
     fseq <| seq {
       use e = (xs :> IEnumerable<_>).GetEnumerator()
       let mutable continueLoop = true
@@ -1729,10 +1731,12 @@ module FSeq =
 
   /// <summary>
   /// Returns the sequence through the first element for which the given function returns True.
-  /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// also includes the element for which the predicate first returns True.
+  /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
   /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
   /// </summary>
-  let inline takeWhileIncluding predicate (xs : _ fseq) : _ fseq = FiniteSeq.takeWhileIncluding predicate xs
+  let inline takeUntilIncluding predicate (xs : _ fseq) : _ fseq = FiniteSeq.takeUntilIncluding predicate xs
 
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
@@ -2455,12 +2459,13 @@ module FSeq =
 
     /// <summary>
     /// Returns the sequence through the first element for which the given function returns True.
-    /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+    /// Like <c>takeWhile</c>, but with an inverted predicate and 
+    /// also includes the element for which the predicate first returns True.
     /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
     /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
     /// </summary>
-    let takeWhileIncluding predicate (NonEmpty xs : NonEmptyFSeq<_>) : NonEmptyFSeq<_> =
-      NonEmpty (FiniteSeq.takeWhileIncluding predicate xs)
+    let takeUntilIncluding predicate (NonEmpty xs : NonEmptyFSeq<_>) : NonEmptyFSeq<_> =
+      NonEmpty (FiniteSeq.takeUntilIncluding predicate xs)
 
     type ZipperExpression() =
       member inline this.MergeSources(t1, t2) = 

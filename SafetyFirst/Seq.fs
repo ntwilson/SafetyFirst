@@ -532,11 +532,12 @@ let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
 
 /// <summary>
 /// Returns the sequence through the first element for which the given function returns True.
-/// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+/// Like <c>takeWhile</c>, but with an inverted predicate and 
+/// also includes the element for which the predicate first returns True.
 /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
 /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
 /// </summary>
-let takeWhileIncluding predicate (xs: _ seq) =
+let takeUntilIncluding predicate (xs: _ seq) =
   seq {
     use e = xs.GetEnumerator()
     let mutable continueLoop = true
@@ -567,7 +568,7 @@ let takeWhileIncluding predicate (xs: _ seq) =
 /// </summary>
 let split splitAfter xs : seq<NonEmptySeq<_>> =
   let takeGroup (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> = 
-    NonEmpty <| takeWhileIncluding splitAfter xs
+    NonEmpty <| takeUntilIncluding splitAfter xs
 
   let rec split' xs =
     seq {
@@ -909,11 +910,12 @@ module NonEmpty =
 
   /// <summary>
   /// Returns the sequence through the first element for which the given function returns True.
-  /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
-  /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element. 
+  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// also includes the element for which the predicate first returns True.
+  /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
   /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
   /// </summary>
-  let takeWhileIncluding predicate (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (takeWhileIncluding predicate xs)
+  let takeUntilIncluding predicate (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (takeUntilIncluding predicate xs)
 
   /// <summary>
   /// Builds an array from the given collection.

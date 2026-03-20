@@ -261,39 +261,39 @@ module Splitting =
       @>
 
   [<Test>]
-  let ``NonEmpty.takeWhileIncluding returns through the first matching element`` () =
+  let ``NonEmpty.takeUntilIncluding returns through the first matching element`` () =
     test
       <@
-        List.NonEmpty.takeWhileIncluding ((=) 3) (List.NonEmpty.create 1 [2;3;4;5])
+        List.NonEmpty.takeUntilIncluding ((=) 3) (List.NonEmpty.create 1 [2;3;4;5])
           = List.NonEmpty.create 1 [2;3]
         &&
-        List.NonEmpty.takeWhileIncluding ((=) 1) (List.NonEmpty.create 1 [2;3;4;5])
+        List.NonEmpty.takeUntilIncluding ((=) 1) (List.NonEmpty.create 1 [2;3;4;5])
           = List.NonEmpty.singleton 1
         &&
-        List.NonEmpty.takeWhileIncluding ((=) 99) (List.NonEmpty.create 1 [2;3])
+        List.NonEmpty.takeUntilIncluding ((=) 99) (List.NonEmpty.create 1 [2;3])
           = List.NonEmpty.create 1 [2;3]
       @>
 
-module TakeWhileIncluding =
+module takeUntilIncluding =
   [<Test>]
   let ``returns empty for empty input`` () =
-    test <@ List.takeWhileIncluding (fun _ -> true) [] = [] @>
+    test <@ List.takeUntilIncluding (fun _ -> true) [] = [] @>
 
   [<Test>]
   let ``returns through the first matching element`` () =
-    test <@ List.takeWhileIncluding ((=) 3) [1;2;3;4;5] = [1;2;3] @>
+    test <@ List.takeUntilIncluding ((=) 3) [1;2;3;4;5] = [1;2;3] @>
 
   [<Test>]
   let ``returns only the first element when it matches`` () =
-    test <@ List.takeWhileIncluding ((=) 3) [3;4;5] = [3] @>
+    test <@ List.takeUntilIncluding ((=) 3) [3;4;5] = [3] @>
 
   [<Test>]
   let ``stops at the first match even when multiple elements match`` () =
-    test <@ List.takeWhileIncluding ((=) 3) [1;3;3;3] = [1;3] @>
+    test <@ List.takeUntilIncluding ((=) 3) [1;3;3;3] = [1;3] @>
 
   [<Test>]
   let ``returns the full list when no element matches`` () =
-    test <@ List.takeWhileIncluding ((=) 99) [1;2;3] = [1;2;3] @>
+    test <@ List.takeUntilIncluding ((=) 99) [1;2;3] = [1;2;3] @>
 
 module SkipUntilIncluding =
   [<Test>]
@@ -321,8 +321,8 @@ module SkipUntilIncluding =
     test <@ List.skipUntilIncluding ((=) 99) [1;2;3] = [] @>
 
   [<Test>]
-  let ``takeWhileIncluding and skipUntilIncluding partition the list`` () =
+  let ``takeUntilIncluding and skipUntilIncluding partition the list`` () =
     let xs = [1;2;3;4;5]
-    let taken = List.takeWhileIncluding ((=) 3) xs
+    let taken = List.takeUntilIncluding ((=) 3) xs
     let skipped = List.skipUntilIncluding ((=) 3) xs
     test <@ taken @ skipped = xs @>

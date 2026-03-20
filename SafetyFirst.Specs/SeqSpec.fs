@@ -200,36 +200,36 @@ let ``isHungAfter throws for finite sequences that exceed the limit`` () =
   raises<InfiniteSequenceEvaluationHung>
     <@ [1..11] |> Seq.isHungAfter 10 |> Seq.toList @>
 
-module TakeWhileIncluding = 
+module takeUntilIncluding = 
   [<Test>]
   let ``returns empty for empty input`` () =
-    test <@ Seq.takeWhileIncluding (fun _ -> true) Seq.empty |> Seq.toList = [] @>
+    test <@ Seq.takeUntilIncluding (fun _ -> true) Seq.empty |> Seq.toList = [] @>
 
   [<Test>]
   let ``returns through the first matching element`` () =
-    test <@ Seq.takeWhileIncluding ((=) 3) [1;2;3;4;5] |> Seq.toList = [1;2;3] @>
+    test <@ Seq.takeUntilIncluding ((=) 3) [1;2;3;4;5] |> Seq.toList = [1;2;3] @>
 
   [<Test>]
   let ``returns only the first element when it matches`` () =
-    test <@ Seq.takeWhileIncluding ((=) 3) [3;4;5] |> Seq.toList = [3] @>
+    test <@ Seq.takeUntilIncluding ((=) 3) [3;4;5] |> Seq.toList = [3] @>
 
   [<Test>]
   let ``stops at the first match even when multiple elements match`` () =
-    test <@ Seq.takeWhileIncluding ((=) 3) [1;3;3;3] |> Seq.toList = [1;3] @>
+    test <@ Seq.takeUntilIncluding ((=) 3) [1;3;3;3] |> Seq.toList = [1;3] @>
 
   [<Test>]
   let ``returns the full sequence when no element matches`` () =
-    test <@ Seq.takeWhileIncluding ((=) 99) [1;2;3] |> Seq.toList = [1;2;3] @>
+    test <@ Seq.takeUntilIncluding ((=) 99) [1;2;3] |> Seq.toList = [1;2;3] @>
 
   [<Test>]
   let ``works with infinite sequences`` () =
     // stops after finding the matching element rather than diverging
-    test <@ Seq.initInfinite id |> Seq.takeWhileIncluding ((=) 3) |> Seq.toList = [0;1;2;3] @>
+    test <@ Seq.initInfinite id |> Seq.takeUntilIncluding ((=) 3) |> Seq.toList = [0;1;2;3] @>
 
   [<Test>]
   let ``is lazy - does not evaluate past the matching element`` () =
     let splitInfinite: seq<_> = InfiniteSeq.initBounded 3000 id
-    test <@ splitInfinite |> Seq.takeWhileIncluding ((=) 3) |> Seq.toList = [0;1;2;3] @>
+    test <@ splitInfinite |> Seq.takeUntilIncluding ((=) 3) |> Seq.toList = [0;1;2;3] @>
 
 module SkipUntilIncluding =
   [<Test>]
@@ -262,9 +262,9 @@ module SkipUntilIncluding =
     test <@ Seq.initInfinite id |> Seq.skipUntilIncluding ((=) 3) |> Seq.take 4 |> Seq.toList = [4;5;6;7] @>
 
   [<Test>]
-  let ``takeWhileIncluding and skipUntilIncluding partition the sequence`` () =
+  let ``takeUntilIncluding and skipUntilIncluding partition the sequence`` () =
     let xs = [1;2;3;4;5]
-    let taken = Seq.takeWhileIncluding ((=) 3) xs |> Seq.toList
+    let taken = Seq.takeUntilIncluding ((=) 3) xs |> Seq.toList
     let skipped = Seq.skipUntilIncluding ((=) 3) xs |> Seq.toList
     test <@ taken @ skipped = xs @>
 

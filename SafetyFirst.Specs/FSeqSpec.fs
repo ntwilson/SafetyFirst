@@ -390,40 +390,40 @@ module Splitting =
         (FSeq.split ((=) 5) (fseq [5;0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
       @>
 
-module TakeWhileIncluding =
+module takeUntilIncluding =
   [<Test>]
-  let ``NonEmpty.takeWhileIncluding returns through the first matching element`` () =
+  let ``NonEmpty.takeUntilIncluding returns through the first matching element`` () =
     test
       <@
-        FSeq.NonEmpty.takeWhileIncluding ((=) 3) (Splitting.toNonEmpty [1;2;3;4;5])
+        FSeq.NonEmpty.takeUntilIncluding ((=) 3) (Splitting.toNonEmpty [1;2;3;4;5])
           = Splitting.toNonEmpty [1;2;3]
         &&
-        FSeq.NonEmpty.takeWhileIncluding ((=) 1) (Splitting.toNonEmpty [1;2;3;4;5])
+        FSeq.NonEmpty.takeUntilIncluding ((=) 1) (Splitting.toNonEmpty [1;2;3;4;5])
           = Splitting.toNonEmpty [1]
         &&
-        FSeq.NonEmpty.takeWhileIncluding ((=) 99) (Splitting.toNonEmpty [1;2;3])
+        FSeq.NonEmpty.takeUntilIncluding ((=) 99) (Splitting.toNonEmpty [1;2;3])
           = Splitting.toNonEmpty [1;2;3]
       @>
 
   [<Test>]
   let ``returns empty for empty input`` () =
-    test <@ FSeq.takeWhileIncluding (fun _ -> true) (fseq []) = fseq [] @>
+    test <@ FSeq.takeUntilIncluding (fun _ -> true) (fseq []) = fseq [] @>
 
   [<Test>]
   let ``returns through the first matching element`` () =
-    test <@ FSeq.takeWhileIncluding ((=) 3) (fseq [1;2;3;4;5]) = fseq [1;2;3] @>
+    test <@ FSeq.takeUntilIncluding ((=) 3) (fseq [1;2;3;4;5]) = fseq [1;2;3] @>
 
   [<Test>]
   let ``returns only the first element when it matches`` () =
-    test <@ FSeq.takeWhileIncluding ((=) 3) (fseq [3;4;5]) = fseq [3] @>
+    test <@ FSeq.takeUntilIncluding ((=) 3) (fseq [3;4;5]) = fseq [3] @>
 
   [<Test>]
   let ``stops at the first match even when multiple elements match`` () =
-    test <@ FSeq.takeWhileIncluding ((=) 3) (fseq [1;3;3;3]) = fseq [1;3] @>
+    test <@ FSeq.takeUntilIncluding ((=) 3) (fseq [1;3;3;3]) = fseq [1;3] @>
 
   [<Test>]
   let ``returns the full sequence when no element matches`` () =
-    test <@ FSeq.takeWhileIncluding ((=) 99) (fseq [1;2;3]) = fseq [1;2;3] @>
+    test <@ FSeq.takeUntilIncluding ((=) 99) (fseq [1;2;3]) = fseq [1;2;3] @>
 
 module SkipUntilIncluding =
   [<Test>]
@@ -451,9 +451,9 @@ module SkipUntilIncluding =
     test <@ FSeq.skipUntilIncluding ((=) 99) (fseq [1;2;3]) = fseq [] @>
 
   [<Test>]
-  let ``takeWhileIncluding and skipUntilIncluding partition the sequence`` () =
+  let ``takeUntilIncluding and skipUntilIncluding partition the sequence`` () =
     let xs = fseq [1;2;3;4;5]
-    let taken = FSeq.takeWhileIncluding ((=) 3) xs
+    let taken = FSeq.takeUntilIncluding ((=) 3) xs
     let skipped = FSeq.skipUntilIncluding ((=) 3) xs
     test <@ FSeq.append taken skipped = xs @>
 

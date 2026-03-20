@@ -226,40 +226,40 @@ module Splitting =
         (Array.split ((=) 5) [|5;0;0;5;5;0;5|] |> toArrs) = [|[|5|]; [|0;0;5|]; [|5|]; [|0;5|]|]
       @>
 
-module TakeWhileIncluding =
+module takeUntilIncluding =
   [<Test>]
-  let ``NonEmpty.takeWhileIncluding returns through the first matching element`` () =
+  let ``NonEmpty.takeUntilIncluding returns through the first matching element`` () =
     test
       <@
-        Array.NonEmpty.takeWhileIncluding ((=) 3) (Array.NonEmpty.create 1 [|2;3;4;5|])
+        Array.NonEmpty.takeUntilIncluding ((=) 3) (Array.NonEmpty.create 1 [|2;3;4;5|])
           = Array.NonEmpty.create 1 [|2;3|]
         &&
-        Array.NonEmpty.takeWhileIncluding ((=) 1) (Array.NonEmpty.create 1 [|2;3;4;5|])
+        Array.NonEmpty.takeUntilIncluding ((=) 1) (Array.NonEmpty.create 1 [|2;3;4;5|])
           = Array.NonEmpty.singleton 1
         &&
-        Array.NonEmpty.takeWhileIncluding ((=) 99) (Array.NonEmpty.create 1 [|2;3|])
+        Array.NonEmpty.takeUntilIncluding ((=) 99) (Array.NonEmpty.create 1 [|2;3|])
           = Array.NonEmpty.create 1 [|2;3|]
       @>
 
   [<Test>]
   let ``returns empty for empty input`` () =
-    test <@ Array.takeWhileIncluding (fun _ -> true) [||] = [||] @>
+    test <@ Array.takeUntilIncluding (fun _ -> true) [||] = [||] @>
 
   [<Test>]
   let ``returns through the first matching element`` () =
-    test <@ Array.takeWhileIncluding ((=) 3) [|1;2;3;4;5|] = [|1;2;3|] @>
+    test <@ Array.takeUntilIncluding ((=) 3) [|1;2;3;4;5|] = [|1;2;3|] @>
 
   [<Test>]
   let ``returns only the first element when it matches`` () =
-    test <@ Array.takeWhileIncluding ((=) 3) [|3;4;5|] = [|3|] @>
+    test <@ Array.takeUntilIncluding ((=) 3) [|3;4;5|] = [|3|] @>
 
   [<Test>]
   let ``stops at the first match even when multiple elements match`` () =
-    test <@ Array.takeWhileIncluding ((=) 3) [|1;3;3;3|] = [|1;3|] @>
+    test <@ Array.takeUntilIncluding ((=) 3) [|1;3;3;3|] = [|1;3|] @>
 
   [<Test>]
   let ``returns the full array when no element matches`` () =
-    test <@ Array.takeWhileIncluding ((=) 99) [|1;2;3|] = [|1;2;3|] @>
+    test <@ Array.takeUntilIncluding ((=) 99) [|1;2;3|] = [|1;2;3|] @>
 
 module SkipUntilIncluding =
   [<Test>]
@@ -287,8 +287,8 @@ module SkipUntilIncluding =
     test <@ Array.skipUntilIncluding ((=) 99) [|1;2;3|] = [||] @>
 
   [<Test>]
-  let ``takeWhileIncluding and skipUntilIncluding partition the array`` () =
+  let ``takeUntilIncluding and skipUntilIncluding partition the array`` () =
     let xs = [|1;2;3;4;5|]
-    let taken = Array.takeWhileIncluding ((=) 3) xs
+    let taken = Array.takeUntilIncluding ((=) 3) xs
     let skipped = Array.skipUntilIncluding ((=) 3) xs
     test <@ Array.append taken skipped = xs @>

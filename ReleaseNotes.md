@@ -5,7 +5,7 @@
 Adds new functions for the List/Array/Seq/FSeq modules:
 - `splitPairwise`
 - `split`
-- `takeWhileIncluding`
+- `takeUntilIncluding`
 - `skipUntilIncluding`
 
 ### InfiniteSeq
