@@ -541,7 +541,7 @@ module InfiniteSeq =
   /// the sequence preceding the split.
   /// For example:
   /// <code>
-  /// IniniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
+  /// InfiniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
   /// </code>
   /// </summary>
