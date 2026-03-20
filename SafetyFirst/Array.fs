@@ -738,7 +738,7 @@ let splitPairwise splitBetween (xs: array<_>) : array<NonEmptyArray<_>> =
 /// Splits an array at every occurrence of an element satisfying <c>splitAfter</c>.
 /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
 /// and the element satisfying <c>splitAfter</c> will be included as the last element of
-/// the array preceeding the split.
+/// the array preceding the split.
 /// For example:
 /// <code>
 /// split ((=) 100) [|1;2;3;100;100;4;100;5;6|]

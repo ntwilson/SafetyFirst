@@ -746,7 +746,7 @@ let splitPairwise splitBetween xs : List<NonEmptyList<_>> =
 /// Splits a list at every occurrence of an element satisfying <c>splitAfter</c>.
 /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
 /// and the element satisfying <c>splitAfter</c> will be included as the last element of
-/// the list preceeding the split.
+/// the list preceding the split.
 /// For example:
 /// <code>
 /// split ((=) 100) [1;2;3;100;100;4;100;5;6]
@@ -1493,10 +1493,8 @@ module NonEmpty =
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
   /// </code>
   /// </summary>
-  let split splitAfter xs = 
-    FSeq.NonEmpty.split splitAfter (toNonEmptyFSeq xs)
-    |> Seq.NonEmpty.map Seq.NonEmpty.toNonEmptyList
-    |> Seq.NonEmpty.toNonEmptyList
+  let split splitAfter (NonEmpty xs: NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> = 
+    NonEmpty (split splitAfter xs)
 
   /// <summary>
   /// Splits a list between each pair of adjacent elements that satisfy <c>splitBetween</c>.

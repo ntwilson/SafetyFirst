@@ -525,25 +525,19 @@ module InfiniteSeq =
   let scan f initialState (InfiniteSeq xs) = InfiniteSeq (Seq.scan f initialState xs)
 
 
-
-  // -- tests end here -- 
-
-
-
-
   /// <summary>
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
   /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  /// the sequence preceeding the split.
+  /// the sequence preceding the split.
   /// For example:
   /// <code>
   /// IniniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
   /// </code>
   /// </summary>
-  // let split splitAfter xs = 
-  //   InfiniteSeq (Seq.split splitAfter xs)
+  let split splitAfter xs = 
+    InfiniteSeq (Seq.split splitAfter xs)
 
   /// <summary>
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.

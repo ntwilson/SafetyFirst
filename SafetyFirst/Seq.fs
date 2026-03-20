@@ -551,7 +551,7 @@ let takeWhileIncluding predicate (xs: _ seq) =
 /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
 /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
 /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-/// the sequence preceeding the split.
+/// the sequence preceding the split.
 /// For example:
 /// <code>
 /// split ((=) 100) [1;2;3;100;100;4;100;5;6]
@@ -979,7 +979,7 @@ module NonEmpty =
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
   /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  /// the sequence preceeding the split.
+  /// the sequence preceding the split.
   /// For example:
   /// <code>
   /// split ((=) 100) (Seq.NonEmpty.create 1[2;3;100;100;4;100;5;6])

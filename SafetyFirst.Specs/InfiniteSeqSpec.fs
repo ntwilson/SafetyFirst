@@ -360,6 +360,45 @@ let ``splitPairwise inner segments can be consumed out of order`` () =
       && Seq.toList segments.[1] = [1;2;3;4]
     @>
 
+[<Test>]
+let ``split returns what the documentation says`` () =
+  // Four 100s → four finite segments; everything after belongs to a 5th segment we don't read
+  let xs = InfiniteSeq.append [1;2;3;100;100;4;100;5;100;0] (InfiniteSeq.initBounded 100 id)
+  test
+    <@
+      InfiniteSeq.split ((=) 100) xs |> InfiniteSeq.take 4 |> Seq.map Seq.toList |> Seq.toList
+        = [[1;2;3;100];[100];[4;100];[5;100]]
+    @>
+
+[<Test>]
+let ``split inner segments can be infinite`` () =
+  // initBounded 100 id yields 0..99 with no 100s, so the second segment is infinite
+  let xs = InfiniteSeq.append [1;100] (InfiniteSeq.initBounded 100 id)
+  let secondSeg = InfiniteSeq.split ((=) 100) xs |> InfiniteSeq.take 2 |> Seq.toList |> List.item 1
+  test <@ secondSeg |> Seq.truncate 4 |> Seq.toList = [0;1;2;3] @>
+
+[<Test>]
+let ``split inner segments can be re-enumerated`` () =
+  let xs = InfiniteSeq.append [1;2;100;3] (InfiniteSeq.initBounded 100 id)
+  let firstSegment = InfiniteSeq.split ((=) 100) xs |> InfiniteSeq.take 1 |> Seq.head
+  test
+    <@
+      Seq.toList firstSegment = [1;2;100]
+      && Seq.toList firstSegment = [1;2;100]
+    @>
+
+[<Test>]
+let ``split inner segments can be consumed out of order`` () =
+  let xs = InfiniteSeq.append [1;2;3;100;100;4;100;5;100;0] (InfiniteSeq.initBounded 100 id)
+  let segments = InfiniteSeq.split ((=) 100) xs |> InfiniteSeq.take 4 |> Seq.toArray
+  test
+    <@
+      Seq.toList segments.[2] = [4;100]
+      && Seq.toList segments.[0] = [1;2;3;100]
+      && Seq.toList segments.[3] = [5;100]
+      && Seq.toList segments.[1] = [100]
+    @>
+
 // [<Test>]
 // let ``splits infinite sequences without hanging`` () =
 //   let alwaysFalse (_:int) = false
