@@ -108,6 +108,12 @@ let ``skipping does not hang`` () =
       illFormedList |> InfiniteSeq.skipWhile (fun i -> i < 10) |> take 5 |> Result.isError
       &&
       wellFormedList |> InfiniteSeq.skipWhile (always true) |> take 1 |> Result.isError
+      &&
+      wellFormedList |> InfiniteSeq.skipUntilIncluding (fun i -> i = 10) |> take 5 = Ok [11 .. 15]
+      &&
+      illFormedList |> InfiniteSeq.skipUntilIncluding (fun i -> i = 10) |> take 5 |> Result.isError
+      && 
+      wellFormedList |> InfiniteSeq.skipUntilIncluding (fun i -> i < 0) |> take 1 |> Result.isError 
     @>
 
 [<Test>]

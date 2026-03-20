@@ -309,6 +309,15 @@ module InfiniteSeq =
   let skipWhile predicate (InfiniteSeq xs) = InfiniteSeq (Seq.skipWhile predicate xs)
 
   /// <summary>
+  /// Returns a sequence that, when iterated, skips elements of the underlying sequence 
+  /// up to and including the first element for which the given predicate returns True, 
+  /// and then yields the remaining elements of the sequence.
+  /// Like <c>skipWhile</c>, but with an inverted predicate and 
+  /// also skips the element for which the predicate first returns True.
+  /// </summary>
+  let skipUntilIncluding predicate (InfiniteSeq xs) = InfiniteSeq (Seq.skipUntilIncluding predicate xs)
+
+  /// <summary>
   /// Returns the first element of the sequence.
   /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
