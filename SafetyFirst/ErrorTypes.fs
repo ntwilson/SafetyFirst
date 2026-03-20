@@ -2,6 +2,9 @@ namespace SafetyFirst
 
 open System
 
+type InfiniteSequenceEvaluationHung (msg:string) =
+  inherit Exception (msg)
+
 type SeqIsEmpty = SeqIsEmpty of string with
   override this.ToString() = let (SeqIsEmpty s) = this in s
 type NotEnoughElements = NotEnoughElements of string with

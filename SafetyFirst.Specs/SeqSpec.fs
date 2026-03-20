@@ -182,6 +182,24 @@ let ``Safe Seq functions always produce the same output as unsafe versions for a
   alwaysProduceSameOutputForSeq2ExceptNonEmpty  Seq.chunkBySize'  Seq.chunkBySize
   alwaysProduceSameOutputForSeq2ExceptNonEmpty  Seq.windowed'     Seq.windowed
 
+[<Test>]
+let ``isHungAfter allows elements below the limit`` () =
+  test <@ Seq.initInfinite id |> Seq.isHungAfter 10 |> Seq.take 10 |> Seq.toList = [0..9] @>
+
+[<Test>]
+let ``isHungAfter throws when the limit is exceeded`` () =
+  raises<InfiniteSequenceEvaluationHung>
+    <@ Seq.initInfinite id |> Seq.isHungAfter 10 |> Seq.take 11 |> Seq.toList @>
+
+[<Test>]
+let ``isHungAfter works with finite sequences that stay within the limit`` () =
+  test <@ [1..5] |> Seq.isHungAfter 10 |> Seq.toList = [1..5] @>
+
+[<Test>]
+let ``isHungAfter throws for finite sequences that exceed the limit`` () =
+  raises<InfiniteSequenceEvaluationHung>
+    <@ [1..11] |> Seq.isHungAfter 10 |> Seq.toList @>
+
 module Splitting = 
   let toLists (xs:seq<#seq<_>>) = 
     Seq.toList <| Seq.map Seq.toList xs
@@ -208,7 +226,7 @@ module Splitting =
 
   [<Test>]
   let ``works with infinite lists`` () =
-    let infinite = Seq.append [0;1;1;2;3;4;4;4;5;0] (Seq.initInfinite id)
+    let infinite = Seq.append [0;1;1;2;3;4;4;4;5;0] (InfiniteSeq.initBounded 3000 id)
     let neInfinite = NonEmpty.assume infinite
     test 
       <@
@@ -227,7 +245,7 @@ module Splitting =
   let ``inner segments can be infinite`` () =
     // [5; 5; 0; 1; 2; 3; ...]: one split at (5,5), then an infinite segment [5; 0; 1; 2; 3; ...]
     // with no equal adjacent pairs, so it never splits again
-    let infinite = Seq.collect id [ seq [5; 5]; (Seq.initInfinite id |> Seq.truncate 3000); seq { yield failwith "evaluation hung" } ]
+    let infinite = Seq.append [5; 5] (InfiniteSeq.initBounded 3000 id)
     let neInfinite = NonEmpty.assume infinite
 
     test <@ (Seq.splitPairwise (=) infinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>

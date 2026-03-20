@@ -1,22 +1,29 @@
 namespace SafetyFirst
 
+#nowarn "44"
+
+open System
 open System.Collections.Generic
 open SafetyFirst.Numbers
 
 /// <summary>
-/// An infinite sequence created by <c>InfiniteSeq.init</c>.
+/// An infinite sequence created by e.g., <c>InfiniteSeq.init</c>.
 /// The functions in InfiniteSeq are all safe for use with infinite sequences.
-/// Note that an InfiniteSeq is technically finite, with an upper bound supplied
-/// at the time of creation. This upper bound represents a limit such that we can 
-/// be sure that the application "hung" if the sequence produced that many elements.
-/// This allows for safe usage of <c>InfiniteSeq</c> without needing to worry about
-/// the application truly hanging in an infinite loop.
-/// Note that this makes the InfiniteSeq type inappropriate for intentionally initiating
-/// an infinite loop (e.g., with an <c>iter</c> function).  You might consider using a 
-/// regular infinite seq with <c>Seq.initInfinite</c> if you're looking to initiate an 
-/// infinite loop.
 /// </summary>
-type InfiniteSeq<'a> = private InfiniteSeq of seq<'a>
+type InfiniteSeq<'a> = 
+  private | InfiniteSeq of seq<'a>
+
+  interface IEnumerable<'a> with
+    member this.GetEnumerator() = 
+      let (InfiniteSeq xs) = this
+      xs.GetEnumerator()
+
+  interface System.Collections.IEnumerable with
+    member this.GetEnumerator() = 
+      let (InfiniteSeq xs) = this
+      (xs :> System.Collections.IEnumerable).GetEnumerator()
+
+  
 
 [<AutoOpen>]
 module InfiniteSeqTypes = 
@@ -24,12 +31,31 @@ module InfiniteSeqTypes =
   type InfiniteSeqHung = InfiniteSeqHung of string
 
 /// <summary>
-/// Functions safe to use with InfiniteSeqs.  None of the functions in this module
-/// hang indefinitely.
+/// Functions safe to use with InfiniteSeqs.
 /// </summary>
 module InfiniteSeq =
-  let private always x _ = x
   let private hung = InfiniteSeqHung "Program execution hung.  This infinite sequence was allowed to evaluate elements for too long."
+  let private protect f x = 
+    try Ok (f x)
+    with :? InfiniteSequenceEvaluationHung -> Error hung
+
+  let private toLazyResults (xs: _ seq) = 
+    seq {
+      use mutable iter = xs.GetEnumerator()
+      let mutable keepGoing = true
+      while keepGoing do
+        let nextElement = 
+          protect (fun _ -> 
+            iter.MoveNext() |> ignore
+            iter.Current) ()
+
+        match nextElement with
+        | Error e -> 
+          keepGoing <- false
+          yield Error e
+        | Ok v -> 
+          yield Ok v
+    }
 
   /// <summary>
   /// Generates a new sequence which, when iterated, will return successive
@@ -37,15 +63,14 @@ module InfiniteSeq =
   /// will not be saved, that is the function will be reapplied as necessary to
   /// regenerate the elements. The function is passed the index of the item being
   /// generated.
-  /// Note that an InfiniteSeq is technically finite, with the upper bound supplied
+  /// Note that an InfiniteSeq created with this function is technically finite, 
+  /// with the upper bound supplied
   /// representing a limit such that we can be sure that the application "hung" if 
-  /// the sequence produced that many elements.
-  /// This allows for safe usage of <c>InfiniteSeq</c> without needing to worry about
-  /// the application truly hanging in an infinite loop.
+  /// the sequence produced that many elements. If the sequence produces more than the 
+  /// specified maximum number of elements, an exception will be thrown.
   /// </summary>
-  [<CompiledName("$init_NotUsedByC#")>]
   let init (MaxElements maxElements) transform = 
-    InfiniteSeq (Seq.initInfinite transform |> Seq.truncate maxElements)
+    InfiniteSeq (Seq.initInfinite transform |> Seq.isHungAfter maxElements)
 
   /// <summary>
   /// Generates a new sequence which, when iterated, will return successive
@@ -53,15 +78,47 @@ module InfiniteSeq =
   /// will not be saved, that is the function will be reapplied as necessary to
   /// regenerate the elements. The function is passed the index of the item being
   /// generated.
-  /// Note that an InfiniteSeq is technically finite, with the upper bound supplied
+  /// Note that an InfiniteSeq created with this function is technically finite, 
+  /// with the upper bound supplied
+  /// representing a limit such that we can be sure that the application "hung" if 
+  /// the sequence produced that many elements. If the sequence produces more than the 
+  /// specified maximum number of elements, an exception will be thrown.
+  /// </summary>
+  let initBounded (maxElements) transform = init (MaxElements maxElements) transform
+
+  /// <summary>
+  /// Generates a new infinite sequence by calling the given function. Unlike <c>InfiniteSeq.init</c>,
+  /// this version does not set an upper bound on the number of elements, so the application can hang if
+  /// a bug causes an infinite loop.
+  /// </summary>
+  let initUnbounded transform = InfiniteSeq (Seq.initInfinite transform)
+
+  /// <summary>
+  /// Assert that the given sequence is infinite (or bounded by <c>Seq.isHungAfter</c>). Note that there 
+  /// is no possible runtime check to ensure that the sequence is actually infinite. Functions in this module
+  /// can throw if used with a sequence that is not actually infinite.
+  /// </summary>
+  let assume xs = InfiniteSeq xs
+
+  /// <summary>
+  /// Generates a new sequence which, when iterated, will return successive
+  /// elements by calling the given function. The results of calling the function
+  /// will not be saved, that is the function will be reapplied as necessary to
+  /// regenerate the elements. The function is passed the index of the item being generated.
+  /// Note that an InfiniteSeq created with this function is technically finite, 
+  /// with the upper bound supplied
   /// representing a limit such that we can be sure that the application "hung" if 
   /// the sequence produced that many elements.
-  /// This allows for safe usage of <c>InfiniteSeq</c> without needing to worry about
-  /// the application truly hanging in an infinite loop.
   /// </summary>
   [<CompilerMessage(message="not for use from F# - Intended to be used from C# only", messageNumber=17333, IsHidden=true)>]
+  [<Obsolete("Use Seq.isHungAfter instead of the InfiniteSeq module.")>]
   let Init maxElements transform = 
-    InfiniteSeq (Seq.initInfinite transform |> Seq.truncate maxElements)
+    InfiniteSeq (Seq.initInfinite transform |> Seq.isHungAfter maxElements)
+
+  /// <summary>
+  /// Returns a new sequence that contains the elements of the first sequence followed by the elements of the second sequence.
+  /// </summary>
+  let append (xs) (InfiniteSeq ys) = InfiniteSeq (Seq.append xs ys)
 
   /// <summary>
   /// Returns a new collection containing only the elements of the collection
@@ -70,102 +127,148 @@ module InfiniteSeq =
   let filter f (InfiniteSeq xs) = InfiniteSeq (Seq.filter f xs)
 
   /// <summary>
-  /// Computes the element at the specified index in the collection.  Returns
-  /// an error if the sequence hung (produced too many elements).
+  /// Guard against hanging by providing an upper bound that represents a limit such that we can 
+  /// be sure that the application "hung" if the sequence produced that many elements. If more than 
+  /// <c>maxElements</c> elements are consumed, an exception is thrown. While this can be used with
+  /// any InfiniteSeq, this function is mostly for use with
+  /// unbounded infinite sequences (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// For example, you might not know what a proper upper bound is until after you filter an infinite sequence.
+  /// If used on an already bounded InfiniteSeq, 
+  /// it will apply a new bound _on top of_ the existing bound, but will not override the existing one.
+  /// So <c>InfiniteSeq.initBounded 100 |> InfiniteSeq.isHungAfter 500 |> InfiniteSeq.take 200</c> will throw an exception,
+  /// as will <c>InfiniteSeq.initBounded 500 |> InfiniteSeq.isHungAfter 100 |> InfiniteSeq.take 200</c>
   /// </summary>
-  [<CompiledName("itemSafe_F#")>]
-  let item' (NaturalInt i) (InfiniteSeq xs) = 
-    Seq.item' i xs |> Result.mapError (always hung)
+  let isHungAfter maxElements (InfiniteSeq xs) = InfiniteSeq (Seq.isHungAfter maxElements xs)
 
   /// <summary>
-  /// Computes the element at the specified index in the collection.  Returns
-  /// an error if the sequence hung (produced too many elements).
+  /// Computes the element at the specified index in the collection.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
   /// </summary>
+  let item (NaturalInt i) (InfiniteSeq xs) = Seq.item i xs
+
+  /// <summary>
+  /// Computes the element at the specified index in the collection. 
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// </summary>
+  [<Obsolete("Use item instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  [<CompiledName("itemSafe_F#")>]
+  let item' i xs =
+    protect (item i) xs
+
+  /// <summary>
+  /// Computes the element at the specified index in the collection.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// </summary>
+  [<Obsolete("Use item instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let itemSafe i xs = item' i xs
 
   /// <summary>
-  /// Computes the element at the specified index in the collection.  Returns
-  /// None if the sequence hung (produced too many elements).
+  /// Computes the element at the specified index in the collection.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use item instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let tryItem i xs = item' i xs |> Result.toOption
 
   /// <summary>
-  /// Returns the first N elements of the sequence.  Note that this will happen
-  /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
-  /// <c>takeLazy</c> instead.  Returns
-  /// an error if the sequence hung (produced too many elements).
+  /// Returns the first N elements of the sequence.
+  /// This function returns immediately because of lazy evaluation, but when iterating the result, 
+  /// it can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// Iterating this function's result can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
   /// </summary>
-  [<CompiledName("takeSafe_F#")>]
-  let take' n (InfiniteSeq xs) = 
-    Seq.take' n xs |> Result.mapError (always hung)
+  let take n (InfiniteSeq xs) = Seq.take n xs
 
   /// <summary>
-  /// Returns the first N elements of the sequence.  Note that this will happen
-  /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
-  /// <c>truncate</c> instead.  Returns
-  /// an error if the sequence hung (produced too many elements).
+  /// Returns the first N elements of the sequence. Note that this will happen eagerly to check for a hang. 
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use take instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  [<CompiledName("takeSafe_F#")>]
+  let take' n xs =
+    protect (take n >> List.ofSeq >> Seq.ofList) xs
+
+  /// <summary>
+  /// Returns the first N elements of the sequence. Note that this will happen eagerly to check for a hang. 
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// </summary>
+  [<Obsolete("Use take instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let takeSafe n xs = take' n xs
 
   /// <summary>
-  /// Returns the first N elements of the sequence.  Note that this will happen
-  /// eagerly to check for a hang.  If you want to iterate the result lazily, consider using 
-  /// <c>truncate</c> instead.  Returns
-  /// an error if the sequence hung (produced too many elements).
+  /// Returns the first N elements of the sequence. Note that this will happen eagerly to check for a hang. 
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use take instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let tryTake n xs = take' n xs |> Result.toOption
 
   /// <summary>
-  /// Lazily returns up to the first N elements of the sequence.  
-  /// Note that reaching the end of the infinite sequence represents
-  /// the application hanging, and we cannot preemptively detect a hang while executing lazily.  
-  /// As such the possibility of a hang is deferred to each individual element.
-  /// This only returns elements up to the first Error, so there is no guarantee that
-  /// the resulting sequence would contain N elements.  
-  /// If you are able to eagerly evaluate the first n elements, consider using 
-  /// <c>take'</c> instead, which is likely easier to consume.
+  /// Lazily returns up to the first N elements of the sequence.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
   /// </summary>
+  [<Obsolete("Use take instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let truncate n (InfiniteSeq xs) = 
-    let xs = Seq.append (Seq.map Ok xs) [Error hung]
-    in (Seq.truncate n xs)
+    toLazyResults xs |> Seq.truncate n
+
+
+  /// <summary>
+  /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
+  /// given predicate returns True, and then returns no further elements.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// Iterating the result of this function can throw if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// </summary>
+  let takeWhile predicate (InfiniteSeq xs) =
+    Seq.takeWhile predicate xs
 
   /// <summary>
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
   /// given predicate returns True, and then returns no further elements.  Note that the resulting
-  /// sequence is evaluated eagerly to ensure that a hang does not occur when iterated.  If you
-  /// expect to possibly receive an infinite result from this function, consider using 
-  /// <c>takeWhileLazy</c> instead.  Returns
-  /// an error if the sequence hung (produced too many elements).
+  /// sequence is evaluated eagerly to ensure that a hang does not occur when iterated.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<CompiledName("takeWhileSafe_F#")>]
-  let takeWhile' predicate (InfiniteSeq xs) = 
+  [<Obsolete("Use takeWhile instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let takeWhile' predicate (InfiniteSeq xs) =
     let xs = Seq.cache xs
-    Seq.find' (not << predicate) xs 
+    xs 
+    |> protect (Seq.find (not << predicate))
     |> Result.map (fun _ -> Seq.takeWhile predicate xs)
-    |> Result.mapError (always hung)
 
   /// <summary>
   /// Returns a sequence that, when iterated, yields elements of the underlying sequence while the
   /// given predicate returns True, and then returns no further elements.  Note that the resulting
   /// sequence is evaluated eagerly to ensure that a hang does not occur when iterated.  If you
-  /// expect to possibly receive an infinite result from this function, consider using 
-  /// <c>takeWhileLazy</c> instead.  Returns
-  /// None if the sequence hung (produced too many elements).
+  /// expect to possibly receive an infinite result from this function, consider using
+  /// <c>takeWhileLazy</c> instead.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use takeWhile instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let tryTakeWhile predicate xs = takeWhile' predicate xs |> Result.toOption
 
 
   /// <summary>
-  /// Lazily returns elements of the underlying sequence while the given predicate returns True, and 
+  /// Lazily returns elements of the underlying sequence while the given predicate returns True, and
   /// then returns no further elements. Note that reaching the end of the infinite sequence represents
   /// the application hanging, and we cannot preemptively detect a hang while executing lazily.  As such
-  /// the possibility of a hang is deferred to each individual element.  If you are expecting a finite
-  /// result and are able to eagerly evaluate up to the first element that doesn't pass the predicate, 
+  /// the possibility of a hang is deferred to each individual element, which will throw an exception
+  /// if the sequence hung (produced too many elements).  If you are expecting a finite
+  /// result and are able to eagerly evaluate up to the first element that doesn't pass the predicate,
   /// consider using <c>takeWhile'</c> instead, which is likely easier to consume.
   /// </summary>
+  [<Obsolete("Use takeWhile instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let takeWhileLazy predicate (InfiniteSeq xs) = 
-    let xs = Seq.append (Seq.map Ok xs) [Error hung]
-    in xs |> Seq.takeWhile (function | Error _ -> true | Ok x -> predicate x)
+    toLazyResults xs 
+    |> Seq.takeWhile (function
+      | Ok v -> predicate v
+      | Error _ -> true)
 
   /// <summary>
   /// Applies the given function to each element of the seq. Return the seq comprised of the results <c>x</c> 
@@ -176,19 +279,12 @@ module InfiniteSeq =
   let choose chooser (InfiniteSeq xs) = InfiniteSeq (Seq.choose chooser xs)
 
   /// <summary>
-  /// Divides the input sequence into chunks of size at most <c>size</c>.
+  /// Divides the input sequence into chunks of size <c>chunkSize</c>.
   /// Each chunk is guaranteed to contain <c>chunkSize</c> elements.
   /// Same as <c>InfiniteSeq.chunkBySizeUnsafe</c>, but restricts the input to a PositiveInt.
   /// </summary>
-  let chunksOf ((PositiveInt n) as chunkSize) (InfiniteSeq xs) : InfiniteSeq<NonEmptyArray<_>> = 
+  let chunksOf chunkSize (InfiniteSeq xs) : InfiniteSeq<NonEmptyArray<_>> = 
     Seq.chunksOf chunkSize xs
-    |> Seq.map (fun innerChunk ->
-      if Array.NonEmpty.length innerChunk = n 
-      then Some innerChunk
-      else None
-    )
-    |> Seq.takeWhile Option.isSome
-    |> Seq.choose id
     |> InfiniteSeq 
 
   /// <summary>
@@ -213,16 +309,27 @@ module InfiniteSeq =
   let skipWhile predicate (InfiniteSeq xs) = InfiniteSeq (Seq.skipWhile predicate xs)
 
   /// <summary>
-  /// Returns the first element of the sequence.  Returns an error if 
-  /// the sequence hung (produced too many elements).
+  /// Returns the first element of the sequence.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
   /// </summary>
-  [<CompiledName("headSafe_F#")>]
-  let head' (InfiniteSeq xs) = Seq.head' xs |> Result.mapError (always hung)
+  let head (InfiniteSeq xs) = Seq.head xs
 
   /// <summary>
-  /// Returns the first element of the sequence.  Returns None if 
-  /// the sequence hung (produced too many elements).
+  /// Returns the first element of the sequence.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<CompiledName("headSafe_F#")>]
+  [<Obsolete("Use head instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let head' xs = protect head xs
+
+  /// <summary>
+  /// Returns the first element of the sequence.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// </summary>
+  [<Obsolete("Use head instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryHead xs = head' xs |> Result.toOption
 
   /// <summary>
@@ -232,21 +339,32 @@ module InfiniteSeq =
   let tail xs = skip 1 xs
 
   /// <summary>
-  /// Returns tuple of head element and tail of the list.
-  /// Returns an error if the sequence hung (produced too many elements).
+  /// Returns tuple of head element and tail of the sequence.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
+  /// </summary>
+  let uncons xs = head xs, tail xs
+
+  /// <summary>
+  /// Returns tuple of head element and tail of the sequence.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
   [<CompiledName("unconsSafe_F#")>]
-  let uncons' xs = 
-    result { 
-      let! h = head' xs 
+  [<Obsolete("Use uncons instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let uncons' xs =
+    result {
+      let! h = head' xs
       let t = tail xs
       return (h, t)
     }
 
   /// <summary>
-  /// Returns tuple of head element and tail of the list.
-  /// Returns None if the sequence hung (produced too many elements).
+  /// Returns tuple of head element and tail of the sequence.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use uncons instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let tryUncons xs = uncons' xs |> Result.toOption
 
   /// <summary>
@@ -272,50 +390,52 @@ module InfiniteSeq =
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the 
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Returns an error if the infinite sequence hung 
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
-  let map2L f (InfiniteSeq xs) ys = 
-    let result = Seq.map2 f xs ys |> fseq
-    if FSeq.length result = FSeq.length ys
-    then Ok result
-    else Error hung
+  [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let map2L f (InfiniteSeq xs) (ys: _ fseq) =
+    Seq.map2 f xs ys |> protect (List.ofSeq >> fseq)
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the 
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Returns None if the infinite sequence hung 
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryMap2L f xs ys = map2L f xs ys |> Result.toOption
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the 
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Returns an error if the infinite sequence hung 
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
-  let map2R f xs (InfiniteSeq ys) = 
-    let result = Seq.map2 f xs ys |> fseq
-    if FSeq.length result = FSeq.length xs
-    then Ok result
-    else Error hung
+  [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let map2R f (xs: _ fseq) (InfiniteSeq ys) =
+    Seq.map2 f xs ys |> protect (List.ofSeq >> fseq)
 
   /// <summary>
   /// Build a new collection whose elements are the results of applying the given function
-  /// to the corresponding elements of the two collections pairwise.  Truncates the 
-  /// infinite sequence to the same length as the finite sequence.  The resulting sequence
+  /// to the corresponding elements of the two collections pairwise. Truncates the
+  /// infinite sequence to the same length as the finite sequence. The resulting sequence
   /// is computed eagerly (though of course the elements of the infinite sequence that aren't
-  /// needed are left lazy).  Returns None if the infinite sequence hung 
-  /// while trying to produce as many elements as the finite sequence.
+  /// needed are left lazy). 
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use Seq.map2 instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryMap2R f xs ys = map2R f xs ys |> Result.toOption
 
   /// <summary>
@@ -326,17 +446,26 @@ module InfiniteSeq =
   
   /// <summary>
   /// Searches the sequence until an element matching the predicate is found.
-  /// Returns an error if the infinite sequence hung 
-  /// while trying to find a matching element.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
   /// </summary>
-  [<CompiledName("findSafe_F#")>]
-  let find' predicate (InfiniteSeq xs) = Seq.find' predicate xs |> Result.mapError (always hung)
-  
+  let find predicate (InfiniteSeq xs) = Seq.find predicate xs
+
   /// <summary>
   /// Searches the sequence until an element matching the predicate is found.
-  /// Returns None if the infinite sequence hung 
-  /// while trying to find a matching element.
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<CompiledName("findSafe_F#")>]
+  [<Obsolete("Use find instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let find' predicate xs = protect (find predicate) xs
+
+  /// <summary>
+  /// Searches the sequence until an element matching the predicate is found.
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
+  /// </summary>
+  [<Obsolete("Use find instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryFind predicate xs = find' predicate xs |> Result.toOption
 
   /// <summary>
@@ -345,51 +474,49 @@ module InfiniteSeq =
   let zip (InfiniteSeq xs) (InfiniteSeq ys) = InfiniteSeq <| Seq.zip xs ys
 
   /// <summary>
-  /// Combines the two sequences into a list of pairs. 
-  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// Combines the two sequences into a list of pairs.
+  /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
-  /// of the infinite sequence that aren't needed are left lazy).  
-  /// Returns an error if the infinite sequence hung while trying 
-  /// to produce as many elements as the finite sequence.
+  /// of the infinite sequence that aren't needed are left lazy).
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
-  let zipL (InfiniteSeq xs) ys = 
-    let result = Seq.zip xs ys |> fseq
-    if FSeq.length result = FSeq.length ys
-    then Ok result
-    else Error hung
+  [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let zipL (InfiniteSeq xs) (ys: _ fseq) =
+    Seq.zip xs ys |> protect (List.ofSeq >> fseq)
 
   /// <summary>
-  /// Combines the two sequences into a list of pairs. 
-  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// Combines the two sequences into a list of pairs.
+  /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
-  /// of the infinite sequence that aren't needed are left lazy).  
-  /// Returns None if the infinite sequence hung while trying 
-  /// to produce as many elements as the finite sequence.
+  /// of the infinite sequence that aren't needed are left lazy).
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let tryZipL xs ys = zipL xs ys |> Result.toOption
 
   /// <summary>
-  /// Combines the two sequences into a list of pairs. 
-  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// Combines the two sequences into a list of pairs.
+  /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
-  /// of the infinite sequence that aren't needed are left lazy).  
-  /// Returns an error if the infinite sequence hung while trying 
-  /// to produce as many elements as the finite sequence.
+  /// of the infinite sequence that aren't needed are left lazy).
+  /// Returns an error if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
-  let zipR xs (InfiniteSeq ys) = 
-    let result = Seq.zip xs ys |> fseq
-    if FSeq.length result = FSeq.length xs
-    then Ok result
-    else Error hung
+  [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
+  let zipR (xs: _ fseq) (InfiniteSeq ys) =
+    Seq.zip xs ys |> protect (List.ofSeq >> fseq)
 
   /// <summary>
-  /// Combines the two sequences into a list of pairs. 
-  /// Truncates the infinite sequence to the same length as the finite sequence.  
+  /// Combines the two sequences into a list of pairs.
+  /// Truncates the infinite sequence to the same length as the finite sequence.
   /// The resulting sequence is computed eagerly (though of course the elements
-  /// of the infinite sequence that aren't needed are left lazy).  
-  /// Returns None if the infinite sequence hung while trying 
-  /// to produce as many elements as the finite sequence.
+  /// of the infinite sequence that aren't needed are left lazy).
+  /// Returns None if the sequence hung on a bounded InfiniteSeq created with <c>init</c>.
+  /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// </summary>
+  [<Obsolete("Use Seq.zip instead. See the release notes at https://github.com/ntwilson/SafetyFirst/blob/main/ReleaseNotes.md")>]
   let inline tryZipR xs ys = zipR xs ys |> Result.toOption
 
   /// <summary>
@@ -416,27 +543,15 @@ module InfiniteSeq =
   /// </code>
   /// </summary>
   // let split splitAfter xs = 
-  //   uncons xs 
-  //   |> Result.map (fun (head, InfiniteSeq tail) ->
-  //     let nonEmpty = Seq.NonEmpty.create head tail
-  //     InfiniteSeq (Seq.NonEmpty.split splitAfter nonEmpty)
-  //     |> map (InfiniteSeq << seq))
-  //   |> Result.mapError hungErr
-
-  // let private uncurry f (a, b) = f a b
+  //   InfiniteSeq (Seq.split splitAfter xs)
 
   /// <summary>
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
   /// For example:
   /// <code>
-  /// NonEmptySeq.splitPairwise (=) (seq { 0;1;1;2;3;4;4;4;5;...})
+  /// InfiniteSeq.splitPairwise (=) (seq { 0;1;1;2;3;4;4;4;5;...})
   ///   //returns seq { [0;1];[1;2;3;4];[4];[4;5];... }
   /// </code>
   /// </summary>
-  // let splitPairwise splitBetween xs =
-  //   uncons xs
-  //   |> Result.map (fun (head, InfiniteSeq tail) -> 
-  //     let nonEmpty = Seq.NonEmpty.create head tail
-  //     InfiniteSeq (Seq.NonEmpty.splitPairwise splitBetween nonEmpty)
-  //     |> map (InfiniteSeq << seq))
-  //   |> Result.mapError hungErr
+  let splitPairwise splitBetween (InfiniteSeq xs) =
+    InfiniteSeq (Seq.splitPairwise splitBetween xs)

@@ -192,6 +192,26 @@ let headSafe xs =
 let inline head' xs = headSafe xs
 
 /// <summary>
+/// Guard against hanging by providing an upper bound that represents a limit such that we can 
+/// be sure that the application "hung" if the sequence produced that many elements. If more than 
+/// <c>maxElements</c> elements are consumed, an exception is thrown. This is intended for use with
+/// infinite sequences, but is safe to use with finite sequences as well. 
+/// </summary>
+let isHungAfter maxElements xs =
+  seq {
+    for i, x in Seq.indexed xs ->
+      if i < maxElements then x
+      else 
+        let message = 
+          if maxElements < 0 then
+            (sprintf "Program execution is considered to have hung, since this sequence produced more than 0 elements (maxElements set to %i)." maxElements)
+          else 
+            (sprintf "Program execution is considered to have hung, since this sequence produced more than %i elements." maxElements)
+
+        raise (InfiniteSequenceEvaluationHung message)
+  }
+
+/// <summary>
 /// Computes the element at the specified index in the collection.
 /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the collection.
 /// </summary>
@@ -435,32 +455,29 @@ let inline skip' count xs = skipSafe count xs
 let inline trySkip count xs = skipSafe count xs |> Result.toOption
 
 /// <summary>
-/// Returns a sequence that skips at least N elements of the underlying sequence and then yields the
+/// Returns a sequence that lazily skips N elements of the underlying sequence and then yields the
 /// remaining elements of the sequence.
-/// Returns an empty sequence if <c>count</c> exceeds the length of <c>xs</c> 
-/// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
-/// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
-/// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
-/// and a second time to produce the result.  This is necessary because caching the sequence 
-/// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
-/// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
-/// calling this function.
+/// Returns an empty sequence if <c>count</c> exceeds the length of <c>xs</c>.
 /// </summary>
-let skipLenient count xs =
-  skip' count xs
-  |> Result.defaultValue Seq.empty
+let skipLenient count (xs: _ seq) =
+  seq {
+    use e = xs.GetEnumerator()
+    let mutable remaining = count
+    let mutable enoughElements = true
+    while remaining > 0 && enoughElements do
+      if e.MoveNext() then
+        remaining <- remaining - 1
+      else
+        enoughElements <- false
+    if enoughElements then
+      while e.MoveNext() do
+        yield e.Current
+  }
 
 /// <summary>
-/// Returns a sequence that skips at least N elements of the underlying sequence and then yields the
+/// Returns a sequence that lazily skips N elements of the underlying sequence and then yields the
 /// remaining elements of the sequence.
-/// Returns an empty sequence if <c>count</c> exceeds the length of <c>xs</c> 
-/// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
-/// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
-/// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
-/// and a second time to produce the result.  This is necessary because caching the sequence 
-/// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
-/// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
-/// calling this function.
+/// Returns an empty sequence if <c>count</c> exceeds the length of <c>xs</c>.
 /// </summary>
 let inline drop count xs = skipLenient count xs
 
@@ -687,7 +704,16 @@ module NonEmpty =
   /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
-  let indexed (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.indexed xs)
+  let indexed (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> = NonEmpty (Seq.indexed xs)
+
+  /// <summary>
+  /// Guard against hanging by providing an upper bound that represents a limit such that we can 
+  /// be sure that the application "hung" if the sequence produced that many elements. If more than 
+  /// <c>maxElements</c> elements are consumed, an exception is thrown. This is intended for use with
+  /// infinite sequences, but is safe to use with finite sequences as well. 
+  /// </summary>
+  let isHungAfter maxElements (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> =
+    NonEmpty (isHungAfter maxElements xs)
 
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
