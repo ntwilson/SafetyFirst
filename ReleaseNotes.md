@@ -16,14 +16,16 @@ New functions include:
 - `initUnbounded`: Create an "unsafe" InfiniteSeq that can hang if misused
 - `isHungAfter`: apply a new upper bound to any InfiniteSeq
 - `assume`: assume an existing seq is infinite
-- `append`: prepend any seq to the front of an infinite seq
+- `append`: prepend any seq to the front of an InfiniteSeq
 - `item`: same as `Seq.item`, but safe for infinite sequences (barring a hang)
 - `take`: same as `Seq.take`, but safe for infinite sequences (barring a hang)
 - `takeWhile`: same as `Seq.takeWhile`, but safe for infinite sequences (barring a hang)
 - `head`: same as `Seq.head`, but safe for infinite sequences (barring a hang)
 - `uncons`: same as `Seq.uncons`, but safe for infinite sequences (barring a hang)
 - `find`: same as `Seq.find`, but safe for infinite sequences (barring a hang)
+- `skipUntilIncluding`: same as `Seq.skipUntilIncluding`
 - `splitPairwise`: same as `Seq.splitPairwise`
+- `split`: same as `Seq.split`
 
 Also `Seq.isHungAfter` exists to take a potentially infinite seq that _isn't_ defined as an `InfiniteSeq` and apply an upper bound to consider the sequence hung if it produces more elements than some max number.
 
