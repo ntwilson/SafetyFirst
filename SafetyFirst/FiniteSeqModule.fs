@@ -688,7 +688,7 @@ module FiniteSeq =
         if startYielding then
           yield e.Current
 
-        if predicate e.Current then
+        if not startYielding && predicate e.Current then
           startYielding <- true
     }
 
