@@ -226,7 +226,7 @@ module Splitting =
         (Array.split ((=) 5) [|5;0;0;5;5;0;5|] |> toArrs) = [|[|5|]; [|0;0;5|]; [|5|]; [|0;5|]|]
       @>
 
-module takeUntilIncluding =
+module TakeUntilIncluding =
   [<Test>]
   let ``NonEmpty.takeUntilIncluding returns through the first matching element`` () =
     test

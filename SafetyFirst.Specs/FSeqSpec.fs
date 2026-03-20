@@ -390,7 +390,7 @@ module Splitting =
         (FSeq.split ((=) 5) (fseq [5;0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
       @>
 
-module takeUntilIncluding =
+module TakeUntilIncluding =
   [<Test>]
   let ``NonEmpty.takeUntilIncluding returns through the first matching element`` () =
     test

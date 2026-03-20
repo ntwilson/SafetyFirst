@@ -274,7 +274,7 @@ module Splitting =
           = List.NonEmpty.create 1 [2;3]
       @>
 
-module takeUntilIncluding =
+module TakeUntilIncluding =
   [<Test>]
   let ``returns empty for empty input`` () =
     test <@ List.takeUntilIncluding (fun _ -> true) [] = [] @>

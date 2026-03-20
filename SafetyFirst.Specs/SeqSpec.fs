@@ -200,7 +200,7 @@ let ``isHungAfter throws for finite sequences that exceed the limit`` () =
   raises<InfiniteSequenceEvaluationHung>
     <@ [1..11] |> Seq.isHungAfter 10 |> Seq.toList @>
 
-module takeUntilIncluding = 
+module TakeUntilIncluding = 
   [<Test>]
   let ``returns empty for empty input`` () =
     test <@ Seq.takeUntilIncluding (fun _ -> true) Seq.empty |> Seq.toList = [] @>
