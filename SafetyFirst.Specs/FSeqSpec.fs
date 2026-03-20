@@ -240,7 +240,7 @@ module Splitting =
     List.ofSeq <| Seq.map FSeq.NonEmpty.toList xs
 
   let toNonEmpty xs = 
-    FSeq.NonEmpty.ofFSeq' (fseq xs) |> Result.expect
+    NonEmpty.assume (fseq xs)
 
   [<Test>]
   let ``returns what the documentation says`` () =
@@ -351,6 +351,111 @@ module Splitting =
         && Seq.toList neSegments.[3] = [4;5]
         && Seq.toList neSegments.[1] = [1;2;3;4]
       @>
+
+  [<Test>]
+  let ``split returns what the documentation says`` () =
+    test
+      <@
+        (FSeq.split ((=) 100) (fseq [1;2;3;100;100;4;100;5;6]) |> ofNonEmpty)
+          = [[1;2;3;100];[100];[4;100];[5;6]]
+      @>
+
+  [<Test>]
+  let ``split handles empty and single element sequences`` () =
+    test
+      <@
+        (FSeq.split ((=) 5) (fseq []) |> ofNonEmpty) = []
+        &&
+        (FSeq.split ((=) 5) (fseq [0]) |> ofNonEmpty) = [[0]]
+        &&
+        (FSeq.split ((=) 5) (fseq [5]) |> ofNonEmpty) = [[5]]
+        &&
+        (FSeq.split ((=) 5) (fseq [5;5]) |> ofNonEmpty) = [[5]; [5]]
+      @>
+
+  [<Test>]
+  let ``split splits properly for multiple types of inputs`` () =
+    test
+      <@
+        (FSeq.split ((=) 5) (fseq [0]) |> ofNonEmpty) = [[0]]
+        &&
+        (FSeq.split ((=) 5) (fseq [5]) |> ofNonEmpty) = [[5]]
+        &&
+        (FSeq.split ((=) 5) (fseq [0;5]) |> ofNonEmpty) = [[0; 5]]
+        &&
+        (FSeq.split ((=) 5) (fseq [5;5]) |> ofNonEmpty) = [[5]; [5]]
+        &&
+        (FSeq.split ((=) 5) (fseq [5;0]) |> ofNonEmpty) = [[5]; [0]]
+        &&
+        (FSeq.split ((=) 5) (fseq [5;0;0;5;5;0;5]) |> ofNonEmpty) = [[5]; [0;0;5]; [5]; [0;5]]
+      @>
+
+module TakeWhileIncluding =
+  [<Test>]
+  let ``NonEmpty.takeWhileIncluding returns through the first matching element`` () =
+    test
+      <@
+        FSeq.NonEmpty.takeWhileIncluding ((=) 3) (Splitting.toNonEmpty [1;2;3;4;5])
+          = Splitting.toNonEmpty [1;2;3]
+        &&
+        FSeq.NonEmpty.takeWhileIncluding ((=) 1) (Splitting.toNonEmpty [1;2;3;4;5])
+          = Splitting.toNonEmpty [1]
+        &&
+        FSeq.NonEmpty.takeWhileIncluding ((=) 99) (Splitting.toNonEmpty [1;2;3])
+          = Splitting.toNonEmpty [1;2;3]
+      @>
+
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ FSeq.takeWhileIncluding (fun _ -> true) (fseq []) = fseq [] @>
+
+  [<Test>]
+  let ``returns through the first matching element`` () =
+    test <@ FSeq.takeWhileIncluding ((=) 3) (fseq [1;2;3;4;5]) = fseq [1;2;3] @>
+
+  [<Test>]
+  let ``returns only the first element when it matches`` () =
+    test <@ FSeq.takeWhileIncluding ((=) 3) (fseq [3;4;5]) = fseq [3] @>
+
+  [<Test>]
+  let ``stops at the first match even when multiple elements match`` () =
+    test <@ FSeq.takeWhileIncluding ((=) 3) (fseq [1;3;3;3]) = fseq [1;3] @>
+
+  [<Test>]
+  let ``returns the full sequence when no element matches`` () =
+    test <@ FSeq.takeWhileIncluding ((=) 99) (fseq [1;2;3]) = fseq [1;2;3] @>
+
+module SkipUntilIncluding =
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ FSeq.skipUntilIncluding (fun _ -> true) (fseq []) = fseq [] @>
+
+  [<Test>]
+  let ``returns elements after the first matching element`` () =
+    test <@ FSeq.skipUntilIncluding ((=) 3) (fseq [1;2;3;4;5]) = fseq [4;5] @>
+
+  [<Test>]
+  let ``returns elements after the first element when it matches`` () =
+    test <@ FSeq.skipUntilIncluding ((=) 3) (fseq [3;4;5]) = fseq [4;5] @>
+
+  [<Test>]
+  let ``stops skipping at the first match even when multiple elements match`` () =
+    test <@ FSeq.skipUntilIncluding ((=) 3) (fseq [1;3;3;3]) = fseq [3;3] @>
+
+  [<Test>]
+  let ``returns empty when the match is the last element`` () =
+    test <@ FSeq.skipUntilIncluding ((=) 3) (fseq [1;2;3]) = fseq [] @>
+
+  [<Test>]
+  let ``returns empty when no element matches`` () =
+    test <@ FSeq.skipUntilIncluding ((=) 99) (fseq [1;2;3]) = fseq [] @>
+
+  [<Test>]
+  let ``takeWhileIncluding and skipUntilIncluding partition the sequence`` () =
+    let xs = fseq [1;2;3;4;5]
+    let taken = FSeq.takeWhileIncluding ((=) 3) xs
+    let skipped = FSeq.skipUntilIncluding ((=) 3) xs
+    test <@ FSeq.append taken skipped = xs @>
 
 module SafeFunctions =
   open SeqSpec

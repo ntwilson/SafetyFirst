@@ -150,7 +150,6 @@ module Splitting =
           = [[0;1];[1;2;3;4];[4];[4;5]]
       @>
 
-
   [<Test>]
   let ``splits empty and single element sequences`` () = 
     test 
@@ -214,3 +213,116 @@ module Splitting =
         (List.NonEmpty.splitPairwise splitOnDescent (List.NonEmpty.create 5 [3;1;2;4]) |> toLists)
           = [[5]; [3]; [1;2;4]]
       @>
+
+  [<Test>]
+  let ``split returns what the documentation says`` () =
+    test
+      <@
+        (List.split ((=) 100) [1;2;3;100;100;4;100;5;6] |> toLists)
+          = [[1;2;3;100];[100];[4;100];[5;6]]
+      @>
+
+  [<Test>]
+  let ``works when the start and end elements match the predicate`` () =
+    test 
+      <@ 
+        (List.split ((=) 100) [100; 100; 1; 2; 3; 100] |> toLists) 
+          = [ [100]; [100]; [1;2;3;100] ] 
+      @>
+
+  [<Test>]
+  let ``split handles empty and single element lists`` () =
+    test
+      <@
+        (List.split ((=) 5) [] |> toLists) = []
+        &&
+        (List.split ((=) 5) [0] |> toLists) = [[0]]
+        &&
+        (List.split ((=) 5) [5] |> toLists) = [[5]]
+        &&
+        (List.split ((=) 5) [5;5] |> toLists) = [[5]; [5]]
+      @>
+
+  [<Test>]
+  let ``split splits properly for multiple types of inputs`` () =
+    test
+      <@
+        (List.split ((=) 5) [0] |> toLists) = [[0]]
+        &&
+        (List.split ((=) 5) [5] |> toLists) = [[5]]
+        &&
+        (List.split ((=) 5) [0;5] |> toLists) = [[0; 5]]
+        &&
+        (List.split ((=) 5) [5;5] |> toLists) = [[5]; [5]]
+        &&
+        (List.split ((=) 5) [5;0] |> toLists) = [[5]; [0]]
+        &&
+        (List.split ((=) 5) [5;0;0;5;5;0;5] |> toLists) = [[5]; [0;0;5]; [5]; [0;5]]
+      @>
+
+  [<Test>]
+  let ``NonEmpty.takeWhileIncluding returns through the first matching element`` () =
+    test
+      <@
+        List.NonEmpty.takeWhileIncluding ((=) 3) (List.NonEmpty.create 1 [2;3;4;5])
+          = List.NonEmpty.create 1 [2;3]
+        &&
+        List.NonEmpty.takeWhileIncluding ((=) 1) (List.NonEmpty.create 1 [2;3;4;5])
+          = List.NonEmpty.singleton 1
+        &&
+        List.NonEmpty.takeWhileIncluding ((=) 99) (List.NonEmpty.create 1 [2;3])
+          = List.NonEmpty.create 1 [2;3]
+      @>
+
+module TakeWhileIncluding =
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ List.takeWhileIncluding (fun _ -> true) [] = [] @>
+
+  [<Test>]
+  let ``returns through the first matching element`` () =
+    test <@ List.takeWhileIncluding ((=) 3) [1;2;3;4;5] = [1;2;3] @>
+
+  [<Test>]
+  let ``returns only the first element when it matches`` () =
+    test <@ List.takeWhileIncluding ((=) 3) [3;4;5] = [3] @>
+
+  [<Test>]
+  let ``stops at the first match even when multiple elements match`` () =
+    test <@ List.takeWhileIncluding ((=) 3) [1;3;3;3] = [1;3] @>
+
+  [<Test>]
+  let ``returns the full list when no element matches`` () =
+    test <@ List.takeWhileIncluding ((=) 99) [1;2;3] = [1;2;3] @>
+
+module SkipUntilIncluding =
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ List.skipUntilIncluding (fun _ -> true) [] = [] @>
+
+  [<Test>]
+  let ``returns elements after the first matching element`` () =
+    test <@ List.skipUntilIncluding ((=) 3) [1;2;3;4;5] = [4;5] @>
+
+  [<Test>]
+  let ``returns elements after the first element when it matches`` () =
+    test <@ List.skipUntilIncluding ((=) 3) [3;4;5] = [4;5] @>
+
+  [<Test>]
+  let ``stops skipping at the first match even when multiple elements match`` () =
+    test <@ List.skipUntilIncluding ((=) 3) [1;3;3;3] = [3;3] @>
+
+  [<Test>]
+  let ``returns empty when the match is the last element`` () =
+    test <@ List.skipUntilIncluding ((=) 3) [1;2;3] = [] @>
+
+  [<Test>]
+  let ``returns empty when no element matches`` () =
+    test <@ List.skipUntilIncluding ((=) 99) [1;2;3] = [] @>
+
+  [<Test>]
+  let ``takeWhileIncluding and skipUntilIncluding partition the list`` () =
+    let xs = [1;2;3;4;5]
+    let taken = List.takeWhileIncluding ((=) 3) xs
+    let skipped = List.skipUntilIncluding ((=) 3) xs
+    test <@ taken @ skipped = xs @>

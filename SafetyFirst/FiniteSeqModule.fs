@@ -671,8 +671,26 @@ module FiniteSeq =
   /// Returns a sequence that, when iterated, skips elements of the underlying sequence while the
   /// given predicate returns True, and then yields the remaining elements of the sequence.
   /// </summary>
-  let skipWhile predicate (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> = 
+  let skipWhile predicate (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> =
     fseq (Seq.skipWhile predicate xs)
+
+  /// <summary>
+  /// Returns the elements of the sequence after the first element for which the given function returns True,
+  /// discarding all elements up to and including the first match.
+  /// Like <c>skipWhile</c>, but also skips the element for which the predicate first returns True.
+  /// If the sequence is exhausted without finding a matching element, an empty sequence is returned.
+  /// </summary>
+  let skipUntilIncluding predicate (xs: FiniteSeq<_>) : FiniteSeq<_> =
+    fseq <| seq {
+      use e = (xs :> IEnumerable<_>).GetEnumerator()
+      let mutable startYielding = false
+      while e.MoveNext() do
+        if startYielding then
+          yield e.Current
+
+        if predicate e.Current then
+          startYielding <- true
+    }
 
   /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
@@ -705,6 +723,34 @@ module FiniteSeq =
   /// Returns None if <c>count</c> is zero or negative.
   /// </summary>
   let inline trySplitInto n xs = splitIntoSafe n xs |> Result.toOption
+
+  /// <summary>
+  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+  /// and the element satisfying <c>splitAfter</c> will be included as the last element of
+  /// the sequence preceeding the split.
+  /// For example:
+  /// <code>
+  /// split ((=) 100) [1;2;3;100;100;4;100;5;6]
+  ///   //returns [[1;2;3;100];[100];[4;100];[5;6]]
+  /// </code>
+  /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
+  /// sequence advances to it.
+  /// </summary>
+  let split splitAfter (xs: FiniteSeq<_>) : FiniteSeq<NonEmptyFSeq<_>> =
+    fseq <| seq {
+      use mutable iter = xs :> IEnumerable<_> |> _.GetEnumerator()
+      let mutable keepGoing = iter.MoveNext()
+      while keepGoing do
+        yield
+          NonEmpty <| fseq [
+            let mutable stop = false
+            while keepGoing && not stop do
+              yield iter.Current
+              stop <- splitAfter iter.Current
+              keepGoing <- iter.MoveNext()
+          ]
+    }
 
   /// <summary>
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
@@ -791,6 +837,21 @@ module FiniteSeq =
   /// </summary>
   let takeWhile predicate (FSeq xs : FiniteSeq<_>) : FiniteSeq<_> =
     fseq (Seq.takeWhile predicate xs)
+
+  /// <summary>
+  /// Returns the sequence through the first element for which the given function returns True.
+  /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+  /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
+  /// </summary>
+  let takeWhileIncluding predicate (xs: FiniteSeq<_>) : FiniteSeq<_> =
+    fseq <| seq {
+      use e = (xs :> IEnumerable<_>).GetEnumerator()
+      let mutable continueLoop = true
+      while continueLoop && e.MoveNext() do
+        yield e.Current
+        if predicate e.Current then
+          continueLoop <- false
+    }
 
   /// <summary>
   /// Builds an array from the given collection.
@@ -1586,6 +1647,14 @@ module FSeq =
   let inline skipWhile predicate (xs : _ fseq) : _ fseq = FiniteSeq.skipWhile predicate xs
 
   /// <summary>
+  /// Returns the elements of the sequence after the first element for which the given function returns True,
+  /// discarding all elements up to and including the first match.
+  /// Like <c>skipWhile</c>, but also skips the element for which the predicate first returns True.
+  /// If the sequence is exhausted without finding a matching element, an empty sequence is returned.
+  /// </summary>
+  let inline skipUntilIncluding predicate (xs : _ fseq) : _ fseq = FiniteSeq.skipUntilIncluding predicate xs
+
+  /// <summary>
   /// Splits the input sequence into at most <c>count</c> chunks.
   /// This function consumes the whole input sequence before yielding the first element of the result sequence.
   /// </summary>
@@ -1626,6 +1695,21 @@ module FSeq =
   let splitPairwise splitBetween (xs: FSeq<_>) : FSeq<NonEmptyFSeq<_>> = FiniteSeq.splitPairwise splitBetween xs
 
   /// <summary>
+  /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+  /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+  /// and the element satisfying <c>splitAfter</c> will be included as the last element of
+  /// the sequence preceeding the split.
+  /// For example:
+  /// <code>
+  /// split ((=) 100) (fseq [1;2;3;100;100;4;100;5;6])
+  ///   //returns [[1;2;3;100];[100];[4;100];[5;6]]
+  /// </code>
+  /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
+  /// sequence advances to it.
+  /// </summary>
+  let split splitAfter (xs: FSeq<_>) : FSeq<NonEmptyFSeq<_>> = FiniteSeq.split splitAfter xs
+
+  /// <summary>
   /// Returns the sum of the elements in the sequence.
   /// The elements are summed using the <c>+</c> operator and <c>Zero</c> property associated with the generated type.
   /// </summary>
@@ -1642,6 +1726,13 @@ module FSeq =
   /// given predicate returns True, and then returns no further elements.
   /// </summary>
   let inline takeWhile predicate (xs : _ fseq) : _ fseq = FiniteSeq.takeWhile predicate xs
+
+  /// <summary>
+  /// Returns the sequence through the first element for which the given function returns True.
+  /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+  /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
+  /// </summary>
+  let inline takeWhileIncluding predicate (xs : _ fseq) : _ fseq = FiniteSeq.takeWhileIncluding predicate xs
 
   /// <summary>
   /// O(1). Return option the list corresponding to the remaining items in the sequence.
@@ -2346,27 +2437,8 @@ module FSeq =
     /// </summary>
     // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
     // so this should be the default used for any finite sequence (inculding lists and arrays) 
-    let split splitAfter xs = 
-      let addToEnd xs x = appendR xs (singleton x)
-      let (++) = addToEnd
-
-      let rec split' (input:'a fseq) startNewGroup (currentGroup:NonEmptyFSeq<'a>) (completedGroups:fseq<NonEmptyFSeq<'a>>) =
-        match input with
-        | NotEmpty input ->
-          let (head, tail) = uncons input
-
-          let newCurrentGroup, newCompletedGroups = 
-            if not startNewGroup
-            then (fseq currentGroup ++ head, completedGroups)
-            else (singleton head, fseq (completedGroups ++ currentGroup))
-
-          split' tail (splitAfter head) newCurrentGroup newCompletedGroups
-
-        | Empty ->
-          completedGroups ++ currentGroup
-
-      let (head, tail) = uncons xs
-      split' tail (splitAfter head) (singleton head) (fseq [])
+    let split splitAfter (NonEmpty xs: NonEmptyFSeq<_>) : NonEmptyFSeq<NonEmptyFSeq<_>> = 
+      NonEmpty (FiniteSeq.split splitAfter xs)
 
     /// <summary>
     /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
@@ -2381,7 +2453,16 @@ module FSeq =
     let splitPairwise splitBetween (NonEmpty xs) : NonEmptyFSeq<NonEmptyFSeq<_>> =
       NonEmpty (FiniteSeq.splitPairwise splitBetween xs)
 
-    type ZipperExpression() = 
+    /// <summary>
+    /// Returns the sequence through the first element for which the given function returns True.
+    /// Like <c>takeWhile</c>, but includes the element for which the predicate returns True.
+    /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
+    /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
+    /// </summary>
+    let takeWhileIncluding predicate (NonEmpty xs : NonEmptyFSeq<_>) : NonEmptyFSeq<_> =
+      NonEmpty (FiniteSeq.takeWhileIncluding predicate xs)
+
+    type ZipperExpression() =
       member inline this.MergeSources(t1, t2) = 
         zip t1 t2
 

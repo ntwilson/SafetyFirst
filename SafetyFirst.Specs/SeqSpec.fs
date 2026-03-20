@@ -200,20 +200,94 @@ let ``isHungAfter throws for finite sequences that exceed the limit`` () =
   raises<InfiniteSequenceEvaluationHung>
     <@ [1..11] |> Seq.isHungAfter 10 |> Seq.toList @>
 
-module Splitting = 
-  let toLists (xs:seq<#seq<_>>) = 
+module TakeWhileIncluding = 
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ Seq.takeWhileIncluding (fun _ -> true) Seq.empty |> Seq.toList = [] @>
+
+  [<Test>]
+  let ``returns through the first matching element`` () =
+    test <@ Seq.takeWhileIncluding ((=) 3) [1;2;3;4;5] |> Seq.toList = [1;2;3] @>
+
+  [<Test>]
+  let ``returns only the first element when it matches`` () =
+    test <@ Seq.takeWhileIncluding ((=) 3) [3;4;5] |> Seq.toList = [3] @>
+
+  [<Test>]
+  let ``stops at the first match even when multiple elements match`` () =
+    test <@ Seq.takeWhileIncluding ((=) 3) [1;3;3;3] |> Seq.toList = [1;3] @>
+
+  [<Test>]
+  let ``returns the full sequence when no element matches`` () =
+    test <@ Seq.takeWhileIncluding ((=) 99) [1;2;3] |> Seq.toList = [1;2;3] @>
+
+  [<Test>]
+  let ``works with infinite sequences`` () =
+    // stops after finding the matching element rather than diverging
+    test <@ Seq.initInfinite id |> Seq.takeWhileIncluding ((=) 3) |> Seq.toList = [0;1;2;3] @>
+
+  [<Test>]
+  let ``is lazy - does not evaluate past the matching element`` () =
+    let splitInfinite: seq<_> = InfiniteSeq.initBounded 3000 id
+    test <@ splitInfinite |> Seq.takeWhileIncluding ((=) 3) |> Seq.toList = [0;1;2;3] @>
+
+module SkipUntilIncluding =
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ Seq.skipUntilIncluding (fun _ -> true) Seq.empty |> Seq.toList = [] @>
+
+  [<Test>]
+  let ``returns elements after the first matching element`` () =
+    test <@ Seq.skipUntilIncluding ((=) 3) [1;2;3;4;5] |> Seq.toList = [4;5] @>
+
+  [<Test>]
+  let ``returns elements after the first element when it matches`` () =
+    test <@ Seq.skipUntilIncluding ((=) 3) [3;4;5] |> Seq.toList = [4;5] @>
+
+  [<Test>]
+  let ``stops skipping at the first match even when multiple elements match`` () =
+    test <@ Seq.skipUntilIncluding ((=) 3) [1;3;3;3] |> Seq.toList = [3;3] @>
+
+  [<Test>]
+  let ``returns empty when the match is the last element`` () =
+    test <@ Seq.skipUntilIncluding ((=) 3) [1;2;3] |> Seq.toList = [] @>
+
+  [<Test>]
+  let ``returns empty when no element matches`` () =
+    test <@ Seq.skipUntilIncluding ((=) 99) [1;2;3] |> Seq.toList = [] @>
+
+  [<Test>]
+  let ``works with infinite sequences`` () =
+    // yields the infinite tail after the matching element
+    test <@ Seq.initInfinite id |> Seq.skipUntilIncluding ((=) 3) |> Seq.take 4 |> Seq.toList = [4;5;6;7] @>
+
+  [<Test>]
+  let ``takeWhileIncluding and skipWhileIncluding partition the sequence`` () =
+    let xs = [1;2;3;4;5]
+    let taken = Seq.takeWhileIncluding ((=) 3) xs |> Seq.toList
+    let skipped = Seq.skipUntilIncluding ((=) 3) xs |> Seq.toList
+    test <@ taken @ skipped = xs @>
+
+module Splitting =
+  let toLists (xs:seq<#seq<_>>) =
     Seq.toList <| Seq.map Seq.toList xs
 
   [<Test>]
   let ``returns what the documentation says`` () =
 
-    test 
+    test
+      <@
+        (Seq.split ((=) 100) [1;2;3;100;100;4;100;5;6] |> toLists)
+          = [[1;2;3;100];[100];[4;100];[5;6]]
+      @>
+
+    test
       <@
         (Seq.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> toLists)
           = [[0;1];[1;2;3;4];[4];[4;5]]
       @>
 
-    test 
+    test
       <@
         (Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1 [2;3;100;100;4;100;5;6]) |> toLists)
           = [[1;2;3;100];[100];[4;100];[5;6]]
@@ -226,34 +300,67 @@ module Splitting =
 
   [<Test>]
   let ``works with infinite lists`` () =
-    let infinite = Seq.append [0;1;1;2;3;4;4;4;5;0] (InfiniteSeq.initBounded 3000 id)
-    let neInfinite = NonEmpty.assume infinite
-    test 
+    let splitInfinite = Seq.append [1;2;3;100;100;4;100;5;6] (InfiniteSeq.initBounded 3000 id)
+    let neSplitInfinite = NonEmpty.assume splitInfinite
+    test
       <@
-        (Seq.splitPairwise (=) infinite |> Seq.truncate 4 |> toLists)
+        (Seq.split ((=) 100) splitInfinite |> Seq.truncate 3 |> toLists)
+          = [[1;2;3;100];[100];[4;100]]
+      @>
+
+    test
+      <@
+        (Seq.NonEmpty.split ((=) 100) neSplitInfinite |> Seq.truncate 3 |> toLists)
+          = [[1;2;3;100];[100];[4;100]]
+      @>
+
+    let pairwiseInfinite = Seq.append [0;1;1;2;3;4;4;4;5;0] (InfiniteSeq.initBounded 3000 id)
+    let nePairwiseInfinite = NonEmpty.assume pairwiseInfinite
+    test
+      <@
+        (Seq.splitPairwise (=) pairwiseInfinite |> Seq.truncate 4 |> toLists)
           = [[0;1];[1;2;3;4];[4];[4;5;0]]
       @>
 
-    test 
+    test
       <@
-        (Seq.NonEmpty.splitPairwise (=) neInfinite |> Seq.truncate 4 |> toLists)
+        (Seq.NonEmpty.splitPairwise (=) nePairwiseInfinite |> Seq.truncate 4 |> toLists)
           = [[0;1];[1;2;3;4];[4];[4;5;0]]
       @>
 
 
   [<Test>]
   let ``inner segments can be infinite`` () =
+    // [0; 1; 2; 3; ...]: first segment is [0; 1], then an infinite segment [2; 3; 4; ...]
+    // that never triggers the split again
+    let splitInfinite: seq<_> = InfiniteSeq.initBounded 3000 id
+    let neSplitInfinite = NonEmpty.assume splitInfinite
+
+    test <@ (Seq.split ((=) 1) splitInfinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [2; 3; 4; 5] @>
+    test <@ (Seq.NonEmpty.split ((=) 1) neSplitInfinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [2; 3; 4; 5] @>
+
     // [5; 5; 0; 1; 2; 3; ...]: one split at (5,5), then an infinite segment [5; 0; 1; 2; 3; ...]
     // with no equal adjacent pairs, so it never splits again
-    let infinite = Seq.append [5; 5] (InfiniteSeq.initBounded 3000 id)
-    let neInfinite = NonEmpty.assume infinite
+    let pairwiseInfinite = Seq.append [5; 5] (InfiniteSeq.initBounded 3000 id)
+    let nePairwiseInfinite = NonEmpty.assume pairwiseInfinite
 
-    test <@ (Seq.splitPairwise (=) infinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
-    test <@ (Seq.NonEmpty.splitPairwise (=) neInfinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
+    test <@ (Seq.splitPairwise (=) pairwiseInfinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
+    test <@ (Seq.NonEmpty.splitPairwise (=) nePairwiseInfinite |> Seq.item 1 |> Seq.truncate 4 |> Seq.toList) = [5; 0; 1; 2] @>
 
   [<Test>]
   let ``splits empty and single element sequences`` () =
-    test 
+    test
+      <@
+        (Seq.split ((=) 5) Seq.empty |> toLists) = []
+        &&
+        (Seq.split ((=) 5) [0] |> toLists) = [[0]]
+        &&
+        (Seq.split ((=) 5) [5] |> toLists) = [[5]]
+        &&
+        (Seq.split ((=) 5) [5; 5] |> toLists) = [[5]; [5]]
+      @>
+
+    test
       <@
         (Seq.splitPairwise (=) Seq.empty |> toLists) = []
         &&
@@ -263,8 +370,25 @@ module Splitting =
       @>
   
   [<Test>]
-  let ``splits properly for multiple types of inputs`` () = 
-    test 
+  let ``splits properly for multiple types of inputs`` () =
+    test
+      <@
+        (Seq.split ((=) 5) [] |> toLists) = []
+        &&
+        (Seq.split ((=) 5) [0] |> toLists) = [[0]]
+        &&
+        (Seq.split ((=) 5) [5] |> toLists) = [[5]]
+        &&
+        (Seq.split ((=) 5) [0;5] |> toLists) = [[0; 5]]
+        &&
+        (Seq.split ((=) 5) [5;5] |> toLists) = [[5]; [5]]
+        &&
+        (Seq.split ((=) 5) [5;0] |> toLists) = [[5]; [0]]
+        &&
+        (Seq.split ((=) 5) [5;0;0;5;5;0;5] |> toLists) = [[5]; [0;0;5]; [5]; [0;5]]
+      @>
+
+    test
       <@
         (Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.singleton 0) |> toLists) = [[0]]
         &&
@@ -299,6 +423,12 @@ module Splitting =
 
   [<Test>]
   let ``inner segments remain valid after outer sequence is fully materialized`` () =
+    let splitSegments = Seq.split ((=) 100) [1;2;3;100;100;4;100;5;6] |> Seq.toList
+    test <@ splitSegments |> List.map Seq.toList = [[1;2;3;100];[100];[4;100];[5;6]] @>
+
+    let neSplitSegments = Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1 [2;3;100;100;4;100;5;6]) |> Seq.toList
+    test <@ neSplitSegments |> List.map Seq.toList = [[1;2;3;100];[100];[4;100];[5;6]] @>
+
     let segments = Seq.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> Seq.toList
     test <@ segments |> List.map Seq.toList = [[0;1];[1;2;3;4];[4];[4;5]] @>
 
@@ -307,6 +437,20 @@ module Splitting =
 
   [<Test>]
   let ``inner segments can be re-enumerated`` () =
+    let splitFirstSegment = Seq.split ((=) 100) [1;2;3;100;4;100] |> Seq.toList |> List.head
+    test
+      <@
+        Seq.toList splitFirstSegment = [1;2;3;100]
+        && Seq.toList splitFirstSegment = [1;2;3;100]
+      @>
+
+    let neSplitFirstSegment = Seq.NonEmpty.split ((=) 100) (Seq.NonEmpty.create 1 [2;3;100;4;100]) |> Seq.toList |> List.head
+    test
+      <@
+        Seq.toList neSplitFirstSegment = [1;2;3;100]
+        && Seq.toList neSplitFirstSegment = [1;2;3;100]
+      @>
+
     let firstSegment = Seq.splitPairwise (=) [0;1;1;2] |> Seq.toList |> List.head
     test
       <@
@@ -323,6 +467,24 @@ module Splitting =
 
   [<Test>]
   let ``inner segments can be consumed out of order`` () =
+    let splitSegments = Seq.split ((=) 5) [5;0;0;5;5;0;5] |> Seq.toArray
+    test
+      <@
+        Seq.toList splitSegments.[2] = [5]
+        && Seq.toList splitSegments.[0] = [5]
+        && Seq.toList splitSegments.[3] = [0;5]
+        && Seq.toList splitSegments.[1] = [0;0;5]
+      @>
+
+    let neSplitSegments = Seq.NonEmpty.split ((=) 5) (Seq.NonEmpty.create 5 [0;0;5;5;0;5]) |> Seq.toArray
+    test
+      <@
+        Seq.toList neSplitSegments.[2] = [5]
+        && Seq.toList neSplitSegments.[0] = [5]
+        && Seq.toList neSplitSegments.[3] = [0;5]
+        && Seq.toList neSplitSegments.[1] = [0;0;5]
+      @>
+
     let segments = Seq.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> Seq.toArray
     test
       <@
