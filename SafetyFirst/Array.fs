@@ -641,6 +641,17 @@ let skipLenient count xs =
 let inline drop count xs = skipLenient count xs
 
 /// <summary>
+/// Returns the elements of the array after the first element for which the given function returns True,
+/// discarding all elements up to and including the first match.
+/// Like <c>skipWhile</c>, but also skips the element for which the predicate first returns True.
+/// If the array is exhausted without finding a matching element, an empty array is returned.
+/// </summary>
+let skipUntilIncluding predicate (xs: _ array) =
+  match Array.tryFindIndex predicate xs with
+  | None -> [||]
+  | Some i -> xs.[i + 1..]
+
+/// <summary>
 /// Splits an array into two arrays, at the given index.
 /// Returns an IndexOutOfBounds Error when split index exceeds 
 /// the number of elements in the array.
@@ -724,6 +735,28 @@ let splitPairwise splitBetween (xs: array<_>) : array<NonEmptyArray<_>> =
   |]
 
 /// <summary>
+/// Splits an array at every occurrence of an element satisfying <c>splitAfter</c>.
+/// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+/// and the element satisfying <c>splitAfter</c> will be included as the last element of
+/// the array preceding the split.
+/// For example:
+/// <code>
+/// split ((=) 100) [|1;2;3;100;100;4;100;5;6|]
+///   //returns [|[|1;2;3;100|];[|100|];[|4;100|];[|5;6|]|]
+/// </code>
+/// </summary>
+let split splitAfter (xs: _ array) : NonEmptyArray<_>[] =
+  [|
+    let mutable groupStart = 0
+    for i in 0..xs.Length - 1 do
+      if splitAfter xs.[i] then
+        yield NonEmpty xs.[groupStart..i]
+        groupStart <- i + 1
+    if groupStart < xs.Length then
+      yield NonEmpty xs.[groupStart..]
+  |]
+
+/// <summary>
 /// Slices an array given a starting index and a count of elements to return.
 /// Returns an IndexOutOfBounds Error if either <c>startIndex</c> or <c>count</c> is negative,
 /// or if there aren't enough elements in the input array.
@@ -804,6 +837,18 @@ let inline take' count xs = takeSafe count xs
 /// Returns None if <c>count</c> exceeds the length of <c>xs</c> 
 /// </summary>
 let inline tryTake count xs = takeSafe count xs |> Result.toOption
+
+/// <summary>
+/// Returns the array through the first element for which the given function returns True.
+/// Like <c>takeWhile</c>, but with an inverted predicate and 
+/// also includes the element for which the predicate first returns True.
+/// Like <c>find</c>, but returns the array of intermediary result through the found element.
+/// If the array is exhausted without finding a matching element, the entire array is returned.
+/// </summary>
+let takeUntilIncluding predicate (xs: _ array) =
+  match Array.tryFindIndex predicate xs with
+  | None -> xs
+  | Some i -> xs.[..i]
 
 /// <summary>
 /// Returns the transpose of the given sequence of arrays.  Returns a DifferingLengths Error if
@@ -1475,10 +1520,8 @@ module NonEmpty =
   ///   //returns ([|[|1;2;3;100|];[|100|];[|4;100|];[|5;6|]|])
   /// </code>
   /// </summary>
-  let split splitAfter xs = 
-    FSeq.NonEmpty.split splitAfter (toNonEmptyFSeq xs)
-    |> FSeq.NonEmpty.map FSeq.NonEmpty.toNonEmptyArray
-    |> FSeq.NonEmpty.toNonEmptyArray
+  let split splitAfter (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> = 
+    NonEmpty <| split splitAfter xs
 
   /// <summary>
   /// Splits an array between each pair of adjacent elements that satisfy <c>splitBetween</c>.
@@ -1491,7 +1534,17 @@ module NonEmpty =
   let splitPairwise splitBetween (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
     NonEmpty (splitPairwise splitBetween xs)
 
-  type ZipperExpression() = 
+  /// <summary>
+  /// Returns the array through the first element for which the given function returns True.
+  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// also includes the element for which the predicate first returns True.
+  /// Like <c>find</c>, but returns the array of intermediary result through the found element.
+  /// If the array is exhausted without finding a matching element, the entire array is returned.
+  /// </summary>
+  let takeUntilIncluding predicate (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> =
+    NonEmpty (takeUntilIncluding predicate xs)
+
+  type ZipperExpression() =
     member inline this.MergeSources(t1, t2) = 
       zipShortest t1 t2
 

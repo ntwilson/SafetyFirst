@@ -475,6 +475,27 @@ let skipLenient count (xs: _ seq) =
   }
 
 /// <summary>
+/// Returns a sequence that, when iterated, skips elements of the underlying sequence 
+/// up to and including the first element for which the given predicate returns True, 
+/// and then yields the remaining elements of the sequence.
+/// Like <c>skipWhile</c>, but with an inverted predicate and 
+/// also skips the element for which the predicate first returns True.
+/// If the sequence is exhausted without finding a matching element, an empty sequence is returned.
+/// </summary>
+let skipUntilIncluding predicate (xs: _ seq) =
+  seq {
+    use e = xs.GetEnumerator()
+    let mutable startYielding = false
+    while e.MoveNext() do
+      if startYielding then
+        yield e.Current
+
+      if not startYielding && predicate e.Current then
+        startYielding <- true
+  }
+
+
+/// <summary>
 /// Returns a sequence that lazily skips N elements of the underlying sequence and then yields the
 /// remaining elements of the sequence.
 /// Returns an empty sequence if <c>count</c> exceeds the length of <c>xs</c>.
@@ -508,6 +529,58 @@ let inline trySplitInto count xs = splitIntoSafe count xs |> Result.toOption
 /// Same as <c>Seq.splitInto</c>, but restricts the input to a PositiveInt
 /// </summary>
 let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
+
+/// <summary>
+/// Returns the sequence through the first element for which the given function returns True.
+/// Like <c>takeWhile</c>, but with an inverted predicate and 
+/// also includes the element for which the predicate first returns True.
+/// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
+/// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
+/// </summary>
+let takeUntilIncluding predicate (xs: _ seq) =
+  seq {
+    use e = xs.GetEnumerator()
+    let mutable continueLoop = true
+    while continueLoop && e.MoveNext() do
+      yield e.Current
+      if predicate e.Current then
+        continueLoop <- false
+  }
+
+
+/// <summary>
+/// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
+/// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+/// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+/// the sequence preceding the split.
+/// For example:
+/// <code>
+/// split ((=) 100) [1;2;3;100;100;4;100;5;6]
+///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
+/// </code>
+/// Both the outer sequence and each inner segment are lazy.
+/// Inner segments are safe to re-enumerate and consume in any order.
+/// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
+/// segments, due to re-traversal of the lazy chain at each level. If the source sequence
+/// is expensive to evaluate, cache it with Seq.cache before calling this function.
+/// If the source sequence is finite, you can achieve better performance by converting it to 
+/// a list or array first and using <c>List.split</c> or <c>Array.split</c> instead.
+/// </summary>
+let split splitAfter xs : seq<NonEmptySeq<_>> =
+  let takeGroup (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> = 
+    NonEmpty <| takeUntilIncluding splitAfter xs
+
+  let rec split' xs =
+    seq {
+      match xs with
+      | Empty -> ()
+      | NotEmpty neXs ->
+        yield takeGroup neXs
+        yield! split' (skipUntilIncluding splitAfter xs)
+    }
+
+  split' xs
+
 
 /// <summary>
 /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
@@ -836,6 +909,15 @@ module NonEmpty =
   let scan f initialState (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.scan f initialState xs)
 
   /// <summary>
+  /// Returns the sequence through the first element for which the given function returns True.
+  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// also includes the element for which the predicate first returns True.
+  /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
+  /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
+  /// </summary>
+  let takeUntilIncluding predicate (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (takeUntilIncluding predicate xs)
+
+  /// <summary>
   /// Builds an array from the given collection.
   /// </summary>
   let toArray (NonEmpty xs) = Seq.toArray xs
@@ -899,47 +981,15 @@ module NonEmpty =
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
   /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  /// the sequence preceeding the split.
+  /// the sequence preceding the split.
   /// For example:
   /// <code>
   /// split ((=) 100) (Seq.NonEmpty.create 1[2;3;100;100;4;100;5;6])
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
   /// </code>
   /// </summary>
-  let split splitAfter xs : NonEmptySeq<_> = 
-    let (++) (NonEmpty xs) ys = NonEmpty <| Seq.append xs ys
-  
-    let takeGroup input : NonEmptySeq<_> =
-      let rec takeGroup' input =  
-        seq { 
-          match input with
-          | SeqOneOrMore (head, tail) ->
-            if splitAfter head 
-            then yield head
-            else 
-              yield head
-              yield! takeGroup' tail
-          | _ -> ()
-        }
-
-      let head, tail = uncons input
-      if splitAfter head 
-      then singleton head
-      else singleton head ++ takeGroup' tail
-
-    let rec split' (xs:NonEmptySeq<_>) = 
-      NonEmpty (
-        seq { 
-          yield takeGroup xs
-
-          let subsequentElements = Seq.skipWhile (not << splitAfter) xs |> skipLenient 1
-          match subsequentElements with
-          | Empty -> ()
-          | NotEmpty elements -> yield! split' elements
-        }
-      )
-
-    split' (NonEmpty <| toSeq xs)
+  let split splitAfter (NonEmpty xs : NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> = 
+    NonEmpty <| split splitAfter xs
 
   /// <summary>
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.

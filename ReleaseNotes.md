@@ -2,7 +2,11 @@
 
 ## New features:
 
-Adds a `splitPairwise` function for the List/Array/Seq/FSeq modules.
+Adds new functions for the List/Array/Seq/FSeq modules:
+- `splitPairwise`
+- `split`
+- `takeUntilIncluding`
+- `skipUntilIncluding`
 
 ### InfiniteSeq
 InfiniteSeq has been reworked. It is now iterable as a regular sequence. When dealing with infinite sequences, a hang should not be considered a recoverable error with programmatic mitigation (other than possibly with a global exception handler), rather it should be considered a bug needing a fix. Therefore, InfiniteSeq is no longer designed to return a Result in the event of a hang - it's meant to throw an exception instead. Functions like `InfiniteSeq.item` now either crash for a hang or return the item without Result. Existing Result-returning functions like `item'` or Option-returning functions like `tryItem` still exist but are marked deprecated, and will be removed in version 6.0. If you still need the functionality to programmatically recover from a hang, then switch to a `try ... with :? InfiniteSequenceEvaluationHung ->` block.
@@ -12,14 +16,16 @@ New functions include:
 - `initUnbounded`: Create an "unsafe" InfiniteSeq that can hang if misused
 - `isHungAfter`: apply a new upper bound to any InfiniteSeq
 - `assume`: assume an existing seq is infinite
-- `append`: prepend any seq to the front of an infinite seq
+- `append`: prepend any seq to the front of an InfiniteSeq
 - `item`: same as `Seq.item`, but safe for infinite sequences (barring a hang)
 - `take`: same as `Seq.take`, but safe for infinite sequences (barring a hang)
 - `takeWhile`: same as `Seq.takeWhile`, but safe for infinite sequences (barring a hang)
 - `head`: same as `Seq.head`, but safe for infinite sequences (barring a hang)
 - `uncons`: same as `Seq.uncons`, but safe for infinite sequences (barring a hang)
 - `find`: same as `Seq.find`, but safe for infinite sequences (barring a hang)
+- `skipUntilIncluding`: same as `Seq.skipUntilIncluding`
 - `splitPairwise`: same as `Seq.splitPairwise`
+- `split`: same as `Seq.split`
 
 Also `Seq.isHungAfter` exists to take a potentially infinite seq that _isn't_ defined as an `InfiniteSeq` and apply an upper bound to consider the sequence hung if it produces more elements than some max number.
 

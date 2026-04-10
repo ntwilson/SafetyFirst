@@ -645,6 +645,19 @@ let skipLenient count xs =
 let inline drop count xs = skipLenient count xs
 
 /// <summary>
+/// Returns the elements of the list after the first element for which the given function returns True,
+/// discarding all elements up to and including the first match.
+/// Like <c>skipWhile</c>, but also skips the element for which the predicate first returns True.
+/// If the list is exhausted without finding a matching element, an empty list is returned.
+/// </summary>
+let rec skipUntilIncluding predicate xs =
+  match xs with
+  | [] -> []
+  | head :: tail ->
+    if predicate head then tail
+    else skipUntilIncluding predicate tail
+
+/// <summary>
 /// Splits a list into two lists, at the given index.
 /// Returns an IndexOutOfBounds Error when split index exceeds 
 /// the number of elements in the list.
@@ -730,6 +743,30 @@ let splitPairwise splitBetween xs : List<NonEmptyList<_>> =
     split' input prev currGroup completedGroups
 
 /// <summary>
+/// Splits a list at every occurrence of an element satisfying <c>splitAfter</c>.
+/// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
+/// and the element satisfying <c>splitAfter</c> will be included as the last element of
+/// the list preceding the split.
+/// For example:
+/// <code>
+/// split ((=) 100) [1;2;3;100;100;4;100;5;6]
+///   //returns [[1;2;3;100];[100];[4;100];[5;6]]
+/// </code>
+/// </summary>
+let split splitAfter xs : NonEmptyList<_> list =
+  let rec split' splitBefore input (NonEmpty currGroupLst as currentGroup : NonEmptyList<_>) completedGroups =
+    match input with
+    | [] -> currentGroup :: completedGroups
+    | head :: tail ->
+      if splitBefore head
+      then split' splitBefore tail (NonEmpty [head]) (currentGroup :: completedGroups)
+      else split' splitBefore tail (NonEmpty (head :: currGroupLst)) completedGroups
+
+  match List.rev xs, splitAfter with
+  | [], _ -> []
+  | prev :: input, splitBefore -> split' splitBefore input (NonEmpty [prev]) []
+
+/// <summary>
 /// Returns a list that skips 1 element of the underlying list and then yields the
 /// remaining elements of the list.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
@@ -775,6 +812,21 @@ let inline take' count xs = takeSafe count xs
 /// Returns None if <c>count</c> exceeds the length of <c>xs</c> 
 /// </summary>
 let inline tryTake count xs = takeSafe count xs |> Result.toOption
+
+/// <summary>
+/// Returns the list through the first element for which the given function returns True.
+/// Like <c>takeWhile</c>, but with an inverted predicate and 
+/// also includes the element for which the predicate first returns True.
+/// Like <c>find</c>, but returns the list of intermediary result through the found element.
+/// If the list is exhausted without finding a matching element, the entire list is returned.
+/// </summary>
+let takeUntilIncluding predicate xs =
+  let rec take' acc = function
+    | [] -> List.rev acc
+    | head :: tail ->
+      if predicate head then List.rev (head :: acc)
+      else take' (head :: acc) tail
+  take' [] xs
 
 /// <summary>
 /// Returns a list that yields sliding windows containing elements drawn from the input
@@ -1443,10 +1495,8 @@ module NonEmpty =
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
   /// </code>
   /// </summary>
-  let split splitAfter xs = 
-    FSeq.NonEmpty.split splitAfter (toNonEmptyFSeq xs)
-    |> Seq.NonEmpty.map Seq.NonEmpty.toNonEmptyList
-    |> Seq.NonEmpty.toNonEmptyList
+  let split splitAfter (NonEmpty xs: NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> = 
+    NonEmpty (split splitAfter xs)
 
   /// <summary>
   /// Splits a list between each pair of adjacent elements that satisfy <c>splitBetween</c>.
@@ -1459,7 +1509,17 @@ module NonEmpty =
   let splitPairwise splitBetween (NonEmpty xs: NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> =
     NonEmpty (splitPairwise splitBetween xs)
 
-  type ZipperExpression() = 
+  /// <summary>
+  /// Returns the list through the first element for which the given function returns True.
+  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// also includes the element for which the predicate first returns True.
+  /// Like <c>find</c>, but returns the list of intermediary result through the found element.
+  /// If the list is exhausted without finding a matching element, the entire list is returned.
+  /// </summary>
+  let takeUntilIncluding predicate (NonEmpty xs: NonEmptyList<_>) : NonEmptyList<_> =
+    NonEmpty (takeUntilIncluding predicate xs)
+
+  type ZipperExpression() =
     member inline this.MergeSources(t1, t2) = 
       zipShortest t1 t2
 

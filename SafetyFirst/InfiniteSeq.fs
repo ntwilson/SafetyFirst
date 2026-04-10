@@ -309,6 +309,15 @@ module InfiniteSeq =
   let skipWhile predicate (InfiniteSeq xs) = InfiniteSeq (Seq.skipWhile predicate xs)
 
   /// <summary>
+  /// Returns a sequence that, when iterated, skips elements of the underlying sequence 
+  /// up to and including the first element for which the given predicate returns True, 
+  /// and then yields the remaining elements of the sequence.
+  /// Like <c>skipWhile</c>, but with an inverted predicate and 
+  /// also skips the element for which the predicate first returns True.
+  /// </summary>
+  let skipUntilIncluding predicate (InfiniteSeq xs) = InfiniteSeq (Seq.skipUntilIncluding predicate xs)
+
+  /// <summary>
   /// Returns the first element of the sequence.
   /// This function can hang for an unbounded InfiniteSeq (created with <c>initUnbounded</c> or <c>assume</c>).
   /// This function can throw if the computation hung when called on an InfiniteSeq created with <c>init</c>.
@@ -525,25 +534,19 @@ module InfiniteSeq =
   let scan f initialState (InfiniteSeq xs) = InfiniteSeq (Seq.scan f initialState xs)
 
 
-
-  // -- tests end here -- 
-
-
-
-
   /// <summary>
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
   /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
-  /// the sequence preceeding the split.
+  /// the sequence preceding the split.
   /// For example:
   /// <code>
-  /// IniniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
+  /// InfiniteSeq.split ((=) 100) (seq {1;2;3;100;100;4;100;5;6;...})
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6];...])
   /// </code>
   /// </summary>
-  // let split splitAfter xs = 
-  //   InfiniteSeq (Seq.split splitAfter xs)
+  let split splitAfter xs = 
+    InfiniteSeq (Seq.split splitAfter xs)
 
   /// <summary>
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.

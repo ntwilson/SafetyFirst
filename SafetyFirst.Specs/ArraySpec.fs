@@ -122,7 +122,6 @@ module Splitting =
   let toArrs xs = Seq.map Array.NonEmpty.toArray xs |> Array.ofSeq
 
   [<Test>]
-
   let ``returns what the documentation says`` () =
 
     test 
@@ -172,9 +171,9 @@ module Splitting =
       @>
 
   [<Test>]
-  let ``splits pairwise properly for multiple types of inputs`` () = 
+  let ``splits pairwise properly for multiple types of inputs`` () =
     let bigDiff i j = abs (i - j) > 5
-    test 
+    test
       <@
         (Array.NonEmpty.splitPairwise (=) (Array.NonEmpty.singleton 0) |> toArrs) = [|[|0|]|]
         &&
@@ -188,3 +187,108 @@ module Splitting =
         (Array.NonEmpty.splitPairwise (bigDiff) (Array.NonEmpty.create 1 [|2;12;13;23|]) |> toArrs)
           = [|[|1;2|]; [|12;13|]; [|23|]|]
       @>
+
+  [<Test>]
+  let ``split returns what the documentation says`` () =
+    test
+      <@
+        (Array.split ((=) 100) [|1;2;3;100;100;4;100;5;6|] |> toArrs)
+          = [|[|1;2;3;100|];[|100|];[|4;100|];[|5;6|]|]
+      @>
+
+  [<Test>]
+  let ``split handles empty and single element arrays`` () =
+    test
+      <@
+        (Array.split ((=) 5) [||] |> toArrs) = [||]
+        &&
+        (Array.split ((=) 5) [|0|] |> toArrs) = [|[|0|]|]
+        &&
+        (Array.split ((=) 5) [|5|] |> toArrs) = [|[|5|]|]
+        &&
+        (Array.split ((=) 5) [|5;5|] |> toArrs) = [|[|5|]; [|5|]|]
+      @>
+
+  [<Test>]
+  let ``split splits properly for multiple types of inputs`` () =
+    test
+      <@
+        (Array.split ((=) 5) [|0|] |> toArrs) = [|[|0|]|]
+        &&
+        (Array.split ((=) 5) [|5|] |> toArrs) = [|[|5|]|]
+        &&
+        (Array.split ((=) 5) [|0;5|] |> toArrs) = [|[|0; 5|]|]
+        &&
+        (Array.split ((=) 5) [|5;5|] |> toArrs) = [|[|5|]; [|5|]|]
+        &&
+        (Array.split ((=) 5) [|5;0|] |> toArrs) = [|[|5|]; [|0|]|]
+        &&
+        (Array.split ((=) 5) [|5;0;0;5;5;0;5|] |> toArrs) = [|[|5|]; [|0;0;5|]; [|5|]; [|0;5|]|]
+      @>
+
+module TakeUntilIncluding =
+  [<Test>]
+  let ``NonEmpty.takeUntilIncluding returns through the first matching element`` () =
+    test
+      <@
+        Array.NonEmpty.takeUntilIncluding ((=) 3) (Array.NonEmpty.create 1 [|2;3;4;5|])
+          = Array.NonEmpty.create 1 [|2;3|]
+        &&
+        Array.NonEmpty.takeUntilIncluding ((=) 1) (Array.NonEmpty.create 1 [|2;3;4;5|])
+          = Array.NonEmpty.singleton 1
+        &&
+        Array.NonEmpty.takeUntilIncluding ((=) 99) (Array.NonEmpty.create 1 [|2;3|])
+          = Array.NonEmpty.create 1 [|2;3|]
+      @>
+
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ Array.takeUntilIncluding (fun _ -> true) [||] = [||] @>
+
+  [<Test>]
+  let ``returns through the first matching element`` () =
+    test <@ Array.takeUntilIncluding ((=) 3) [|1;2;3;4;5|] = [|1;2;3|] @>
+
+  [<Test>]
+  let ``returns only the first element when it matches`` () =
+    test <@ Array.takeUntilIncluding ((=) 3) [|3;4;5|] = [|3|] @>
+
+  [<Test>]
+  let ``stops at the first match even when multiple elements match`` () =
+    test <@ Array.takeUntilIncluding ((=) 3) [|1;3;3;3|] = [|1;3|] @>
+
+  [<Test>]
+  let ``returns the full array when no element matches`` () =
+    test <@ Array.takeUntilIncluding ((=) 99) [|1;2;3|] = [|1;2;3|] @>
+
+module SkipUntilIncluding =
+  [<Test>]
+  let ``returns empty for empty input`` () =
+    test <@ Array.skipUntilIncluding (fun _ -> true) [||] = [||] @>
+
+  [<Test>]
+  let ``returns elements after the first matching element`` () =
+    test <@ Array.skipUntilIncluding ((=) 3) [|1;2;3;4;5|] = [|4;5|] @>
+
+  [<Test>]
+  let ``returns elements after the first element when it matches`` () =
+    test <@ Array.skipUntilIncluding ((=) 3) [|3;4;5|] = [|4;5|] @>
+
+  [<Test>]
+  let ``stops skipping at the first match even when multiple elements match`` () =
+    test <@ Array.skipUntilIncluding ((=) 3) [|1;3;3;3|] = [|3;3|] @>
+
+  [<Test>]
+  let ``returns empty when the match is the last element`` () =
+    test <@ Array.skipUntilIncluding ((=) 3) [|1;2;3|] = [||] @>
+
+  [<Test>]
+  let ``returns empty when no element matches`` () =
+    test <@ Array.skipUntilIncluding ((=) 99) [|1;2;3|] = [||] @>
+
+  [<Test>]
+  let ``takeUntilIncluding and skipUntilIncluding partition the array`` () =
+    let xs = [|1;2;3;4;5|]
+    let taken = Array.takeUntilIncluding ((=) 3) xs
+    let skipped = Array.skipUntilIncluding ((=) 3) xs
+    test <@ Array.append taken skipped = xs @>
