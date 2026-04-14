@@ -2441,7 +2441,7 @@ module FSeq =
     /// </summary>
     // this implementation is faster than the version in Seq.NonEmpty, but is unsafe for infinite sequences
     // so this should be the default used for any finite sequence (including lists and arrays) 
-    let split splitAfter (NonEmpty xs: NonEmptyFSeq<_>) : NonEmptyFSeq<NonEmptyFSeq<_>> = 
+    let split splitAfter (NonEmptyFSeq xs: NonEmptyFSeq<_>) : NonEmptyFSeq<NonEmptyFSeq<_>> = 
       NonEmpty (FiniteSeq.split splitAfter xs)
 
     /// <summary>
@@ -2454,7 +2454,7 @@ module FSeq =
     /// The outer sequence is lazy, but each inner segment is eagerly materialized when the outer
     /// sequence advances to it.
     /// </summary>
-    let splitPairwise splitBetween (NonEmpty xs) : NonEmptyFSeq<NonEmptyFSeq<_>> =
+    let splitPairwise splitBetween (NonEmptyFSeq xs) : NonEmptyFSeq<NonEmptyFSeq<_>> =
       NonEmpty (FiniteSeq.splitPairwise splitBetween xs)
 
     /// <summary>
