@@ -1,3 +1,9 @@
+# Version 5.4.1
+
+## Bug fixes:
+
+- Fix an inadvertently changed signature breaking binary compatibility with 5.3.0
+
 # Version 5.4.0
 
 ## New features:

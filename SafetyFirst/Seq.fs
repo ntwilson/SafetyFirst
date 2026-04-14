@@ -988,7 +988,7 @@ module NonEmpty =
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
   /// </code>
   /// </summary>
-  let split splitAfter (NonEmpty xs : NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> = 
+  let split splitAfter (NonEmpty xs) : NonEmptySeq<NonEmptySeq<_>> = 
     NonEmpty <| split splitAfter xs
 
   /// <summary>
@@ -1006,7 +1006,7 @@ module NonEmpty =
   /// If the source sequence is finite, you can achieve better performance by converting it to 
   /// a list or array first and using <c>List.splitPairwise</c> or <c>Array.splitPairwise</c> instead.
   /// </summary>
-  let splitPairwise splitBetween (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<NonEmptySeq<_>> =
+  let splitPairwise splitBetween (NonEmpty xs) : NonEmptySeq<NonEmptySeq<_>> =
     NonEmpty <| splitPairwise splitBetween xs
 
   type ZipperExpression() = 
