@@ -1519,6 +1519,353 @@ module NonEmpty =
   let takeUntilIncluding predicate (NonEmpty xs: NonEmptyList<_>) : NonEmptyList<_> =
     NonEmpty (takeUntilIncluding predicate xs)
 
+  /// <summary>
+  /// Divides the input list into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let chunkBySizeSafe size (NonEmpty xs : NonEmptyList<_>) : Result<NonEmptyList<NonEmptyList<_>>, _> =
+    NonEmpty <!> chunkBySizeSafe size xs
+
+  /// <summary>
+  /// Divides the input list into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  [<CompiledName("chunkBySizeSafe_F#")>]
+  let inline chunkBySize' size xs = chunkBySizeSafe size xs
+
+  /// <summary>
+  /// Divides the input list into chunks of size at most <c>size</c>.
+  /// Returns None if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let inline tryChunkBySize size xs = chunkBySizeSafe size xs |> Result.toOption
+
+  /// <summary>
+  /// Divides the input list into chunks of size at most <c>size</c>.
+  /// </summary>
+  let chunksOf size (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> =
+    NonEmpty (chunksOf size xs)
+
+  /// <summary>
+  /// If the input list has only one element, returns that element.
+  /// Returns a WrongNumberOfElements Error if the input list has more than one element.
+  /// </summary>
+  let exactlyOneSafe (NonEmpty xs : NonEmptyList<_>) = exactlyOneSafe xs
+
+  /// <summary>
+  /// If the input list has only one element, returns that element.
+  /// Returns a WrongNumberOfElements Error if the input list has more than one element.
+  /// </summary>
+  [<CompiledName("exactlyOneSafe_F#")>]
+  let inline exactlyOne' xs = exactlyOneSafe xs
+
+  /// <summary>
+  /// If the input list has only one element, returns that element.
+  /// Returns None if the input list has more than one element.
+  /// </summary>
+  let inline tryExactlyOne xs = exactlyOneSafe xs |> Result.toOption
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two lists, threading an accumulator argument
+  /// through the computation.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let fold2Safe folder initialState (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) =
+    fold2Safe folder initialState xs ys
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two lists, threading an accumulator argument
+  /// through the computation.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  [<CompiledName("fold2Safe_F#")>]
+  let inline fold2' folder initialState xs ys = fold2Safe folder initialState xs ys
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two lists, threading an accumulator argument
+  /// through the computation.
+  /// Returns None if the input lists have a different number of elements.
+  /// </summary>
+  let inline tryFold2 folder initialState xs ys = fold2Safe folder initialState xs ys |> Result.toOption
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two lists, starting from the end, threading an
+  /// accumulator argument through the computation.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let foldBack2Safe folder (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) initialState =
+    foldBack2Safe folder xs ys initialState
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two lists, starting from the end, threading an
+  /// accumulator argument through the computation.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  [<CompiledName("foldBack2Safe_F#")>]
+  let inline foldBack2' folder xs ys initialState = foldBack2Safe folder xs ys initialState
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two lists, starting from the end, threading an
+  /// accumulator argument through the computation.
+  /// Returns None if the input lists have a different number of elements.
+  /// </summary>
+  let inline tryFoldBack2 folder xs ys initialState = foldBack2Safe folder xs ys initialState |> Result.toOption
+
+  /// <summary>
+  /// Tests if all corresponding elements of the lists satisfy the given predicate pairwise.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// Note: if the predicate is proven false before the shorter list is exhausted, returns
+  /// <c>Ok false</c> even if the lists have different lengths.
+  /// </summary>
+  let forall2Safe predicate (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) =
+    forall2Safe predicate xs ys
+
+  /// <summary>
+  /// Tests if all corresponding elements of the lists satisfy the given predicate pairwise.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// Note: if the predicate is proven false before the shorter list is exhausted, returns
+  /// <c>Ok false</c> even if the lists have different lengths.
+  /// </summary>
+  [<CompiledName("forall2Safe_F#")>]
+  let inline forall2' predicate xs ys = forall2Safe predicate xs ys
+
+  /// <summary>
+  /// Tests if all corresponding elements of the lists satisfy the given predicate pairwise.
+  /// Returns None if the input lists have a different number of elements.
+  /// Note: if the predicate is proven false before the shorter list is exhausted, returns
+  /// <c>Ok false</c> even if the lists have different lengths.
+  /// </summary>
+  let inline tryForall2 predicate xs ys = forall2Safe predicate xs ys |> Result.toOption
+
+  /// <summary>
+  /// Gets the element at the specified index.
+  /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the list.
+  /// </summary>
+  let itemSafe index (NonEmpty xs : NonEmptyList<_>) = itemSafe index xs
+
+  /// <summary>
+  /// Gets the element at the specified index.
+  /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the list.
+  /// </summary>
+  [<CompiledName("itemSafe_F#")>]
+  let inline item' index xs = itemSafe index xs
+
+  /// <summary>
+  /// Applies the given function to two lists simultaneously.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let iter2Safe action (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) =
+    iter2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two lists simultaneously.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  [<CompiledName("iter2Safe_F#")>]
+  let inline iter2' action xs ys = iter2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two lists simultaneously.
+  /// Returns None if the input lists have a different number of elements.
+  /// </summary>
+  let inline tryIter2 action xs ys = iter2Safe action xs ys |> Result.toOption
+
+  /// <summary>
+  /// Applies the given function to two lists simultaneously, also passing the index of the elements.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let iteri2Safe action (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) =
+    iteri2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two lists simultaneously, also passing the index of the elements.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  [<CompiledName("iteri2Safe_F#")>]
+  let inline iteri2' action xs ys = iteri2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two lists simultaneously, also passing the index of the elements.
+  /// Returns None if the input lists have a different number of elements.
+  /// </summary>
+  let inline tryIteri2 action xs ys = iteri2Safe action xs ys |> Result.toOption
+
+  /// <summary>
+  /// Like mapi, but mapping corresponding elements from two lists of equal length.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let mapi2Safe f (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) : Result<NonEmptyList<_>,_> =
+    NonEmpty <!> mapi2Safe f xs ys
+
+  /// <summary>
+  /// Like mapi, but mapping corresponding elements from two lists of equal length.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  [<CompiledName("mapi2Safe_F#")>]
+  let inline mapi2' f xs ys : Result<NonEmptyList<_>,_> = mapi2Safe f xs ys
+
+  /// <summary>
+  /// Like mapi, but mapping corresponding elements from two lists of equal length.
+  /// Returns None if the input lists have a different number of elements.
+  /// </summary>
+  let inline tryMapi2 f xs ys : Option<NonEmptyList<_>> = mapi2Safe f xs ys |> Result.toOption
+
+  /// <summary>
+  /// Builds a new list whose elements are the results of applying the given function
+  /// to the corresponding elements of the three lists simultaneously.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  let map3Safe f (NonEmpty xs : NonEmptyList<_>) (NonEmpty ys : NonEmptyList<_>) (NonEmpty zs : NonEmptyList<_>) : Result<NonEmptyList<_>,_> =
+    NonEmpty <!> map3Safe f xs ys zs
+
+  /// <summary>
+  /// Builds a new list whose elements are the results of applying the given function
+  /// to the corresponding elements of the three lists simultaneously.
+  /// Returns a DifferingLengths Error if the input lists have a different number of elements.
+  /// </summary>
+  [<CompiledName("map3Safe_F#")>]
+  let inline map3' f xs ys zs : Result<NonEmptyList<_>,_> = map3Safe f xs ys zs
+
+  /// <summary>
+  /// Builds a new list whose elements are the results of applying the given function
+  /// to the corresponding elements of the three lists simultaneously.
+  /// Returns None if the input lists have a different number of elements.
+  /// </summary>
+  let inline tryMap3 f xs ys zs : Option<NonEmptyList<_>> = map3Safe f xs ys zs |> Result.toOption
+
+  /// <summary>
+  /// Returns the first result where the given function returns "Some(x)".
+  /// Returns a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let pickSafe chooser (NonEmpty xs : NonEmptyList<_>) = pickSafe chooser xs
+
+  /// <summary>
+  /// Returns the first result where the given function returns "Some(x)".
+  /// Returns a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  [<CompiledName("pickSafe_F#")>]
+  let inline pick' chooser xs = pickSafe chooser xs
+
+  /// <summary>
+  /// Returns the first result where the given function returns "Some(x)".
+  /// Returns None if no such element exists.
+  /// </summary>
+  let tryPick chooser (NonEmpty xs : NonEmptyList<_>) = List.tryPick chooser xs
+
+  /// <summary>
+  /// Returns the elements of the list after the first element for which the given function returns True.
+  /// If no element matches, an empty list is returned.
+  /// </summary>
+  let skipUntilIncluding predicate (NonEmpty xs : NonEmptyList<_>) = skipUntilIncluding predicate xs
+
+  /// <summary>
+  /// Splits a list into two lists, at the given index.
+  /// Returns an IndexOutOfBounds Error when the split index is negative or exceeds the number of elements.
+  /// </summary>
+  let splitAtSafe index (NonEmpty xs : NonEmptyList<_>) = splitAtSafe index xs
+
+  /// <summary>
+  /// Splits a list into two lists, at the given index.
+  /// Returns an IndexOutOfBounds Error when the split index is negative or exceeds the number of elements.
+  /// </summary>
+  [<CompiledName("splitAtSafe_F#")>]
+  let inline splitAt' index xs = splitAtSafe index xs
+
+  /// <summary>
+  /// Splits a list into two lists, at the given index.
+  /// Returns None when the split index is negative or exceeds the number of elements.
+  /// </summary>
+  let inline trySplitAt index xs = splitAtSafe index xs |> Result.toOption
+
+  /// <summary>
+  /// Splits the input list into at most <c>count</c> chunks.
+  /// Returns a NegativeInput Error if <c>count</c> is not positive.
+  /// </summary>
+  let splitIntoSafe count (NonEmpty xs : NonEmptyList<_>) : Result<NonEmptyList<NonEmptyList<_>>, _> =
+    NonEmpty <!> splitIntoSafe count xs
+
+  /// <summary>
+  /// Splits the input list into at most <c>count</c> chunks.
+  /// Returns a NegativeInput Error if <c>count</c> is not positive.
+  /// </summary>
+  [<CompiledName("splitIntoSafe_F#")>]
+  let inline splitInto' count xs = splitIntoSafe count xs
+
+  /// <summary>
+  /// Splits the input list into at most <c>count</c> chunks.
+  /// Returns None if <c>count</c> is not positive.
+  /// </summary>
+  let inline trySplitInto count xs = splitIntoSafe count xs |> Result.toOption
+
+  /// <summary>
+  /// Splits the input list into at most <c>count</c> chunks.
+  /// </summary>
+  let splitIntoN count (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<NonEmptyList<_>> =
+    NonEmpty (splitIntoN count xs)
+
+  /// <summary>
+  /// Returns the sum of the elements in the list.
+  /// </summary>
+  let inline sum (NonEmpty xs : NonEmptyList<_>) = List.sum xs
+
+  /// <summary>
+  /// Returns the sum of the results generated by applying the function to each element of the list.
+  /// </summary>
+  let inline sumBy projection (NonEmpty xs : NonEmptyList<_>) = List.sumBy projection xs
+
+  /// <summary>
+  /// Applies the given function to each element of the list.
+  /// </summary>
+  let iter action (NonEmpty xs : NonEmptyList<_>) = List.iter action xs
+
+  /// <summary>
+  /// Applies the given function to each element of the list, also passing the index of the element.
+  /// </summary>
+  let iteri action (NonEmpty xs : NonEmptyList<_>) = List.iteri action xs
+
+  /// <summary>
+  /// Applies the given function to each element of the list, returning the list of results
+  /// for each element where the function returns Some.
+  /// </summary>
+  let choose chooser (NonEmpty xs : NonEmptyList<_>) = List.choose chooser xs
+
+  /// <summary>
+  /// Returns the elements of the list while the given predicate returns True.
+  /// </summary>
+  let takeWhile predicate (NonEmpty xs : NonEmptyList<_>) = List.takeWhile predicate xs
+
+  /// <summary>
+  /// Bypasses elements of the list while the given predicate returns True, and then returns
+  /// the remaining elements.
+  /// </summary>
+  let skipWhile predicate (NonEmpty xs : NonEmptyList<_>) = List.skipWhile predicate xs
+
+  /// <summary>
+  /// Sorts the elements of a list, using the given comparison function. This is a stable sort.
+  /// </summary>
+  let sortWith comparer (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> = NonEmpty (List.sortWith comparer xs)
+
+  /// <summary>
+  /// Like foldBack, but returns both the intermediary and final results.
+  /// </summary>
+  let scanBack f (NonEmpty xs : NonEmptyList<_>) initialState : NonEmptyList<_> =
+    NonEmpty (List.scanBack f xs initialState)
+
+  /// <summary>
+  /// Combines map and fold. Builds a new list whose elements are the results of applying the given
+  /// function to each element, while also threading an accumulator through the computation.
+  /// </summary>
+  let mapFold mapping initialState (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> * _ =
+    let (results, finalState) = List.mapFold mapping initialState xs
+    (NonEmpty results, finalState)
+
+  /// <summary>
+  /// Combines map and foldBack. Builds a new list whose elements are the results of applying the given
+  /// function to each element, while also threading an accumulator through the computation starting from the end.
+  /// </summary>
+  let mapFoldBack mapping (NonEmpty xs : NonEmptyList<_>) initialState : NonEmptyList<_> * _ =
+    let (results, finalState) = List.mapFoldBack mapping xs initialState
+    (NonEmpty results, finalState)
+
   type ZipperExpression() =
     member inline this.MergeSources(t1, t2) = 
       zipShortest t1 t2

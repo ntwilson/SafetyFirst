@@ -1,3 +1,33 @@
+# Version 5.5.0
+
+## New features:
+
+Brings the `NonEmpty` submodules closer to parity with their parent modules, so a NonEmpty collection
+no longer needs converting back before calling these. Where the input being non-empty guarantees a
+non-empty result, the result is NonEmpty.
+
+### Array.NonEmpty and List.NonEmpty
+- `chunkBySize` (Safe/'/try), `chunksOf`
+- `exactlyOne` (Safe/'/try), `item` (Safe/'), `pick` (Safe/'), `tryPick`
+- `fold2`, `foldBack2`, `forall2`, `iter2`, `iteri2` (Safe/'/try)
+- `mapi2`, `map3` (Safe/'/try)
+- `skipUntilIncluding`, `splitAt` (Safe/'/try), `splitInto` (Safe/'/try), `splitIntoN`
+- `sub` (Safe/'/try) - Array only
+- `sum`, `sumBy`, `iter`, `iteri`, `choose`, `takeWhile`, `skipWhile`, `sortWith`, `scanBack`, `mapFold`, `mapFoldBack`
+
+### Seq.NonEmpty
+- `averageBy`, `last`, `reduceBack`, `foldBack`, `contains`, `countBy`, `exists`, `forall`, `groupBy`
+- `chunkBySize` (Safe/'/try), `chunksOf`, `splitInto` (Safe/'/try), `splitIntoN`, `windowed` (Safe/'/try), `window`
+- `exactlyOne` (Safe/'/try), `item` (Safe/'), `pick` (Safe/'), `tryPick`
+- `find`, `findBack`, `findIndex`, `findIndexBack` (Safe/'), `tryFindBack`, `tryFindIndex`, `tryFindIndexBack`
+- `drop`, `dropLenient`, `skipUntilIncluding`
+- `sort`, `sortBy`, `sortDescending`, `sortByDescending`, `zip3`
+- `sum`, `sumBy`, `iter`, `iteri`, `choose`, `takeWhile`, `skipWhile`, `sortWith`, `scanBack`, `mapFold`, `mapFoldBack`
+
+### FSeq.NonEmpty
+- `cons`, `chunkBySize` (Safe/'/try), `chunksOf`, `splitInto` (Safe/'/try), `splitIntoN`, `skipUntilIncluding`
+- `sum`, `sumBy`, `iter`, `iteri`, `choose`, `takeWhile`, `skipWhile`, `sortWith`, `scanBack`, `mapFold`, `mapFoldBack`
+
 # Version 5.4.2
 
 ## Bug fixes:

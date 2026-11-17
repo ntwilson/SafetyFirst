@@ -532,3 +532,88 @@ let ``zips multiple sequences together via computation expression`` () =
     }
 
   test <@ List.ofSeq result = [11;23;35;47;59] @>
+
+module NonEmptyParity =
+  let ne (xs : _ seq) : NonEmptySeq<_> = NonEmpty.assume xs
+  let unwrapAll xs = xs |> Seq.NonEmpty.toList |> List.map Array.NonEmpty.toList
+
+  [<Test>]
+  let ``chunking and splitting a NonEmpty seq yields NonEmpty chunks`` () =
+    test <@ Seq.NonEmpty.chunkBySize' 2 (ne [1;2;3;4;5]) |> Result.map unwrapAll = Ok [[1;2];[3;4];[5]] @>
+    test <@ Seq.NonEmpty.tryChunkBySize 0 (ne [1]) |> Option.isNone @>
+    test <@ Seq.NonEmpty.chunksOf (PositiveInt.assume 3) (ne [1;2;3;4]) |> unwrapAll = [[1;2;3];[4]] @>
+    test <@ Seq.NonEmpty.splitInto' 2 (ne [1;2;3]) |> Result.map unwrapAll = Ok [[1;2];[3]] @>
+    test <@ Seq.NonEmpty.trySplitInto 0 (ne [1]) |> Option.isNone @>
+    test <@ Seq.NonEmpty.splitIntoN (PositiveInt.assume 5) (ne [1;2]) |> unwrapAll = [[1];[2]] @>
+    test <@ Seq.NonEmpty.windowed' 2 (ne [1;2;3]) |> Result.map (Seq.map Array.NonEmpty.toList >> List.ofSeq) = Ok [[1;2];[2;3]] @>
+    test <@ Seq.NonEmpty.tryWindowed 0 (ne [1]) |> Option.isNone @>
+    test <@ Seq.NonEmpty.window (PositiveInt.assume 3) (ne [1;2]) |> Seq.isEmpty @>
+
+  [<Test>]
+  let ``finding, picking, and indexing behave like their Seq counterparts`` () =
+    let xs = ne [1;2;3;2]
+    test <@ Seq.NonEmpty.find' ((=) 2) xs = Ok 2 @>
+    test <@ Seq.NonEmpty.findBack' ((>) 3) xs = Ok 2 @>
+    test <@ Seq.NonEmpty.findIndex' ((=) 2) xs = Ok 1 @>
+    test <@ Seq.NonEmpty.findIndexBack' ((=) 2) xs = Ok 3 @>
+    test <@ Seq.NonEmpty.findIndexBack' ((=) 9) xs |> Result.isError @>
+    test <@ Seq.NonEmpty.tryFindBack ((>) 3) xs = Some 2 @>
+    test <@ Seq.NonEmpty.tryFindIndex ((=) 9) xs = None @>
+    test <@ Seq.NonEmpty.tryFindIndexBack ((=) 2) xs = Some 3 @>
+    test <@ Seq.NonEmpty.item' 2 xs = Ok 3 @>
+    test <@ Seq.NonEmpty.item' 4 xs |> Result.isError @>
+    test <@ Seq.NonEmpty.pick' (fun x -> if x > 2 then Some x else None) xs = Ok 3 @>
+    test <@ Seq.NonEmpty.tryPick (fun _ -> None) xs = (None : int option) @>
+    test <@ Seq.NonEmpty.exactlyOne' (Seq.NonEmpty.singleton 7) = Ok 7 @>
+    test <@ Seq.NonEmpty.tryExactlyOne xs = None @>
+
+  [<Test>]
+  let ``aggregates and predicates behave like their Seq counterparts`` () =
+    let xs = ne [3;1;2]
+    let average = Seq.NonEmpty.averageBy float xs
+    test <@ average = 2.0 @>
+    test <@ Seq.NonEmpty.last xs = 2 @>
+    test <@ Seq.NonEmpty.reduceBack (-) xs = 3 - (1 - 2) @>
+    test <@ Seq.NonEmpty.foldBack (fun x s -> x :: s) xs [] = [3;1;2] @>
+    test <@ Seq.NonEmpty.contains 1 xs && not (Seq.NonEmpty.contains 9 xs) @>
+    test <@ Seq.NonEmpty.exists ((=) 2) xs && Seq.NonEmpty.forall ((<) 0) xs @>
+    test <@ Seq.NonEmpty.countBy (fun x -> x % 2) xs |> Seq.NonEmpty.toList = [(1, 2); (0, 1)] @>
+    test <@ Seq.NonEmpty.groupBy (fun x -> x % 2) xs |> Seq.NonEmpty.toList |> List.map (fun (k, g) -> (k, List.ofSeq g)) = [(1, [3;1]); (0, [2])] @>
+    let total = Seq.NonEmpty.sum xs
+    let totalBy = Seq.NonEmpty.sumBy float xs
+    test <@ total = 6 && totalBy = 6.0 @>
+
+  [<Test>]
+  let ``sorting preserves NonEmpty`` () =
+    let xs = ne [3;1;2]
+    test <@ Seq.NonEmpty.sort xs |> Seq.NonEmpty.toList = [1;2;3] @>
+    test <@ Seq.NonEmpty.sortDescending xs |> Seq.NonEmpty.toList = [3;2;1] @>
+    test <@ Seq.NonEmpty.sortBy (~-) xs |> Seq.NonEmpty.toList = [3;2;1] @>
+    test <@ Seq.NonEmpty.sortByDescending (~-) xs |> Seq.NonEmpty.toList = [1;2;3] @>
+    test <@ Seq.NonEmpty.sortWith compare xs |> Seq.NonEmpty.toList = [1;2;3] @>
+
+  [<Test>]
+  let ``dropping and skipping return plain seqs`` () =
+    let xs = ne [1;2;3]
+    test <@ Seq.NonEmpty.drop (NaturalInt.assume 2) xs |> List.ofSeq = [3] @>
+    test <@ Seq.NonEmpty.drop (NaturalInt.assume 5) xs |> Seq.isEmpty @>
+    test <@ Seq.NonEmpty.dropLenient -1 xs |> List.ofSeq = [1;2;3] @>
+    test <@ Seq.NonEmpty.skipUntilIncluding ((=) 2) xs |> List.ofSeq = [3] @>
+    test <@ Seq.NonEmpty.takeWhile ((<>) 2) xs |> List.ofSeq = [1] @>
+    test <@ Seq.NonEmpty.skipWhile ((<>) 2) xs |> List.ofSeq = [2;3] @>
+    test <@ Seq.NonEmpty.choose (fun x -> if x > 1 then Some x else None) xs |> List.ofSeq = [2;3] @>
+
+  [<Test>]
+  let ``zip3, scanBack, and mapFold preserve NonEmpty`` () =
+    let xs = ne [3;1;2]
+    test <@ Seq.NonEmpty.zip3 xs (ne [10;20]) (ne (Seq.initInfinite id)) |> Seq.NonEmpty.toList = [(3,10,0);(1,20,1)] @>
+    test <@ Seq.NonEmpty.scanBack (+) xs 0 |> Seq.NonEmpty.toList = [6;3;2;0] @>
+    let (mapped, total) = Seq.NonEmpty.mapFold (fun s x -> (x * 2, s + x)) 0 xs
+    test <@ Seq.NonEmpty.toList mapped = [6;2;4] && total = 6 @>
+    let (mappedBack, totalBack) = Seq.NonEmpty.mapFoldBack (fun x s -> (x * 2, s + x)) xs 0
+    test <@ Seq.NonEmpty.toList mappedBack = [6;2;4] && totalBack = 6 @>
+
+    let visited = ResizeArray ()
+    Seq.NonEmpty.iter visited.Add xs
+    Seq.NonEmpty.iteri (fun i x -> visited.Add (i * x)) xs
+    test <@ List.ofSeq visited = [3;1;2;0;1;4] @>

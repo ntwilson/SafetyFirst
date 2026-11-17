@@ -326,3 +326,77 @@ module SkipUntilIncluding =
     let taken = List.takeUntilIncluding ((=) 3) xs
     let skipped = List.skipUntilIncluding ((=) 3) xs
     test <@ taken @ skipped = xs @>
+
+module NonEmptyParity =
+  open SafetyFirst.Numbers
+
+  let ne xs = NonEmpty.assume xs
+  let unwrapAll xs = xs |> List.NonEmpty.toList |> List.map List.NonEmpty.toList
+
+  [<Test>]
+  let ``chunking and splitting a NonEmpty array yields NonEmpty chunks`` () =
+    test <@ List.NonEmpty.chunkBySize' 2 (ne [1;2;3;4;5]) |> Result.map unwrapAll = Ok [[1;2];[3;4];[5]] @>
+    test <@ List.NonEmpty.tryChunkBySize 0 (ne [1]) = None @>
+    test <@ List.NonEmpty.chunksOf (PositiveInt.assume 3) (ne [1;2;3;4]) |> unwrapAll = [[1;2;3];[4]] @>
+    test <@ List.NonEmpty.splitInto' 2 (ne [1;2;3]) |> Result.map unwrapAll = Ok [[1;2];[3]] @>
+    test <@ List.NonEmpty.trySplitInto 0 (ne [1]) = None @>
+    test <@ List.NonEmpty.splitIntoN (PositiveInt.assume 5) (ne [1;2]) |> unwrapAll = [[1];[2]] @>
+
+  [<Test>]
+  let ``exactlyOne, item, and pick behave like their List counterparts`` () =
+    test <@ List.NonEmpty.exactlyOne' (List.NonEmpty.singleton 7) = Ok 7 @>
+    test <@ List.NonEmpty.tryExactlyOne (ne [1;2]) = None @>
+    test <@ List.NonEmpty.item' 1 (ne [1;2]) = Ok 2 @>
+    test <@ List.NonEmpty.item' 2 (ne [1;2]) |> Result.isError @>
+    test <@ List.NonEmpty.pick' (fun x -> if x > 1 then Some (x * 10) else None) (ne [1;2;3]) = Ok 20 @>
+    test <@ List.NonEmpty.pick' (fun _ -> None) (ne [1]) |> Result.isError @>
+    test <@ List.NonEmpty.tryPick (fun _ -> None) (ne [1]) = (None : int option) @>
+
+  [<Test>]
+  let ``two-array functions error on differing lengths`` () =
+    let xs = ne [1;2;3]
+    let ys = ne [10;20;30]
+    let short = ne [1]
+    test <@ List.NonEmpty.fold2' (fun s x y -> s + x * y) 0 xs ys = Ok 140 @>
+    test <@ List.NonEmpty.tryFold2 (fun s x y -> s + x * y) 0 xs short = None @>
+    test <@ List.NonEmpty.foldBack2' (fun x y s -> (x, y) :: s) xs ys [] = Ok [(1,10);(2,20);(3,30)] @>
+    test <@ List.NonEmpty.tryFoldBack2 (fun x y s -> s) xs short 0 = None @>
+    test <@ List.NonEmpty.forall2' (<) xs ys = Ok true @>
+    test <@ List.NonEmpty.tryForall2 (<=) xs short = None @>
+    test <@ List.NonEmpty.iter2' (fun _ _ -> ()) xs ys = Ok () @>
+    test <@ List.NonEmpty.tryIter2 (fun _ _ -> ()) xs short = None @>
+    test <@ List.NonEmpty.iteri2' (fun _ _ _ -> ()) xs ys = Ok () @>
+    test <@ List.NonEmpty.tryIteri2 (fun _ _ _ -> ()) xs short = None @>
+
+  [<Test>]
+  let ``mapi2 and map3 preserve NonEmpty`` () =
+    let xs = ne [1;2]
+    test <@ List.NonEmpty.mapi2' (fun i x y -> i + x + y) xs (ne [10;20]) = Ok (ne [11;23]) @>
+    test <@ List.NonEmpty.tryMapi2 (fun i x y -> i + x + y) xs (ne [10]) = None @>
+    test <@ List.NonEmpty.map3' (fun x y z -> x + y + z) xs xs (ne [100;200]) = Ok (ne [102;204]) @>
+    test <@ List.NonEmpty.tryMap3 (fun x y z -> x + y + z) xs xs (ne [100]) = None @>
+
+  [<Test>]
+  let ``skipUntilIncluding and splitAt return plain lists`` () =
+    test <@ List.NonEmpty.skipUntilIncluding ((=) 2) (ne [1;2;3]) = [3] @>
+    test <@ List.NonEmpty.splitAt' 1 (ne [1;2;3]) = Ok ([1], [2;3]) @>
+    test <@ List.NonEmpty.trySplitAt 4 (ne [1;2;3]) = None @>
+
+  [<Test>]
+  let ``FSharp.Core passthroughs behave like their List counterparts`` () =
+    let xs = ne [3;1;2]
+    let total = List.NonEmpty.sum xs
+    let totalBy = List.NonEmpty.sumBy float xs
+    test <@ total = 6 && totalBy = 6.0 @>
+    test <@ List.NonEmpty.choose (fun x -> if x > 1 then Some x else None) xs = [3;2] @>
+    test <@ List.NonEmpty.takeWhile ((<>) 1) xs = [3] @>
+    test <@ List.NonEmpty.skipWhile ((<>) 1) xs = [1;2] @>
+    test <@ List.NonEmpty.sortWith compare xs = ne [1;2;3] @>
+    test <@ List.NonEmpty.scanBack (+) xs 0 = ne [6;3;2;0] @>
+    test <@ List.NonEmpty.mapFold (fun s x -> (x * 2, s + x)) 0 xs = (ne [6;2;4], 6) @>
+    test <@ List.NonEmpty.mapFoldBack (fun x s -> (x * 2, s + x)) xs 0 = (ne [6;2;4], 6) @>
+
+    let visited = ResizeArray ()
+    List.NonEmpty.iter visited.Add xs
+    List.NonEmpty.iteri (fun i x -> visited.Add (i * x)) xs
+    test <@ Seq.toList visited = [3;1;2;0;1;4] @>
