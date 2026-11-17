@@ -38,7 +38,37 @@ let maxElement'<'a when 'a : comparison> (xs:Set<'a>) = maxElementSafe xs
 /// Returns None if `xs` has no elements.
 let tryMaxElement<'a when 'a : comparison> (xs:Set<'a>) = maxElementSafe xs |> Result.toOption
 
-module NonEmpty = 
+let private traverseResult (fn : 'a -> Result<'b, 'e>) (xs : Set<'a>) : Result<Set<'b>, 'e> =
+  use elements = (xs :> seq<_>).GetEnumerator ()
+  let rec traverse' acc =
+    if elements.MoveNext ()
+    then
+      match fn elements.Current with
+      | Ok y -> traverse' (Set.add y acc)
+      | Error e -> Error e
+    else Ok acc
+
+  traverse' Set.empty
+
+let private partitionMapResult (fn : 'a -> Result<'b, 'e>) (xs : Set<'a>) : Set<'b> * Set<'e> =
+  let addResult (oks, errs) x =
+    match fn x with
+    | Ok y -> (Set.add y oks, errs)
+    | Error e -> (oks, Set.add e errs)
+
+  Set.fold addResult (Set.empty, Set.empty) xs
+
+let private collectResult (results : Set<Result<'a, 'e>>) : Result<Set<'a>, NonEmptyList<'e>> =
+  let addResult (oks, errs) result =
+    match result with
+    | Ok y -> (Set.add y oks, errs)
+    | Error e -> (oks, e :: errs)
+
+  match Set.fold addResult (Set.empty, []) results with
+  | oks, [] -> Ok oks
+  | _, errs -> Error (NonEmpty (List.rev errs))
+
+module NonEmpty =
 
   /// <summary>
   /// Creates a new NonEmptySet with the provided head and tail.  
@@ -362,7 +392,71 @@ module NonEmpty =
   let unionR xs (NonEmpty ys : NonEmptySet<_>) : NonEmptySet<_> = 
     NonEmpty (Set.union xs ys)
 
-  let unionMany (NonEmpty xs : NonEmpty<#seq<NonEmptySet<_>>, _>) : NonEmptySet<_> = 
+  let unionMany (NonEmpty xs : NonEmpty<#seq<NonEmptySet<_>>, _>) : NonEmptySet<_> =
     NonEmpty (Set.unionMany (Seq.map (|NonEmpty|) xs))
+
+  /// <summary>
+  /// Functions for NonEmpty sets of Results, or for mapping NonEmpty sets with Result-producing functions.
+  /// </summary>
+  module Result =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning Ok of all the mapped values, or the first Error.
+    /// Elements after the first Error are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptySet<_>) : Result<NonEmptySet<_>, _> =
+      traverseResult fn xs |> Result.map NonEmpty
+
+    /// <summary>
+    /// Returns Ok of all the contained values, or the first Error.
+    /// Elements after the first Error are not evaluated.
+    /// </summary>
+    let sequence (results : NonEmptySet<Result<_, _>>) = traverse id results
+
+    /// <summary>
+    /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error.
+    /// </summary>
+    let collect (NonEmpty results : NonEmptySet<Result<_, _>>) : Result<NonEmptySet<_>, NonEmptyList<_>> =
+      collectResult results |> Result.map NonEmpty
+
+    /// <summary>
+    /// Maps each element with <c>fn</c>, splitting the results into the Ok values and the Error values.
+    /// </summary>
+    let partitionMap fn (NonEmpty xs : NonEmptySet<_>) = partitionMapResult fn xs
+
+    /// <summary>
+    /// Splits the Results into the Ok values and the Error values.
+    /// </summary>
+    let partition (results : NonEmptySet<Result<_, _>>) = partitionMap id results
+
+/// <summary>
+/// Functions for sets of Results, or for mapping sets with Result-producing functions.
+/// </summary>
+module Result =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning Ok of all the mapped values, or the first Error.
+  /// Elements after the first Error are not evaluated.
+  /// </summary>
+  let traverse fn (xs : Set<_>) = traverseResult fn xs
+
+  /// <summary>
+  /// Returns Ok of all the contained values, or the first Error.
+  /// Elements after the first Error are not evaluated.
+  /// </summary>
+  let sequence (results : Set<Result<_, _>>) = traverse id results
+
+  /// <summary>
+  /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error.
+  /// </summary>
+  let collect (results : Set<Result<_, _>>) : Result<Set<_>, NonEmptyList<_>> = collectResult results
+
+  /// <summary>
+  /// Maps each element with <c>fn</c>, splitting the results into the Ok values and the Error values.
+  /// </summary>
+  let partitionMap fn (xs : Set<_>) = partitionMapResult fn xs
+
+  /// <summary>
+  /// Splits the Results into the Ok values and the Error values.
+  /// </summary>
+  let partition (results : Set<Result<_, _>>) = partitionMap id results
 
   

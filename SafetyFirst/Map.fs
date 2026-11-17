@@ -189,3 +189,96 @@ type ZipperExpression() =
 /// It zips according to zipIntersection, dropping any keys that are not present in all of the maps being zipped.
 let zipper = new ZipperExpression()
 
+let private traverseResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : Map<'k, 'a>) : Result<Map<'k, 'b>, 'e> =
+  use bindings = (xs :> seq<_>).GetEnumerator ()
+  let rec traverse' acc =
+    if bindings.MoveNext ()
+    then
+      let (KeyValue (key, value)) = bindings.Current
+      match fn key value with
+      | Ok y -> traverse' (Map.add key y acc)
+      | Error e -> Error e
+    else Ok acc
+
+  traverse' Map.empty
+
+let private partitionMapResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : Map<'k, 'a>) : Map<'k, 'b> * Map<'k, 'e> =
+  let addResult (oks, errs) key value =
+    match fn key value with
+    | Ok y -> (Map.add key y oks, errs)
+    | Error e -> (oks, Map.add key e errs)
+
+  Map.fold addResult (Map.empty, Map.empty) xs
+
+let private collectResult (results : Map<_, Result<_, _>>) : Result<Map<_, _>, NonEmptyMap<_, _>> =
+  let oks, errs = partitionMapResult (fun _ r -> r) results
+  if Map.isEmpty errs then Ok oks else Error (NonEmpty errs)
+
+/// <summary>
+/// Functions for maps of Results, or for mapping maps with Result-producing functions.
+/// </summary>
+module Result =
+  /// <summary>
+  /// Maps each binding with <c>fn</c>, returning Ok of all the mapped values, or the first Error in key order.
+  /// Bindings after the first Error are not evaluated.
+  /// </summary>
+  let traverse fn (xs : Map<_, _>) = traverseResult fn xs
+
+  /// <summary>
+  /// Returns Ok of all the contained values, or the first Error in key order.
+  /// Bindings after the first Error are not evaluated.
+  /// </summary>
+  let sequence (results : Map<_, Result<_, _>>) = traverse (fun _ r -> r) results
+
+  /// <summary>
+  /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error by key.
+  /// </summary>
+  let collect (results : Map<_, Result<_, _>>) = collectResult results
+
+  /// <summary>
+  /// Maps each binding with <c>fn</c>, splitting the results into the Ok values and the Error values by key.
+  /// </summary>
+  let partitionMap fn (xs : Map<_, _>) = partitionMapResult fn xs
+
+  /// <summary>
+  /// Splits the Results into the Ok values and the Error values by key.
+  /// </summary>
+  let partition (results : Map<_, Result<_, _>>) = partitionMap (fun _ r -> r) results
+
+/// <summary>
+/// Functions for manipulating NonEmpty Maps
+/// </summary>
+module NonEmpty =
+  /// <summary>
+  /// Functions for NonEmpty maps of Results, or for mapping NonEmpty maps with Result-producing functions.
+  /// </summary>
+  module Result =
+    /// <summary>
+    /// Maps each binding with <c>fn</c>, returning Ok of all the mapped values, or the first Error in key order.
+    /// Bindings after the first Error are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyMap<_, _>) : Result<NonEmptyMap<_, _>, _> =
+      traverseResult fn xs |> Result.map NonEmpty
+
+    /// <summary>
+    /// Returns Ok of all the contained values, or the first Error in key order.
+    /// Bindings after the first Error are not evaluated.
+    /// </summary>
+    let sequence (results : NonEmptyMap<_, Result<_, _>>) = traverse (fun _ r -> r) results
+
+    /// <summary>
+    /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error by key.
+    /// </summary>
+    let collect (NonEmpty results : NonEmptyMap<_, Result<_, _>>) : Result<NonEmptyMap<_, _>, NonEmptyMap<_, _>> =
+      collectResult results |> Result.map NonEmpty
+
+    /// <summary>
+    /// Maps each binding with <c>fn</c>, splitting the results into the Ok values and the Error values by key.
+    /// </summary>
+    let partitionMap fn (NonEmpty xs : NonEmptyMap<_, _>) = partitionMapResult fn xs
+
+    /// <summary>
+    /// Splits the Results into the Ok values and the Error values by key.
+    /// </summary>
+    let partition (results : NonEmptyMap<_, Result<_, _>>) = partitionMap (fun _ r -> r) results
+

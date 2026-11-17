@@ -1,3 +1,22 @@
+# Unreleased
+
+## New features:
+
+Adds a nested `Result` module to the List/Array/Set/Map/Dictionary modules and to their `NonEmpty` modules (e.g., `List.Result`, `Map.NonEmpty.Result`), each with:
+- `traverse`: maps with a Result-producing function, returning Ok of the mapped collection, or the first Error without evaluating the rest
+- `sequence`: same as `traverse`, but for a collection that already holds Results
+- `collect`: returns Ok of all the values, or an Error of every error as a non-empty collection (e.g., `NonEmptyList<'e>`, or a `NonEmptyMap<'k, 'e>` keyed like the input)
+- `partition`: splits a collection of Results into the Ok values and the Error values
+- `partitionMap`: maps with a Result-producing function and splits the results into the Ok values and the Error values
+
+The Map and Dictionary versions pass the key to the function, e.g. `Map.Result.traverse : ('k -> 'a -> Result<'b, 'e>) -> Map<'k, 'a> -> Result<Map<'k, 'b>, 'e>`.
+
+`Map.NonEmpty` and `Dictionary.NonEmpty` are new modules, currently containing only their `Result` modules.
+
+## Bug fixes:
+
+- `Dictionary.map` now keeps the input's key comparer when the input is a `Dictionary` (e.g. a case-insensitive dictionary stays case-insensitive). Other `IDictionary` implementations don't expose their comparer, so they still get the default one.
+
 # Version 5.4.2
 
 ## Bug fixes:

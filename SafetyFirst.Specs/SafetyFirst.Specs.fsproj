@@ -24,6 +24,7 @@
     <Compile Include="ArraySpec.fs" />
     <Compile Include="MapSpec.fs" />
     <Compile Include="SetSpec.fs" />
+    <Compile Include="ResultTraversalSpec.fs" />
     <Compile Include="FSeqSpec.fs" />
     <Compile Include="InfiniteSeqSpec.fs" />
     <Compile Include="IEnumerableSpec.fs" />
