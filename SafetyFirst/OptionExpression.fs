@@ -12,6 +12,9 @@ type OptionExpression () =
   member this.ReturnFrom x = 
     x
 
+  member this.Zero () = Some ()
+  member this.Combine (maybeUnit, rest) = this.Bind (maybeUnit, rest)
+
   member this.Delay f = f
   member this.Run f = f ()
 

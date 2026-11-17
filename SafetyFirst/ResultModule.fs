@@ -21,6 +21,9 @@ type ResultExpression () =
 
   member this.BindReturn(x, f) = Result.map f x
 
+  member this.Zero () = Ok ()
+  member this.Combine (x, rest) = Result.bind rest x
+
   member this.Delay f = f
   member this.Run f = f ()
 

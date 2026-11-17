@@ -7,7 +7,7 @@ open SafetyFirst.Numbers
 /// Returns the average of the elements in the sequence.
 /// Returns a SeqIsEmpty error if <c>source</c> has no elements.
 /// </summary>
-let inline averageSafe source = 
+let inline averageSafe source =
   if Seq.isEmpty source
   then Error <| avgErr ()
   else Ok <| Seq.average source
@@ -17,7 +17,7 @@ let inline averageSafe source =
 /// Returns a SeqIsEmpty error if <c>source</c> has no elements.
 /// </summary>
 [<CompiledName("averageSafe_F#")>]
-let inline average' source = averageSafe source 
+let inline average' source = averageSafe source
 
 /// <summary>
 /// Returns the average of the elements in the sequence.
@@ -30,7 +30,7 @@ let inline tryAverage source = averageSafe source |> Result.toOption
 /// of the sequence.
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 /// </summary>
-let inline averageBySafe selector xs = 
+let inline averageBySafe selector xs =
   if Seq.isEmpty xs
   then Error <| avgErr ()
   else Ok <| Seq.averageBy selector xs
@@ -55,7 +55,7 @@ let inline tryAverageBy selector xs = averageBySafe selector xs |> Result.toOpti
 /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
 /// </summary>
 let chunkBySizeSafe size xs : Result<NonEmptyArray<_> seq, _> =
-  if size <= 0 
+  if size <= 0
   then Error chunkErr
   else Ok (Seq.chunkBySize size xs |> Seq.map NonEmpty)
 
@@ -76,30 +76,30 @@ let inline tryChunkBySize size xs = chunkBySizeSafe size xs |> Result.toOption
 /// Divides the input sequence into chunks of size at most <c>size</c>.
 /// Same as <c>Seq.chunkBySize</c>, but restricts the input to a PositiveInt
 /// </summary>
-let chunksOf (PositiveInt size) xs : NonEmptyArray<_> seq = 
+let chunksOf (PositiveInt size) xs : NonEmptyArray<_> seq =
   Seq.chunkBySize size xs |> Seq.map NonEmpty
 
 /// <summary>
 /// If the input sequence has only one element, returns that element.
-/// If the input sequence has more or less than one element, returns a WrongNumberOfElements Error.  
+/// If the input sequence has more or less than one element, returns a WrongNumberOfElements Error.
 /// </summary>
 let exactlyOneSafe xs =
   let xs = Seq.cache (Seq.truncate 2 xs)
   match Seq.length xs with
   | 1 -> Ok <| Seq.head xs
   | 0 -> Error lessThanOneErr
-  | _ -> Error moreThanOneErr 
+  | _ -> Error moreThanOneErr
 
 /// <summary>
 /// If the input sequence has only one element, returns that element.
-/// If the input sequence has more or less than one element, returns a WrongNumberOfElements Error.  
+/// If the input sequence has more or less than one element, returns a WrongNumberOfElements Error.
 /// </summary>
 [<CompiledName("exactlyOneSafe_F#")>]
 let inline exactlyOne' xs = exactlyOneSafe xs
 
 /// <summary>
 /// If the input sequence has only one element, returns that element.
-/// If the input sequence has more or less than one element, returns None.  
+/// If the input sequence has more or less than one element, returns None.
 /// </summary>
 let inline tryExactlyOne xs = exactlyOneSafe xs |> Result.toOption
 
@@ -107,8 +107,8 @@ let inline tryExactlyOne xs = exactlyOneSafe xs |> Result.toOption
 /// Returns the first element for which the given function returns True.
 /// Returns a NoMatchingElement Error if no such element is found.
 /// </summary>
-let findSafe predicate xs = 
-  Seq.tryFind predicate xs 
+let findSafe predicate xs =
+  Seq.tryFind predicate xs
   |> Result.ofOption findErr
 
 /// <summary>
@@ -120,9 +120,9 @@ let inline find' predicate xs = findSafe predicate xs
 
 /// <summary>
 /// Returns the last element for which the given function returns True.
-/// Return a NoMatchingElement Error if no such element exists.
+/// Returns a NoMatchingElement Error if no such element exists.
 /// </summary>
-let findBackSafe predicate xs = 
+let findBackSafe predicate xs =
   Seq.tryFindBack predicate xs
   |> Result.ofOption findErr
 
@@ -136,9 +136,9 @@ let inline findBack' predicate xs = findBackSafe predicate xs
 /// <summary>
 /// Returns the index of the first element in the sequence
 /// that satisfies the given predicate.
-/// Return a NoMatchingElement Error if no such element exists.
+/// Returns a NoMatchingElement Error if no such element exists.
 /// </summary>
-let findIndexSafe predicate xs = 
+let findIndexSafe predicate xs =
   Seq.tryFindIndex predicate xs
   |> Result.ofOption findErr
 
@@ -153,9 +153,9 @@ let inline findIndex' predicate xs = findIndexSafe predicate xs
 /// <summary>
 /// Returns the index of the last element in the sequence
 /// that satisfies the given predicate.
-/// Return a NoMatchingElement Error if no such element exists.
+/// Returns a NoMatchingElement Error if no such element exists.
 /// </summary>
-let findIndexBackSafe predicate xs = 
+let findIndexBackSafe predicate xs =
   Seq.tryFindIndexBack predicate xs
   |> Result.ofOption findErr
 
@@ -171,7 +171,7 @@ let inline findIndexBack' predicate xs = findIndexBackSafe predicate xs
 /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
 /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
 /// </summary>
-let group projection xs : (_ * NonEmptySeq<_>) seq = 
+let group projection xs : (_ * NonEmptySeq<_>) seq =
   Seq.groupBy projection xs
   |> Seq.map (fun (key, group) -> (key, NonEmpty group))
 
@@ -180,7 +180,7 @@ let group projection xs : (_ * NonEmptySeq<_>) seq =
 /// Returns a SeqIsEmpty error if <c>xs</c> has no elements.
 /// </summary>
 let headSafe xs =
-  if Seq.isEmpty xs 
+  if Seq.isEmpty xs
   then Error headErr
   else Ok <| Seq.head xs
 
@@ -192,20 +192,20 @@ let headSafe xs =
 let inline head' xs = headSafe xs
 
 /// <summary>
-/// Guard against hanging by providing an upper bound that represents a limit such that we can 
-/// be sure that the application "hung" if the sequence produced that many elements. If more than 
+/// Guard against hanging by providing an upper bound that represents a limit such that we can
+/// be sure that the application "hung" if the sequence produced that many elements. If more than
 /// <c>maxElements</c> elements are consumed, an exception is thrown. This is intended for use with
-/// infinite sequences, but is safe to use with finite sequences as well. 
+/// infinite sequences, but is safe to use with finite sequences as well.
 /// </summary>
 let isHungAfter maxElements xs =
   seq {
     for i, x in Seq.indexed xs ->
       if i < maxElements then x
-      else 
-        let message = 
+      else
+        let message =
           if maxElements < 0 then
             (sprintf "Program execution is considered to have hung, since this sequence produced more than 0 elements (maxElements set to %i)." maxElements)
-          else 
+          else
             (sprintf "Program execution is considered to have hung, since this sequence produced more than %i elements." maxElements)
 
         raise (InfiniteSequenceEvaluationHung message)
@@ -215,11 +215,11 @@ let isHungAfter maxElements xs =
 /// Computes the element at the specified index in the collection.
 /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the collection.
 /// </summary>
-let itemSafe index xs = 
+let itemSafe index xs =
   let xs = ResizeArray (Seq.truncate (index + 1) xs)
   if index >= 0
-  then 
-    if Seq.length xs > index 
+  then
+    if Seq.length xs > index
     then Ok <| xs.[index]
     else Error <| lazyIndexTooLargeErr index
   else Error <| indexNegativeErr index
@@ -235,7 +235,7 @@ let inline item' index xs = itemSafe index xs
 /// Returns the last element of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
-let lastSafe xs = Seq.tryLast xs |> Result.ofOption lastErr  
+let lastSafe xs = Seq.tryLast xs |> Result.ofOption lastErr
 
 /// <summary>
 /// Returns the last element of the sequence.
@@ -249,7 +249,7 @@ let inline last' xs = lastSafe xs
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
 let maxSafe<'a when 'a : comparison> (xs:'a seq) =
-  if Seq.isEmpty xs 
+  if Seq.isEmpty xs
   then Error <| maxErr
   else Ok <| Seq.max xs
 
@@ -293,7 +293,7 @@ let inline tryMaxBy<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a se
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
 let minSafe<'a when 'a : comparison> (xs:'a seq) =
-  if Seq.isEmpty xs 
+  if Seq.isEmpty xs
   then Error <| minErr
   else Ok <| Seq.min xs
 
@@ -315,7 +315,7 @@ let inline tryMin<'a when 'a : comparison> (xs:'a seq) = minSafe xs |> Result.to
 /// Returns a SeqIsEmpty Error if <c>xs</c> has no elements.
 /// </summary>
 let minBySafe<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a seq) =
-  if Seq.isEmpty xs 
+  if Seq.isEmpty xs
   then Error <| minErr
   else Ok <| Seq.minBy projection xs
 
@@ -337,7 +337,7 @@ let inline tryMinBy<'a, 'b when 'b : comparison> (projection:'a -> 'b) (xs:'a se
 /// result where the function returns "Some(x)".
 /// Return a NoMatchingElement Error if no such element exists.
 /// </summary>
-let pickSafe chooser xs = 
+let pickSafe chooser xs =
   Seq.tryPick chooser xs
   |> Result.ofOption pickErr
 
@@ -353,10 +353,10 @@ let inline pick' chooser xs = pickSafe chooser xs
 /// Applies a function to each element of the sequence, threading an accumulator argument
 /// through the computation. Begin by applying the function to the first two elements.
 /// Then feed this result into the function along with the third element and so on.
-/// Return the final result.
+/// Returns the final result.
 /// Returns a SeqIsEmpty Error if the sequence is empty.
 /// </summary>
-let reduceSafe reduction xs = 
+let reduceSafe reduction xs =
   if Seq.isEmpty xs
   then Error <| reduceErr
   else Ok <| Seq.reduce reduction xs
@@ -386,7 +386,7 @@ let inline tryReduce reduction xs = reduceSafe reduction xs |> Result.toOption
 /// then computes <c>f i0 (...(f iN-1 iN))</c>.
 /// Returns a SeqIsEmpty Error if the sequence is empty.
 /// </summary>
-let reduceBackSafe reduction xs = 
+let reduceBackSafe reduction xs =
   if Seq.isEmpty xs
   then Error <| reduceErr
   else Ok <| Seq.reduceBack reduction xs
@@ -398,7 +398,7 @@ let reduceBackSafe reduction xs =
 /// Returns a SeqIsEmpty Error if the sequence is empty.
 /// </summary>
 [<CompiledName("reduceBackSafe_F#")>]
-let inline reduceBack' reduction xs = reduceBackSafe reduction xs 
+let inline reduceBack' reduction xs = reduceBackSafe reduction xs
 
 /// <summary>
 /// Applies a function to each element of the sequence, starting from the end, threading an accumulator argument
@@ -411,11 +411,11 @@ let inline tryReduceBack reduction xs = reduceBackSafe reduction xs |> Result.to
 /// <summary>
 /// Returns a sequence that skips N elements of the underlying sequence and then yields the
 /// remaining elements of the sequence.
-/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
+/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c>.
 /// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
 /// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
 /// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
-/// and a second time to produce the result.  This is necessary because caching the sequence 
+/// and a second time to produce the result.  This is necessary because caching the sequence
 /// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
 /// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
 /// calling this function.
@@ -423,16 +423,16 @@ let inline tryReduceBack reduction xs = reduceBackSafe reduction xs |> Result.to
 let skipSafe count (xs:_ seq) =
   if (Seq.length (Seq.truncate count xs) = count) || count < 0
   then Ok <| Seq.skip count xs
-  else Error <| lazySkipErr count 
+  else Error <| lazySkipErr count
 
 /// <summary>
 /// Returns a sequence that skips N elements of the underlying sequence and then yields the
 /// remaining elements of the sequence.
-/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
+/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c>.
 /// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
 /// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
 /// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
-/// and a second time to produce the result.  This is necessary because caching the sequence 
+/// and a second time to produce the result.  This is necessary because caching the sequence
 /// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
 /// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
 /// calling this function.
@@ -443,11 +443,11 @@ let inline skip' count xs = skipSafe count xs
 /// <summary>
 /// Returns a sequence that skips N elements of the underlying sequence and then yields the
 /// remaining elements of the sequence.
-/// Returns None if <c>count</c> exceeds the length of <c>xs</c> 
+/// Returns None if <c>count</c> exceeds the length of <c>xs</c>
 /// NOTE: This eagerly evaluates the skipped elements to ensure there are enough elements,
 /// as opposed to the unsafe Seq.skip, which lazily evaluates and will throw as you iterate it.
 /// NOTE: This evaluates the skipped elements twice: once to ensure there are enough elements,
-/// and a second time to produce the result.  This is necessary because caching the sequence 
+/// and a second time to produce the result.  This is necessary because caching the sequence
 /// would make it no longer memory-safe for use with infinite sequences.  If the input sequence
 /// is expensive to compute but finite, it is recommended you cache it with Seq.cache before
 /// calling this function.
@@ -475,10 +475,10 @@ let skipLenient count (xs: _ seq) =
   }
 
 /// <summary>
-/// Returns a sequence that, when iterated, skips elements of the underlying sequence 
-/// up to and including the first element for which the given predicate returns True, 
+/// Returns a sequence that, when iterated, skips elements of the underlying sequence
+/// up to and including the first element for which the given predicate returns True,
 /// and then yields the remaining elements of the sequence.
-/// Like <c>skipWhile</c>, but with an inverted predicate and 
+/// Like <c>skipWhile</c>, but with an inverted predicate and
 /// also skips the element for which the predicate first returns True.
 /// If the sequence is exhausted without finding a matching element, an empty sequence is returned.
 /// </summary>
@@ -506,8 +506,8 @@ let inline drop count xs = skipLenient count xs
 /// Splits the input sequence into at most count chunks.
 /// Returns a NegativeInput Error if <c>count</c> is not positive.
 /// </summary>
-let splitIntoSafe count xs = 
-  if count > 0 
+let splitIntoSafe count xs =
+  if count > 0
   then Ok <| Seq.splitInto count xs
   else Error <| splitIntoErr count
 
@@ -532,9 +532,9 @@ let splitIntoN (PositiveInt count) xs = Seq.splitInto count xs
 
 /// <summary>
 /// Returns the sequence through the first element for which the given function returns True.
-/// Like <c>takeWhile</c>, but with an inverted predicate and 
+/// Like <c>takeWhile</c>, but with an inverted predicate and
 /// also includes the element for which the predicate first returns True.
-/// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
+/// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary results through the found element.
 /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
 /// </summary>
 let takeUntilIncluding predicate (xs: _ seq) =
@@ -551,7 +551,7 @@ let takeUntilIncluding predicate (xs: _ seq) =
 /// <summary>
 /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
 /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
-/// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+/// and the element satisfying <c>splitAfter</c> will be included as the last element of
 /// the sequence preceding the split.
 /// For example:
 /// <code>
@@ -563,11 +563,11 @@ let takeUntilIncluding predicate (xs: _ seq) =
 /// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
 /// segments, due to re-traversal of the lazy chain at each level. If the source sequence
 /// is expensive to evaluate, cache it with Seq.cache before calling this function.
-/// If the source sequence is finite, you can achieve better performance by converting it to 
+/// If the source sequence is finite, you can achieve better performance by converting it to
 /// a list or array first and using <c>List.split</c> or <c>Array.split</c> instead.
 /// </summary>
 let split splitAfter xs : seq<NonEmptySeq<_>> =
-  let takeGroup (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> = 
+  let takeGroup (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> =
     NonEmpty <| takeUntilIncluding splitAfter xs
 
   let rec split' xs =
@@ -594,7 +594,7 @@ let split splitAfter xs : seq<NonEmptySeq<_>> =
 /// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
 /// segments, due to re-traversal of the lazy chain at each level. If the source sequence
 /// is expensive to evaluate, cache it with Seq.cache before calling this function.
-/// If the source sequence is finite, you can achieve better performance by converting it to 
+/// If the source sequence is finite, you can achieve better performance by converting it to
 /// a list or array first and using <c>List.splitPairwise</c> or <c>Array.splitPairwise</c> instead.
 /// </summary>
 let splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
@@ -621,8 +621,8 @@ let splitPairwise splitBetween (xs: _ seq) : seq<NonEmptySeq<_>> =
 /// remaining elements of the sequence.
 /// Returns a SeqIsEmpty Error if <c>xs</c> contains no elements.
 /// </summary>
-let tailSafe xs = 
-  if Seq.isEmpty xs 
+let tailSafe xs =
+  if Seq.isEmpty xs
   then Error <| tailErr
   else Ok <| Seq.tail xs
 
@@ -643,24 +643,24 @@ let inline tryTail xs = tailSafe xs |> Result.toOption
 
 /// <summary>
 /// Returns the first N elements of the sequence.
-/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
+/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c>.
 /// </summary>
-let takeSafe count xs = 
+let takeSafe count xs =
   let xs = ResizeArray (Seq.truncate count xs)
-  if Seq.length xs = count 
+  if Seq.length xs = count
   then Ok <| seq xs
   else Error <| lazyTakeErr count
 
 /// <summary>
 /// Returns the first N elements of the sequence.
-/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c> 
+/// Returns a NotEnoughElements Error if <c>count</c> exceeds the length of <c>xs</c>
 /// </summary>
 [<CompiledName("takeSafe_F#")>]
 let inline take' count xs = takeSafe count xs
 
 /// <summary>
 /// Returns the first N elements of the sequence.
-/// Returns None if <c>count</c> exceeds the length of <c>xs</c> 
+/// Returns None if <c>count</c> exceeds the length of <c>xs</c>
 /// </summary>
 let inline tryTake count xs = takeSafe count xs |> Result.toOption
 
@@ -669,8 +669,8 @@ let inline tryTake count xs = takeSafe count xs |> Result.toOption
 /// sequence. Each window is returned as a fresh array.
 /// Returns a NegativeInput Error when <c>size</c> is not positive.
 /// </summary>
-let windowedSafe size xs : Result<NonEmptyArray<_> seq, _> = 
-  if size > 0 
+let windowedSafe size xs : Result<NonEmptyArray<_> seq, _> =
+  if size > 0
   then Ok (Seq.windowed size xs |> Seq.map NonEmpty)
   else Error <| windowedErr size
 
@@ -694,16 +694,16 @@ let inline tryWindowed size xs = windowedSafe size xs |> Result.toOption
 /// sequence. Each window is returned as a fresh array.
 /// Same as <c>Seq.windowed</c> but restricts the input to a PositiveInt
 /// </summary>
-let window (PositiveInt size) xs : NonEmptyArray<_> seq = 
+let window (PositiveInt size) xs : NonEmptyArray<_> seq =
   Seq.windowed size xs |> Seq.map NonEmpty
 
 /// <summary>
-/// Functions for manipulating NonEmpty Seqs 
+/// Functions for manipulating NonEmpty Seqs
 /// </summary>
 module NonEmpty =
 
   /// <summary>
-  /// Creates a new NonEmptySeq with the provided head and tail.  
+  /// Creates a new NonEmptySeq with the provided head and tail.
   /// </summary>
   let create head tail : NonEmptySeq<_> = NonEmpty (Seq.append [head] tail)
 
@@ -714,11 +714,11 @@ module NonEmpty =
 
   /// <summary>
   /// Returns the average of the elements in the sequence.
-  /// The elements are averaged using the <c>+</c> operator, 
+  /// The elements are averaged using the <c>+</c> operator,
   /// <c>DivideByInt</c> method and <c>Zero</c> property associated with the element type.
   /// </summary>
   let inline average (NonEmpty xs) = Seq.average xs
- 
+
   /// <summary>
   /// Returns the first element of the sequence.
   /// </summary>
@@ -748,12 +748,12 @@ module NonEmpty =
   /// Returns the sequence after removing the first element.
   /// </summary>
   let tail (NonEmpty xs) = Seq.tail xs
-  
+
   /// <summary>
   /// Returns the tuple of the sequence's head and tail
   /// </summary>
   let uncons xs = (head xs, tail xs)
-  
+
   /// <summary>
   /// Applies a function to each element of the sequence, threading an accumulator argument
   /// through the computation. Begin by applying the function to the first two elements.
@@ -766,24 +766,24 @@ module NonEmpty =
   /// O(n). Returns the length of the sequence.
   /// </summary>
   let length (NonEmpty xs) = Seq.length xs
-  
+
   /// <summary>
   /// Applies a function to each element of the collection, threading an accumulator argument
   /// through the computation. If the input function is <c>f</c> and the elements are <c>i0...iN</c>
   /// then computes <c>f (... (f s i0)...) iN</c>
   /// </summary>
   let fold f initialState (NonEmpty xs) = Seq.fold f initialState xs
-  
+
   /// <summary>
   /// Builds a new collection whose elements are the corresponding elements of the input collection paired with the integer index (from 0) of each element.
   /// </summary>
   let indexed (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> = NonEmpty (Seq.indexed xs)
 
   /// <summary>
-  /// Guard against hanging by providing an upper bound that represents a limit such that we can 
-  /// be sure that the application "hung" if the sequence produced that many elements. If more than 
+  /// Guard against hanging by providing an upper bound that represents a limit such that we can
+  /// be sure that the application "hung" if the sequence produced that many elements. If more than
   /// <c>maxElements</c> elements are consumed, an exception is thrown. This is intended for use with
-  /// infinite sequences, but is safe to use with finite sequences as well. 
+  /// infinite sequences, but is safe to use with finite sequences as well.
   /// </summary>
   let isHungAfter maxElements (NonEmpty xs: NonEmptySeq<_>) : NonEmptySeq<_> =
     NonEmpty (isHungAfter maxElements xs)
@@ -795,7 +795,7 @@ module NonEmpty =
   /// object.
   /// </summary>
   let map f (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.map f xs)
-  
+
   /// <summary>
   /// Builds a new collection whose elements are the results of applying the given function
   /// to each of the elements of the collection. The integer index passed to the
@@ -803,11 +803,11 @@ module NonEmpty =
   /// </summary>
   let mapi f (NonEmpty xs) : NonEmptySeq<_> =
     NonEmpty (Seq.mapi f xs)
-  
+
   /// <summary>
   /// O(1). Build a new collection whose elements are the results of applying the given function
   /// to the corresponding elements of the two collections pairwise.  The two sequences need not have equal lengths:
-  /// when one sequence is exhausted any remaining elements in the other sequence are ignored.  
+  /// when one sequence is exhausted any remaining elements in the other sequence are ignored.
   /// </summary>
   let map2 f (NonEmpty xs) (NonEmpty ys) : NonEmptySeq<_> =
     NonEmpty (Seq.map2 f xs ys)
@@ -836,35 +836,35 @@ module NonEmpty =
   /// <summary>
   /// Combines the given enumeration-of-enumerations as a single concatenated enumeration.
   /// </summary>
-  let concat (NonEmpty xs : NonEmptySeq<NonEmptySeq<'a>>) : NonEmptySeq<_>= 
+  let concat (NonEmpty xs : NonEmptySeq<NonEmptySeq<'a>>) : NonEmptySeq<_>=
     NonEmpty (Seq.concat xs)
 
   /// <summary>
   /// Applies the given function to each element of the sequence and concatenates all the results.
   /// Returned sequence is lazy, effects are delayed until it is enumerated.
   /// </summary>
-  let collect (f : 'a -> NonEmptySeq<'b>) (NonEmpty xs : NonEmptySeq<'a>) : NonEmptySeq<'b> = 
+  let collect (f : 'a -> NonEmptySeq<'b>) (NonEmpty xs : NonEmptySeq<'a>) : NonEmptySeq<'b> =
     NonEmpty (Seq.collect f xs)
 
   /// <summary>
-  /// Returns a sequence that contains no duplicate entries according to generic hash and equality comparisons on the entries. 
+  /// Returns a sequence that contains no duplicate entries according to generic hash and equality comparisons on the entries.
   /// If an element occurs multiple times in the sequence then the later occurrences are discarded.
   /// </summary>
   let distinct (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.distinct xs)
 
   /// <summary>
-  /// Returns a sequence that contains no duplicate entries according to the generic hash and equality comparisons 
-  /// on the keys returned by the given key-generating function. 
+  /// Returns a sequence that contains no duplicate entries according to the generic hash and equality comparisons
+  /// on the keys returned by the given key-generating function.
   /// If an element occurs multiple times in the sequence then the later occurrences are discarded.
   /// </summary>
-  let distinctBy projection (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.distinctBy projection xs) 
+  let distinctBy projection (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (Seq.distinctBy projection xs)
 
 
   /// <summary>
   /// Applies a key-generating function to each element of a sequence and yields a sequence of unique keys. Each unique key contains a sequence of all elements that match to this key.
   /// This function returns a sequence that digests the whole initial sequence as soon as that sequence is iterated. As a result this function should not be used with large or infinite sequences. The function makes no assumption on the ordering of the original sequence.
   /// </summary>
-  let group projection (NonEmpty xs : NonEmptySeq<_>) : NonEmptySeq<(_ * NonEmptySeq<_>)> = 
+  let group projection (NonEmpty xs : NonEmptySeq<_>) : NonEmptySeq<(_ * NonEmptySeq<_>)> =
     Seq.groupBy projection xs
     |> Seq.map (fun (key, group) -> (key, NonEmpty group))
     |> NonEmpty
@@ -874,7 +874,7 @@ module NonEmpty =
   /// Asserts that <c>xs</c> is not empty, creating a NonEmptySeq.
   /// Returns a SeqIsEmpty Error if <c>xs</c> is empty.
   /// </summary>
-  let ofSeqSafe (xs:_ seq) : Result<NonEmptySeq<_>,_> = 
+  let ofSeqSafe (xs:_ seq) : Result<NonEmptySeq<_>,_> =
     match xs with
     | Empty -> Error <| SeqIsEmpty "Assertion that a sequence is not empty failed."
     | NotEmpty ys -> Ok ys
@@ -910,9 +910,9 @@ module NonEmpty =
 
   /// <summary>
   /// Returns the sequence through the first element for which the given function returns True.
-  /// Like <c>takeWhile</c>, but with an inverted predicate and 
+  /// Like <c>takeWhile</c>, but with an inverted predicate and
   /// also includes the element for which the predicate first returns True.
-  /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary result through the found element.
+  /// Like <c>find</c>, but computes on-demand and returns the sequence of intermediary results through the found element.
   /// If the sequence is exhausted without finding a matching element, the entire sequence is returned.
   /// </summary>
   let takeUntilIncluding predicate (NonEmpty xs) : NonEmptySeq<_> = NonEmpty (takeUntilIncluding predicate xs)
@@ -940,7 +940,7 @@ module NonEmpty =
   /// <summary>
   /// Views the given NonEmptySeq as a sequence.
   /// </summary>
-  let toSeq (NonEmpty xs) : _ seq = upcast xs 
+  let toSeq (NonEmpty xs) : _ seq = upcast xs
 
   /// <summary>
   /// Views the given NonEmptySeq as a NonEmpty FSeq.
@@ -959,14 +959,14 @@ module NonEmpty =
   let tryFind predicate (NonEmpty xs) = Seq.tryFind predicate xs
 
   /// <summary>
-  /// O(n), where n is count. Return option the list which skips the first 'n' elements of
-  /// the input list.
+  /// O(n), where n is count. Returns an option of the sequence which skips the first 'n' elements of
+  /// the input sequence.
   /// </summary>
-  let trySkip n (NonEmpty xs) = Result.toOption <| skip' n xs 
+  let trySkip n (NonEmpty xs) = Result.toOption <| skip' n xs
 
   /// <summary>
-  /// O(n), where n is count. Return the list which on consumption will consist of exactly 'n' elements of
-  /// the input list.
+  /// O(n), where n is count. Returns an option of the sequence which on consumption will consist of exactly 'n' elements of
+  /// the input sequence.
   /// </summary>
   let tryTake n (NonEmpty xs) = Result.toOption <| take' n xs
 
@@ -980,22 +980,22 @@ module NonEmpty =
   /// <summary>
   /// Splits a sequence at every occurrence of an element satisfying <c>splitAfter</c>.
   /// The split occurs immediately after each element that satisfies <c>splitAfter</c>,
-  /// and the element satisfying <c>splitAfter</c> will be included as the last element of 
+  /// and the element satisfying <c>splitAfter</c> will be included as the last element of
   /// the sequence preceding the split.
   /// For example:
   /// <code>
-  /// split ((=) 100) (Seq.NonEmpty.create 1[2;3;100;100;4;100;5;6])
+  /// split ((=) 100) (Seq.NonEmpty.assume [1;2;3;100;100;4;100;5;6])
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
   /// </code>
   /// </summary>
-  let split splitAfter (NonEmpty xs) : NonEmptySeq<NonEmptySeq<_>> = 
+  let split splitAfter (NonEmpty xs) : NonEmptySeq<NonEmptySeq<_>> =
     NonEmpty <| split splitAfter xs
 
   /// <summary>
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
   /// For example:
   /// <code>
-  /// splitPairwise (=) (Seq.NonEmpty.create 0[1;1;2;3;4;4;4;5])
+  /// splitPairwise (=) (Seq.NonEmpty.assume [0;1;1;2;3;4;4;4;5])
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
   /// Both the outer sequence and each inner segment are lazy.
@@ -1003,14 +1003,14 @@ module NonEmpty =
   /// NOTE: Performance is O(N*K) where N is the number of elements and K is the number of
   /// segments, due to re-traversal of the lazy chain at each level. If the source sequence
   /// is expensive to evaluate, cache it with Seq.cache before calling this function.
-  /// If the source sequence is finite, you can achieve better performance by converting it to 
+  /// If the source sequence is finite, you can achieve better performance by converting it to
   /// a list or array first and using <c>List.splitPairwise</c> or <c>Array.splitPairwise</c> instead.
   /// </summary>
   let splitPairwise splitBetween (NonEmpty xs) : NonEmptySeq<NonEmptySeq<_>> =
     NonEmpty <| splitPairwise splitBetween xs
 
-  type ZipperExpression() = 
-    member inline this.MergeSources(t1, t2) = 
+  type ZipperExpression() =
+    member inline this.MergeSources(t1, t2) =
       zip t1 t2
 
     member this.BindReturn(x, f) = map f x
@@ -1021,8 +1021,8 @@ module NonEmpty =
   let zipper = new ZipperExpression ()
 
 
-type ZipperExpression() = 
-  member inline this.MergeSources(t1, t2) = 
+type ZipperExpression() =
+  member inline this.MergeSources(t1, t2) =
     Seq.zip t1 t2
 
   member this.BindReturn(x, f) = Seq.map f x
@@ -1031,4 +1031,3 @@ type ZipperExpression() =
 /// A zipper computation expression to zip any number of sequences together.
 /// </summary>
 let zipper = new ZipperExpression ()
-
