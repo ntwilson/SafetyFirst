@@ -984,7 +984,7 @@ module NonEmpty =
   /// the sequence preceding the split.
   /// For example:
   /// <code>
-  /// split ((=) 100) (Seq.NonEmpty.assume [1;2;3;100;100;4;100;5;6])
+  /// split ((=) 100) (NonEmpty.assume [1;2;3;100;100;4;100;5;6])
   ///   //returns ([[1;2;3;100];[100];[4;100];[5;6]])
   /// </code>
   /// </summary>
@@ -995,7 +995,7 @@ module NonEmpty =
   /// Splits a sequence between each pair of adjacent elements that satisfy <c>splitBetween</c>.
   /// For example:
   /// <code>
-  /// splitPairwise (=) (Seq.NonEmpty.assume [0;1;1;2;3;4;4;4;5])
+  /// splitPairwise (=) (NonEmpty.assume [0;1;1;2;3;4;4;4;5])
   ///   //returns [[0;1];[1;2;3;4];[4];[4;5]]
   /// </code>
   /// Both the outer sequence and each inner segment are lazy.
