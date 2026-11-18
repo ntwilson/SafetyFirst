@@ -78,3 +78,17 @@ let ``Dictionary functions keep the input Dictionary's key comparer`` () =
   test <@ mapped.ContainsKey "A" @>
   test <@ traversed |> Result.map (fun d -> d.ContainsKey "A") = Ok true @>
   test <@ oks.ContainsKey "A" && errs.Comparer = (System.StringComparer.OrdinalIgnoreCase :> IEqualityComparer<string>) @>
+
+[<Test>]
+let ``Dictionary functions compare keys of a non-Dictionary structurally`` () =
+  let arrayKeyed = dict [ ([| 1 |], 2) ]
+  let alwaysOk _ x : Result<int, string> = Ok x
+
+  let mapped = Dictionary.map (fun _ x -> x * 10) arrayKeyed
+  let traversed = Dictionary.Result.traverse alwaysOk arrayKeyed
+  let oks, _ = Dictionary.Result.partitionMap alwaysOk arrayKeyed
+
+  // A FRESH ARRAY, SO REFERENCE EQUALITY WOULD MISS IT
+  test <@ mapped.ContainsKey [| 1 |] @>
+  test <@ traversed |> Result.map (fun d -> d.ContainsKey [| 1 |]) = Ok true @>
+  test <@ oks.ContainsKey [| 1 |] @>

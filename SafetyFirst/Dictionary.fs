@@ -53,17 +53,18 @@ let values (map:IDictionary<_,_>) = map.Values
 /// </summary>
 let containsKey key (map:IDictionary<_,_>) = map.ContainsKey key
 
-// IDictionary DOESN'T EXPOSE ITS COMPARER, SO ONLY A CONCRETE Dictionary'S IS KEPT
+// IDictionary DOESN'T EXPOSE ITS COMPARER, SO ONLY A CONCRETE Dictionary'S IS KEPT.
+// FALLBACK IS STRUCTURAL, NOT Default, TO MATCH F# dict (E.G. ARRAY KEYS)
 let private comparerOf (xs : IDictionary<'k, 'v>) : IEqualityComparer<'k> =
   match xs with
   | :? Dictionary<'k, 'v> as d -> d.Comparer
-  | _ -> upcast EqualityComparer<'k>.Default
+  | _ -> HashIdentity.Structural
 
 /// <summary>
 /// Builds a new collection whose elements are the results of applying the given
 /// function to each of the elements of the collection.
 /// The key passed to the function indicates the key of element being transformed.
-/// Keeps the key comparer of <c>xs</c> if it's a <c>Dictionary</c>.
+/// Keeps the key comparer of <c>xs</c> if it's a <c>Dictionary</c>, otherwise compares keys structurally.
 /// </summary>
 let map fn (xs:IDictionary<_,_>) =
   xs.ToDictionary (
@@ -137,7 +138,7 @@ let inline ofSeqSafe xs = ofSeq' xs
 /// </summary>
 let inline tryOfSeq xs = ofSeq' xs |> Result.toOption
 
-// Add, NOT THE INDEXER, BECAUSE Add THROWS WHEN A NON-Dictionary COMPARER IS STRICTER THAN THE DEFAULT AND KEYS COLLAPSE
+// Add, NOT THE INDEXER, BECAUSE Add THROWS WHEN A NON-Dictionary COMPARER IS STRICTER THAN STRUCTURAL AND KEYS COLLAPSE
 let private traverseResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : IDictionary<'k, 'a>) : Result<Dictionary<'k, 'b>, 'e> =
   let mapped = Dictionary<'k, 'b> (xs.Count, comparerOf xs)
   use bindings = xs.GetEnumerator ()
@@ -154,7 +155,7 @@ let private traverseResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : IDictionary<'
 
   traverse' ()
 
-// Add, NOT THE INDEXER, BECAUSE Add THROWS WHEN A NON-Dictionary COMPARER IS STRICTER THAN THE DEFAULT AND KEYS COLLAPSE
+// Add, NOT THE INDEXER, BECAUSE Add THROWS WHEN A NON-Dictionary COMPARER IS STRICTER THAN STRUCTURAL AND KEYS COLLAPSE
 let private partitionMapResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : IDictionary<'k, 'a>) : Dictionary<'k, 'b> * Dictionary<'k, 'e> =
   let comparer = comparerOf xs
   let oks = Dictionary<'k, 'b> (comparer)
