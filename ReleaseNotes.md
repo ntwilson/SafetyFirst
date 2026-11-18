@@ -1,6 +1,8 @@
-# Unreleased
+# Version 5.5.0
 
 ## New features:
+
+- The `result`, `option`, and `voption` computation expressions now support `if ... then` without an `else` (e.g., `if verbose then printfn "..."`, or `if x < 0 then do! Error "negative"` to return early)
 
 Adds a nested `Result` module to the List/Array/Set/Map/Dictionary modules and to their `NonEmpty` modules (e.g., `List.Result`, `Map.NonEmpty.Result`), each with:
 

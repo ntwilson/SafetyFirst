@@ -360,6 +360,34 @@ let ``catches exceptions`` () =
   test <@ Result.isError result && exceptionCaught && cleanedUp @>
 
 [<Test>]
+let ``supports if-then without an else`` () =
+  let run cond : Result<int, string> * bool =
+    let mutable didExecute = false
+    let r =
+      result {
+        if cond then
+          didExecute <- true
+        let! x = Ok 5
+        return x
+      }
+    r, didExecute
+
+  test <@ run true = (Ok 5, true) && run false = (Ok 5, false) @>
+
+[<Test>]
+let ``returns early from inside an if-then`` () =
+  let mutable didExecute = false
+  let result =
+    result {
+      if true then
+        do! Error "failed"
+      didExecute <- true
+      return 5
+    }
+
+  test <@ result = Error "failed" && not didExecute @>
+
+[<Test>]
 let ``can use a default value for a failed result`` () =
   test
     <@

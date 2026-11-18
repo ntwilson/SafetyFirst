@@ -74,3 +74,31 @@ let ``Returns from a given voption`` () =
         return! ValueNone
       } = ValueNone
     @>
+
+[<Test>]
+let ``supports if-then without an else`` () =
+  let run cond =
+    let mutable didExecute = false
+    let r =
+      voption {
+        if cond then
+          didExecute <- true
+        let! x = ValueSome 5
+        return x
+      }
+    r, didExecute
+
+  test <@ run true = (ValueSome 5, true) && run false = (ValueSome 5, false) @>
+
+[<Test>]
+let ``returns early from inside an if-then`` () =
+  let mutable didExecute = false
+  let result =
+    voption {
+      if true then
+        do! ValueNone
+      didExecute <- true
+      return 5
+    }
+
+  test <@ result = ValueNone && not didExecute @>

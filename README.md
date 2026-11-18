@@ -383,3 +383,7 @@ let y : NaturalInt = xs |> List.length |> NaturalInt.verify |> Option.unless "li
 ```
 
 Functions that utilize `PositiveInt` include `chunksOf` (a safe version of `chunkBySize`), `splitIntoN` (a safe version of `splitInto`), and `window` (a safe version of `windowed`).  Functions that utilize `NaturalInt` include `drop` and `skip`.
+
+## Development
+
+To test the NuGet package itself rather than the project, run `./test-package.ps1`. It packs into `artifacts/` and runs `PackageTests` against that package.
