@@ -968,6 +968,44 @@ let inline zip3' xs ys zs = zip3Safe xs ys zs
 /// </summary>
 let inline tryZip3 xs ys zs = zip3Safe xs ys zs |> Result.toOption
 
+let private traverseResult (fn : 'a -> Result<'b, 'e>) (xs : 'a[]) : Result<'b[], 'e> =
+  let mapped = Array.zeroCreate xs.Length
+  let rec fill i =
+    if i = xs.Length
+    then Ok mapped
+    else
+      match fn xs.[i] with
+      | Ok y ->
+        mapped.[i] <- y
+        fill (i + 1)
+      | Error e -> Error e
+
+  fill 0
+
+let private partitionResults (results : Result<'a, 'e>[]) : 'a[] * 'e[] =
+  let okCount = results |> Array.sumBy (fun r -> match r with Ok _ -> 1 | Error _ -> 0)
+  let oks = Array.zeroCreate okCount
+  let errs = Array.zeroCreate (results.Length - okCount)
+  let rec fill i okIndex errIndex =
+    if i < results.Length then
+      match results.[i] with
+      | Ok y ->
+        oks.[okIndex] <- y
+        fill (i + 1) (okIndex + 1) errIndex
+      | Error e ->
+        errs.[errIndex] <- e
+        fill (i + 1) okIndex (errIndex + 1)
+
+  fill 0 0 0
+  (oks, errs)
+
+let private partitionMapResult fn (xs : _[]) = partitionResults (Array.map fn xs)
+
+let private collectResult (results : Result<_, _>[]) : Result<_[], NonEmptyArray<_>> =
+  match partitionResults results with
+  | oks, [||] -> Ok oks
+  | _, errs -> Error (NonEmpty errs)
+
 
 /// <summary>
 /// Functions for manipulating NonEmpty Arrays
@@ -1918,7 +1956,40 @@ module NonEmpty =
   /// </summary>
   let zipper = new ZipperExpression ()
 
-type ZipperExpression() = 
+  /// <summary>
+  /// Functions for NonEmpty arrays of Results, or for mapping NonEmpty arrays with Result-producing functions.
+  /// </summary>
+  module Result =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning Ok of all the mapped values, or the first Error.
+    /// Elements after the first Error are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyArray<_>) : Result<NonEmptyArray<_>, _> =
+      traverseResult fn xs |> Result.map NonEmpty
+
+    /// <summary>
+    /// Returns Ok of all the contained values, or the first Error.
+    /// Elements after the first Error are not evaluated.
+    /// </summary>
+    let sequence (results : NonEmptyArray<Result<_, _>>) = traverse id results
+
+    /// <summary>
+    /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error.
+    /// </summary>
+    let collect (NonEmpty results : NonEmptyArray<Result<_, _>>) : Result<NonEmptyArray<_>, NonEmptyArray<_>> =
+      collectResult results |> Result.map NonEmpty
+
+    /// <summary>
+    /// Maps each element with <c>fn</c>, splitting the results into the Ok values and the Error values.
+    /// </summary>
+    let partitionMap fn (NonEmpty xs : NonEmptyArray<_>) = partitionMapResult fn xs
+
+    /// <summary>
+    /// Splits the Results into the Ok values and the Error values.
+    /// </summary>
+    let partition (NonEmpty results : NonEmptyArray<Result<_, _>>) = partitionResults results
+
+type ZipperExpression() =
   member inline this.MergeSources(t1, t2) = 
     zipShortest t1 t2
 
@@ -1928,4 +1999,35 @@ type ZipperExpression() =
 /// A zipper computation expression to zip any number of arrays together.
 /// </summary>
 let zipper = new ZipperExpression ()
+
+/// <summary>
+/// Functions for arrays of Results, or for mapping arrays with Result-producing functions.
+/// </summary>
+module Result =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning Ok of all the mapped values, or the first Error.
+  /// Elements after the first Error are not evaluated.
+  /// </summary>
+  let traverse fn (xs : _[]) = traverseResult fn xs
+
+  /// <summary>
+  /// Returns Ok of all the contained values, or the first Error.
+  /// Elements after the first Error are not evaluated.
+  /// </summary>
+  let sequence (results : Result<_, _>[]) = traverse id results
+
+  /// <summary>
+  /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error.
+  /// </summary>
+  let collect (results : Result<_, _>[]) = collectResult results
+
+  /// <summary>
+  /// Maps each element with <c>fn</c>, splitting the results into the Ok values and the Error values.
+  /// </summary>
+  let partitionMap fn (xs : _[]) = partitionMapResult fn xs
+
+  /// <summary>
+  /// Splits the Results into the Ok values and the Error values.
+  /// </summary>
+  let partition (results : Result<_, _>[]) = partitionResults results
 

@@ -945,6 +945,33 @@ let inline transpose' xs = transposeSafe xs
 /// </summary>
 let inline tryTranspose xs = transposeSafe xs |> Result.toOption
 
+let private traverseResult (fn : 'a -> Result<'b, 'e>) (xs : 'a list) : Result<'b list, 'e> =
+  let rec traverse' acc xs =
+    match xs with
+    | [] -> Ok (List.rev acc)
+    | x :: rest ->
+      match fn x with
+      | Ok y -> traverse' (y :: acc) rest
+      | Error e -> Error e
+
+  traverse' [] xs
+
+let private partitionMapResult (fn : 'a -> Result<'b, 'e>) (xs : 'a list) : 'b list * 'e list =
+  let rec partition' oks errs xs =
+    match xs with
+    | [] -> (List.rev oks, List.rev errs)
+    | x :: rest ->
+      match fn x with
+      | Ok y -> partition' (y :: oks) errs rest
+      | Error e -> partition' oks (e :: errs) rest
+
+  partition' [] [] xs
+
+let private collectResult (results : Result<'a, 'e> list) : Result<'a list, NonEmptyList<'e>> =
+  match partitionMapResult id results with
+  | oks, [] -> Ok oks
+  | _, errs -> Error (NonEmpty errs)
+
 /// <summary>
 /// Functions for manipulating NonEmpty Lists
 /// </summary>
@@ -1877,8 +1904,41 @@ module NonEmpty =
   /// </summary>
   let zipper = new ZipperExpression ()
 
+  /// <summary>
+  /// Functions for NonEmpty lists of Results, or for mapping NonEmpty lists with Result-producing functions.
+  /// </summary>
+  module Result =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning Ok of all the mapped values, or the first Error.
+    /// Elements after the first Error are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyList<_>) : Result<NonEmptyList<_>, _> =
+      traverseResult fn xs |> Result.map NonEmpty
 
-type ZipperExpression() = 
+    /// <summary>
+    /// Returns Ok of all the contained values, or the first Error.
+    /// Elements after the first Error are not evaluated.
+    /// </summary>
+    let sequence (results : NonEmptyList<Result<_, _>>) = traverse id results
+
+    /// <summary>
+    /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error.
+    /// </summary>
+    let collect (NonEmpty results : NonEmptyList<Result<_, _>>) : Result<NonEmptyList<_>, NonEmptyList<_>> =
+      collectResult results |> Result.map NonEmpty
+
+    /// <summary>
+    /// Maps each element with <c>fn</c>, splitting the results into the Ok values and the Error values.
+    /// </summary>
+    let partitionMap fn (NonEmpty xs : NonEmptyList<_>) = partitionMapResult fn xs
+
+    /// <summary>
+    /// Splits the Results into the Ok values and the Error values.
+    /// </summary>
+    let partition (results : NonEmptyList<Result<_, _>>) = partitionMap id results
+
+
+type ZipperExpression() =
   member inline this.MergeSources(t1, t2) = 
     zipShortest t1 t2
 
@@ -1888,4 +1948,35 @@ type ZipperExpression() =
 /// A zipper computation expression to zip any number of lists together.
 /// </summary>
 let zipper = new ZipperExpression ()
+
+/// <summary>
+/// Functions for lists of Results, or for mapping lists with Result-producing functions.
+/// </summary>
+module Result =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning Ok of all the mapped values, or the first Error.
+  /// Elements after the first Error are not evaluated.
+  /// </summary>
+  let traverse fn (xs : _ list) = traverseResult fn xs
+
+  /// <summary>
+  /// Returns Ok of all the contained values, or the first Error.
+  /// Elements after the first Error are not evaluated.
+  /// </summary>
+  let sequence (results : Result<_, _> list) = traverse id results
+
+  /// <summary>
+  /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error.
+  /// </summary>
+  let collect (results : Result<_, _> list) = collectResult results
+
+  /// <summary>
+  /// Maps each element with <c>fn</c>, splitting the results into the Ok values and the Error values.
+  /// </summary>
+  let partitionMap fn (xs : _ list) = partitionMapResult fn xs
+
+  /// <summary>
+  /// Splits the Results into the Ok values and the Error values.
+  /// </summary>
+  let partition (results : Result<_, _> list) = partitionMap id results
 

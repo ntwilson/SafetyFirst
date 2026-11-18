@@ -563,40 +563,35 @@ module Zipping =
 
 module NonEmptyParity =
   open SafetyFirst.Numbers
+  open SafetyFirst.Specs.SeqSpec
 
-  let ne xs : NonEmptyFSeq<_> = NonEmpty.assume (fseq xs)
-  let unwrapAll xs = xs |> FSeq.NonEmpty.toList |> List.map Seq.toList
-
-  [<Test>]
-  let ``chunking and splitting a NonEmpty fseq yields NonEmpty chunks`` () =
-    test <@ FSeq.NonEmpty.chunkBySize' 2 (ne [1;2;3;4;5]) |> Result.map unwrapAll = Ok [[1;2];[3;4];[5]] @>
-    test <@ FSeq.NonEmpty.tryChunkBySize 0 (ne [1]) |> Option.isNone @>
-    test <@ FSeq.NonEmpty.chunksOf (PositiveInt.assume 3) (ne [1;2;3;4]) |> unwrapAll = [[1;2;3];[4]] @>
-    test <@ FSeq.NonEmpty.splitInto' 2 (ne [1;2;3]) |> Result.map unwrapAll = Ok [[1;2];[3]] @>
-    test <@ FSeq.NonEmpty.trySplitInto 0 (ne [1]) |> Option.isNone @>
-    test <@ FSeq.NonEmpty.splitIntoN (PositiveInt.assume 5) (ne [1;2]) |> unwrapAll = [[1];[2]] @>
+  let sameOrBothFail2 safeVersion unsafeVersion = nonEmptyMatchesThrowing2 FSeq.ofList List.toSeq safeVersion unsafeVersion
+  let same1 nonEmptyVersion plainVersion = nonEmptyMatches1 FSeq.ofList List.toSeq nonEmptyVersion plainVersion
+  let same2 nonEmptyVersion plainVersion = nonEmptyMatches2 FSeq.ofList List.toSeq nonEmptyVersion plainVersion
 
   [<Test>]
-  let ``cons and order-changing functions preserve NonEmpty`` () =
-    let xs = ne [3;1;2]
-    test <@ FSeq.NonEmpty.cons 0 xs = ne [0;3;1;2] @>
-    test <@ FSeq.NonEmpty.sortWith compare xs = ne [1;2;3] @>
-    test <@ FSeq.NonEmpty.scanBack (+) xs 0 = ne [6;3;2;0] @>
-    test <@ FSeq.NonEmpty.mapFold (fun s x -> (x * 2, s + x)) 0 xs = (ne [6;2;4], 6) @>
-    test <@ FSeq.NonEmpty.mapFoldBack (fun x s -> (x * 2, s + x)) xs 0 = (ne [6;2;4], 6) @>
+  let ``FSeq.NonEmpty functions error whenever the Seq versions throw, and otherwise match them`` () =
+    sameOrBothFail2 FSeq.NonEmpty.chunkBySize'                                       Seq.chunkBySize
+    sameOrBothFail2 (fun n -> FSeq.NonEmpty.tryChunkBySize n >> Option.toResult ())  Seq.chunkBySize
+    sameOrBothFail2 FSeq.NonEmpty.splitInto'                                         Seq.splitInto
+    sameOrBothFail2 (fun n -> FSeq.NonEmpty.trySplitInto n >> Option.toResult ())    Seq.splitInto
 
   [<Test>]
-  let ``FSharp.Core passthroughs behave like their FSeq counterparts`` () =
-    let xs = ne [3;1;2]
-    let total = FSeq.NonEmpty.sum xs
-    let totalBy = FSeq.NonEmpty.sumBy float xs
-    test <@ total = 6 && totalBy = 6.0 @>
-    test <@ FSeq.NonEmpty.choose (fun x -> if x > 1 then Some x else None) xs = fseq [3;2] @>
-    test <@ FSeq.NonEmpty.takeWhile ((<>) 1) xs = fseq [3] @>
-    test <@ FSeq.NonEmpty.skipWhile ((<>) 1) xs = fseq [1;2] @>
-    test <@ FSeq.NonEmpty.skipUntilIncluding ((=) 1) xs = fseq [2] @>
-
-    let visited = ResizeArray ()
-    FSeq.NonEmpty.iter visited.Add xs
-    FSeq.NonEmpty.iteri (fun i x -> visited.Add (i * x)) xs
-    test <@ List.ofSeq visited = [3;1;2;0;1;4] @>
+  let ``FSeq.NonEmpty functions always match the Seq versions`` () =
+    same2 (fun n -> FSeq.NonEmpty.chunksOf (PositiveInt.assume (toPositive n)))    (fun n -> Seq.chunkBySize (toPositive n))
+    same2 (fun n -> FSeq.NonEmpty.splitIntoN (PositiveInt.assume (toPositive n)))  (fun n -> Seq.splitInto (toPositive n))
+    same2 FSeq.NonEmpty.cons                                                       (fun x xs -> Seq.append [x] xs)
+    same2 FSeq.NonEmpty.skipUntilIncluding                                         Seq.skipUntilIncluding
+    same1 (fun xs -> (FSeq.NonEmpty.sum xs : int))                                 Seq.sum<int>
+    same2 (fun (f: _ -> int) -> FSeq.NonEmpty.sumBy f)                             (fun f -> Seq.sumBy f)
+    same2 FSeq.NonEmpty.choose                                                     Seq.choose
+    same2 FSeq.NonEmpty.takeWhile                                                  Seq.takeWhile
+    same2 FSeq.NonEmpty.skipWhile                                                  Seq.skipWhile
+    same2 FSeq.NonEmpty.sortWith                                                   Seq.sortWith
+    same2 (fun (f, s) xs -> FSeq.NonEmpty.scanBack f xs s)                         (fun (f, s) xs -> Seq.scanBack f xs s)
+    same2 (fun (f, s) -> FSeq.NonEmpty.mapFold f s)                                (fun (f, s) -> Seq.mapFold f s)
+    same2 (fun (f, s) xs -> FSeq.NonEmpty.mapFoldBack f xs s)                      (fun (f, s) xs -> Seq.mapFoldBack f xs s)
+    same1 (fun xs -> visits (fun visit -> FSeq.NonEmpty.iter visit xs))           (fun xs -> visits (fun visit -> Seq.iter visit xs))
+    same1
+      (fun xs -> visits (fun visit -> FSeq.NonEmpty.iteri (fun i x -> visit (i, x)) xs))
+      (fun xs -> visits (fun visit -> Seq.iteri (fun i x -> visit (i, x)) xs))
