@@ -17,14 +17,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "10.x"
+          dotnet-version: 10.0.x
       - name: Restore
         run: dotnet restore SafetyFirst.sln
       - name: Build with dotnet
         run: dotnet build SafetyFirst.sln -c Release --no-restore
       - name: Test with dotnet
         run: dotnet test SafetyFirst.sln -f net10.0 -c Release --no-build
+      - name: Pack and test package
+        shell: pwsh
+        run: ./test-package.ps1

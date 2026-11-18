@@ -1,0 +1,83 @@
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+  # Publishes the branch picked in "Use workflow from", then tags the commit.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to publish, e.g. 1.2.3 or 1.2.3-beta.1
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Trusted Publishing exchanges a GitHub OIDC token for a short-lived NuGet key.
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Resolve version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then v="${INPUT_VERSION#v}"; else v="${GITHUB_REF_NAME#v}"; fi
+
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$v' is not a version like 1.2.3 or 1.2.3-beta.1"
+            exit 1
+          fi
+
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && git ls-remote --exit-code --tags origin "refs/tags/v$v" > /dev/null; then
+            echo "::error::Tag v$v already exists"
+            exit 1
+          fi
+
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test SafetyFirst.sln -c Release
+
+      # Leaves the tested .nupkg in artifacts/ for the push below.
+      - name: Pack and test package
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: ./test-package.ps1 -Version $env:VERSION
+
+      - name: NuGet login
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+
+  # Tags only after a successful push, so a failed publish leaves no tag behind.
+  tag:
+    needs: publish
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # TAGS PUSHED WITH GITHUB_TOKEN DON'T TRIGGER WORKFLOWS, SO THIS DOESN'T START A SECOND PUBLISH.
+      - name: Tag the published commit
+        env:
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          git tag "v$VERSION" "$GITHUB_SHA"
+          git push origin "v$VERSION"
