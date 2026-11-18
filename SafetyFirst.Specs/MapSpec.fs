@@ -4,6 +4,7 @@ open NUnit.Framework
 open Swensen.Unquote
 
 open SafetyFirst
+open SafetyFirst.Specs.ResultFixtures
 
 [<Test>]
 let ``Errors when constructing a Map that contains duplicate keys`` () = 
@@ -121,3 +122,45 @@ let ``can zip many maps together with a computation expression`` () =
 
   test <@ ans = Map [ ('a', 1 + 4 + 7 + 1); ('b', 2 + 5 + 8 + 2); ('c', 3 + 6 + 9 + 3) ] @>
 
+
+
+[<Test>]
+let ``Map.Result functions`` () =
+  let okAndErr = Map.ofList keyedOkAndErr
+  let allOk = Map.ofList keyedAllOk
+
+  test <@ Map.Result.traverse (withKey tenfoldUnlessTwo) (Map.ofList [("a", 1); ("b", 1)]) = Ok (Map.ofList [("a", 10); ("b", 10)]) @>
+  test <@ Map.Result.traverse (withKey tenfoldUnlessTwo) (Map.ofList keyedNumbers) = Error "x: two" @>
+  test <@ Map.Result.traverse (withKey tenfoldUnlessTwo) Map.empty = Ok Map.empty @>
+  test <@ Map.Result.sequence okAndErr = Error "a" @>
+  test <@ Map.Result.sequence allOk = Ok (Map.ofList [("w", 1); ("x", 2)]) @>
+  test <@ Map.Result.collect okAndErr = Error (NonEmpty.assume (Map.ofList [("x", "a"); ("z", "b")])) @>
+  test <@ Map.Result.collect allOk = Ok (Map.ofList [("w", 1); ("x", 2)]) @>
+  test
+    <@
+      Map.Result.partitionMap (withKey tenfoldIfEven) (Map.ofList keyedNumbers)
+        = (Map.ofList [("x", 20); ("z", 40)], Map.ofList [("w", "w: 1 is odd"); ("y", "y: 3 is odd")])
+    @>
+  test <@ Map.Result.partition okAndErr = (Map.ofList [("w", 1); ("y", 2)], Map.ofList [("x", "a"); ("z", "b")]) @>
+
+[<Test>]
+let ``Map.NonEmpty.Result functions`` () =
+  let okAndErr = NonEmpty.assume (Map.ofList keyedOkAndErr)
+  let allOk = NonEmpty.assume (Map.ofList keyedAllOk)
+
+  test
+    <@
+      Map.NonEmpty.Result.traverse (withKey tenfoldUnlessTwo) (NonEmpty.assume (Map.ofList [("a", 1); ("b", 1)]))
+        = Ok (NonEmpty.assume (Map.ofList [("a", 10); ("b", 10)]))
+    @>
+  test <@ Map.NonEmpty.Result.traverse (withKey tenfoldUnlessTwo) (NonEmpty.assume (Map.ofList keyedNumbers)) = Error "x: two" @>
+  test <@ Map.NonEmpty.Result.sequence okAndErr = Error "a" @>
+  test <@ Map.NonEmpty.Result.sequence allOk = Ok (NonEmpty.assume (Map.ofList [("w", 1); ("x", 2)])) @>
+  test <@ Map.NonEmpty.Result.collect okAndErr = Error (NonEmpty.assume (Map.ofList [("x", "a"); ("z", "b")])) @>
+  test <@ Map.NonEmpty.Result.collect allOk = Ok (NonEmpty.assume (Map.ofList [("w", 1); ("x", 2)])) @>
+  test
+    <@
+      Map.NonEmpty.Result.partitionMap (withKey tenfoldIfEven) (NonEmpty.assume (Map.ofList keyedNumbers))
+        = (Map.ofList [("x", 20); ("z", 40)], Map.ofList [("w", "w: 1 is odd"); ("y", "y: 3 is odd")])
+    @>
+  test <@ Map.NonEmpty.Result.partition okAndErr = (Map.ofList [("w", 1); ("y", 2)], Map.ofList [("x", "a"); ("z", "b")]) @>

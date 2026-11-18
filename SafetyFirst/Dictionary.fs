@@ -10,7 +10,7 @@ open SafetyFirst.ErrorTypes
 /// and an Error if not.
 /// </summary>
 [<CompiledName("findSafe_F#")>]
-let find' key (map:IDictionary<_,_>) = 
+let find' key (map:IDictionary<_,_>) =
   match map.TryGetValue key with
   | (true, value) -> Ok value
   | (false, _) -> Error (mapFindErr key)
@@ -19,7 +19,7 @@ let find' key (map:IDictionary<_,_>) =
 /// Lookup an element in the map, returning an value if the element is in the domain of the map
 /// and None if not.
 /// </summary>
-let tryFind key (map:IDictionary<_,_>) = 
+let tryFind key (map:IDictionary<_,_>) =
   match map.TryGetValue key with
   | (true, value) -> Some value
   | (false, _) -> None
@@ -30,7 +30,7 @@ let tryFind key (map:IDictionary<_,_>) =
 /// </summary>
 let inline findSafe key map = find' key map
 
-let private duplicates xs = 
+let private duplicates xs =
   [ for (x, count) in Seq.countBy fst xs do if count > 1 then yield x ]
 
 /// <summary>
@@ -61,7 +61,7 @@ let private comparerOf (xs : IDictionary<'k, 'v>) : IEqualityComparer<'k> =
 
 /// <summary>
 /// Builds a new collection whose elements are the results of applying the given
-/// function to each of the elements of the collection. 
+/// function to each of the elements of the collection.
 /// The key passed to the function indicates the key of element being transformed.
 /// Keeps the key comparer of <c>xs</c> if it's a <c>Dictionary</c>.
 /// </summary>
@@ -77,17 +77,17 @@ let map fn (xs:IDictionary<_,_>) =
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
 [<CompiledName("ofListSafe_F#")>]
-let ofList' xs = 
+let ofList' xs =
   let result = dict xs
   if List.length xs <> count result
-  then Error <| duplicateKeysErr (duplicates xs) 
+  then Error <| duplicateKeysErr (duplicates xs)
   else Ok result
 
 /// <summary>
 /// Returns a new map made from the given bindings, provided all keys are unique.
 /// Returns an Error if any duplicate keys were found.
 /// </summary>
-let inline ofListSafe xs = ofList' xs 
+let inline ofListSafe xs = ofList' xs
 
 /// <summary>
 /// Returns a new map made from the given bindings, provided all keys are unique.
@@ -137,7 +137,7 @@ let inline ofSeqSafe xs = ofSeq' xs
 /// </summary>
 let inline tryOfSeq xs = ofSeq' xs |> Result.toOption
 
-// THE INDEXER, NOT Add, BECAUSE A NON-Dictionary INPUT'S UNKNOWN COMPARER MAY BE STRICTER THAN THE DEFAULT
+// Add, NOT THE INDEXER, BECAUSE Add THROWS WHEN A NON-Dictionary COMPARER IS STRICTER THAN THE DEFAULT AND KEYS COLLAPSE
 let private traverseResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : IDictionary<'k, 'a>) : Result<Dictionary<'k, 'b>, 'e> =
   let mapped = Dictionary<'k, 'b> (xs.Count, comparerOf xs)
   use bindings = xs.GetEnumerator ()
@@ -147,21 +147,22 @@ let private traverseResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : IDictionary<'
       let (KeyValue (key, value)) = bindings.Current
       match fn key value with
       | Ok y ->
-        mapped.[key] <- y
+        mapped.Add(key, y)
         traverse' ()
       | Error e -> Error e
     else Ok mapped
 
   traverse' ()
 
+// Add, NOT THE INDEXER, BECAUSE Add THROWS WHEN A NON-Dictionary COMPARER IS STRICTER THAN THE DEFAULT AND KEYS COLLAPSE
 let private partitionMapResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : IDictionary<'k, 'a>) : Dictionary<'k, 'b> * Dictionary<'k, 'e> =
   let comparer = comparerOf xs
   let oks = Dictionary<'k, 'b> (comparer)
   let errs = Dictionary<'k, 'e> (comparer)
   for KeyValue (key, value) in xs do
     match fn key value with
-    | Ok y -> oks.[key] <- y
-    | Error e -> errs.[key] <- e
+    | Ok y -> oks.Add(key, y)
+    | Error e -> errs.Add(key, e)
 
   (oks, errs)
 
