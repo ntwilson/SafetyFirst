@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- RUN THROUGH test-package.ps1, WHICH PACKS THE VERSION THIS PROJECT RESTORES. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <SafetyFirstVersion Condition="'$(SafetyFirstVersion)' == ''">0.0.0-local</SafetyFirstVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="PackageSpec.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="SafetyFirstVersion" Value="$(SafetyFirstVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SafetyFirst" Version="[$(SafetyFirstVersion)]" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="NUnit" Version="4.5.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="6.1.0" />
+    <PackageReference Include="Unquote" Version="7.0.1" />
+  </ItemGroup>
+
+</Project>

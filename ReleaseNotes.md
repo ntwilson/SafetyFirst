@@ -1,3 +1,9 @@
+# Version 5.5.0
+
+## New features:
+
+- The `result`, `option`, and `voption` computation expressions now support `if ... then` without an `else` (e.g., `if verbose then printfn "..."`, or `if x < 0 then do! Error "negative"` to return early)
+
 # Version 5.4.2
 
 ## Bug fixes:

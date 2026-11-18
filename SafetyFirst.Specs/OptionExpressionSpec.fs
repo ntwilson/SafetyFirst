@@ -112,3 +112,31 @@ let ``catches exceptions`` () =
     | e -> None
 
   test <@ result = None && exceptionCaught && cleanedUp @>
+
+[<Test>]
+let ``supports if-then without an else`` () =
+  let run cond =
+    let mutable didExecute = false
+    let r =
+      option {
+        if cond then
+          didExecute <- true
+        let! x = Some 5
+        return x
+      }
+    r, didExecute
+
+  test <@ run true = (Some 5, true) && run false = (Some 5, false) @>
+
+[<Test>]
+let ``returns early from inside an if-then`` () =
+  let mutable didExecute = false
+  let result =
+    option {
+      if true then
+        do! None
+      didExecute <- true
+      return 5
+    }
+
+  test <@ result = None && not didExecute @>
