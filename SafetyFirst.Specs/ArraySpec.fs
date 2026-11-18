@@ -5,6 +5,7 @@ open Swensen.Unquote
 
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
+open SafetyFirst.Specs.ResultFixtures
 
 let averageFloats' (xs:float[]) = Array.average' xs
 let averageFloats (xs:float[]) = Array.average xs
@@ -292,3 +293,32 @@ module SkipUntilIncluding =
     let taken = Array.takeUntilIncluding ((=) 3) xs
     let skipped = Array.skipUntilIncluding ((=) 3) xs
     test <@ Array.append taken skipped = xs @>
+
+[<Test>]
+let ``Array.Result functions`` () =
+  let okAndErr = List.toArray okAndErr
+  let allOk = List.toArray allOk
+
+  test <@ Array.Result.traverse tenfoldUnlessTwo [|1; 1|] = Ok [|10; 10|] @>
+  test <@ Array.Result.traverse tenfoldUnlessTwo [|1; 2; 3|] = Error "two" @>
+  test <@ Array.Result.traverse tenfoldUnlessTwo [||] = Ok [||] @>
+  test <@ Array.Result.sequence okAndErr = Error "a" @>
+  test <@ Array.Result.sequence allOk = Ok [|1; 2|] @>
+  test <@ Array.Result.collect okAndErr = Error (NonEmpty.assume [|"a"; "b"|]) @>
+  test <@ Array.Result.collect allOk = Ok [|1; 2|] @>
+  test <@ Array.Result.partitionMap tenfoldIfEven [|1; 2; 3; 4|] = ([|20; 40|], [|"1 is odd"; "3 is odd"|]) @>
+  test <@ Array.Result.partition okAndErr = ([|1; 2|], [|"a"; "b"|]) @>
+
+[<Test>]
+let ``Array.NonEmpty.Result functions`` () =
+  let okAndErr = NonEmpty.assume (List.toArray okAndErr)
+  let allOk = NonEmpty.assume (List.toArray allOk)
+
+  test <@ Array.NonEmpty.Result.traverse tenfoldUnlessTwo (NonEmpty.assume [|1; 1|]) = Ok (NonEmpty.assume [|10; 10|]) @>
+  test <@ Array.NonEmpty.Result.traverse tenfoldUnlessTwo (NonEmpty.assume [|1; 2; 3|]) = Error "two" @>
+  test <@ Array.NonEmpty.Result.sequence okAndErr = Error "a" @>
+  test <@ Array.NonEmpty.Result.sequence allOk = Ok (NonEmpty.assume [|1; 2|]) @>
+  test <@ Array.NonEmpty.Result.collect okAndErr = Error (NonEmpty.assume [|"a"; "b"|]) @>
+  test <@ Array.NonEmpty.Result.collect allOk = Ok (NonEmpty.assume [|1; 2|]) @>
+  test <@ Array.NonEmpty.Result.partitionMap tenfoldIfEven (NonEmpty.assume [|1; 2; 3; 4|]) = ([|20; 40|], [|"1 is odd"; "3 is odd"|]) @>
+  test <@ Array.NonEmpty.Result.partition okAndErr = ([|1; 2|], [|"a"; "b"|]) @>

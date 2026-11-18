@@ -5,6 +5,7 @@ open Swensen.Unquote
 
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
+open SafetyFirst.Specs.ResultFixtures
 
 let averageFloats' (xs:float list) = List.average' xs
 let averageFloats (xs:float list) = List.average xs
@@ -326,3 +327,26 @@ module SkipUntilIncluding =
     let taken = List.takeUntilIncluding ((=) 3) xs
     let skipped = List.skipUntilIncluding ((=) 3) xs
     test <@ taken @ skipped = xs @>
+
+[<Test>]
+let ``List.Result functions`` () =
+  test <@ List.Result.traverse tenfoldUnlessTwo [1; 1] = Ok [10; 10] @>
+  test <@ List.Result.traverse tenfoldUnlessTwo [1; 2; 3] = Error "two" @>
+  test <@ List.Result.traverse tenfoldUnlessTwo [] = Ok [] @>
+  test <@ List.Result.sequence okAndErr = Error "a" @>
+  test <@ List.Result.sequence allOk = Ok [1; 2] @>
+  test <@ List.Result.collect okAndErr = Error (NonEmpty.assume ["a"; "b"]) @>
+  test <@ List.Result.collect allOk = Ok [1; 2] @>
+  test <@ List.Result.partitionMap tenfoldIfEven [1; 2; 3; 4] = ([20; 40], ["1 is odd"; "3 is odd"]) @>
+  test <@ List.Result.partition okAndErr = ([1; 2], ["a"; "b"]) @>
+
+[<Test>]
+let ``List.NonEmpty.Result functions`` () =
+  test <@ List.NonEmpty.Result.traverse tenfoldUnlessTwo (NonEmpty.assume [1; 1]) = Ok (NonEmpty.assume [10; 10]) @>
+  test <@ List.NonEmpty.Result.traverse tenfoldUnlessTwo (NonEmpty.assume [1; 2; 3]) = Error "two" @>
+  test <@ List.NonEmpty.Result.sequence (NonEmpty.assume okAndErr) = Error "a" @>
+  test <@ List.NonEmpty.Result.sequence (NonEmpty.assume allOk) = Ok (NonEmpty.assume [1; 2]) @>
+  test <@ List.NonEmpty.Result.collect (NonEmpty.assume okAndErr) = Error (NonEmpty.assume ["a"; "b"]) @>
+  test <@ List.NonEmpty.Result.collect (NonEmpty.assume allOk) = Ok (NonEmpty.assume [1; 2]) @>
+  test <@ List.NonEmpty.Result.partitionMap tenfoldIfEven (NonEmpty.assume [1; 2; 3; 4]) = ([20; 40], ["1 is odd"; "3 is odd"]) @>
+  test <@ List.NonEmpty.Result.partition (NonEmpty.assume okAndErr) = ([1; 2], ["a"; "b"]) @>

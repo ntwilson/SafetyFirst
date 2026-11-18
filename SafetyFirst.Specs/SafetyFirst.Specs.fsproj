@@ -20,10 +20,12 @@
     <Compile Include="MatchSpec.fs" />
     <Compile Include="NonEmptySpec.fs" />
     <Compile Include="SeqSpec.fs" />
+    <Compile Include="ResultFixtures.fs" />
     <Compile Include="ListSpec.fs" />
     <Compile Include="ArraySpec.fs" />
     <Compile Include="MapSpec.fs" />
     <Compile Include="SetSpec.fs" />
+    <Compile Include="DictionarySpec.fs" />
     <Compile Include="FSeqSpec.fs" />
     <Compile Include="InfiniteSeqSpec.fs" />
     <Compile Include="IEnumerableSpec.fs" />
