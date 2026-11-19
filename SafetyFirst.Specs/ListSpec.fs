@@ -6,6 +6,7 @@ open Swensen.Unquote
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
 open SafetyFirst.Specs.ResultFixtures
+open SafetyFirst.Specs.OptionFixtures
 
 let averageFloats' (xs:float list) = List.average' xs
 let averageFloats (xs:float list) = List.average xs
@@ -350,3 +351,33 @@ let ``List.NonEmpty.Result functions`` () =
   test <@ List.NonEmpty.Result.collect (NonEmpty.assume allOk) = Ok (NonEmpty.assume [1; 2]) @>
   test <@ List.NonEmpty.Result.partitionMap tenfoldIfEven (NonEmpty.assume [1; 2; 3; 4]) = ([20; 40], ["1 is odd"; "3 is odd"]) @>
   test <@ List.NonEmpty.Result.partition (NonEmpty.assume okAndErr) = ([1; 2], ["a"; "b"]) @>
+
+[<Test>]
+let ``List.Option functions`` () =
+  test <@ List.Option.traverse tenfoldUnlessTwoOpt [1; 1] = Some [10; 10] @>
+  test <@ List.Option.traverse tenfoldUnlessTwoOpt [1; 2; 3] = None @>
+  test <@ List.Option.traverse tenfoldUnlessTwoOpt [] = Some [] @>
+  test <@ List.Option.sequence someAndNone = None @>
+  test <@ List.Option.sequence allSome = Some [1; 2] @>
+
+[<Test>]
+let ``List.NonEmpty.Option functions`` () =
+  test <@ List.NonEmpty.Option.traverse tenfoldUnlessTwoOpt (NonEmpty.assume [1; 1]) = Some (NonEmpty.assume [10; 10]) @>
+  test <@ List.NonEmpty.Option.traverse tenfoldUnlessTwoOpt (NonEmpty.assume [1; 2; 3]) = None @>
+  test <@ List.NonEmpty.Option.sequence (NonEmpty.assume someAndNone) = None @>
+  test <@ List.NonEmpty.Option.sequence (NonEmpty.assume allSome) = Some (NonEmpty.assume [1; 2]) @>
+
+[<Test>]
+let ``List.ValueOption functions`` () =
+  test <@ List.ValueOption.traverse tenfoldUnlessTwoVOpt [1; 1] = ValueSome [10; 10] @>
+  test <@ List.ValueOption.traverse tenfoldUnlessTwoVOpt [1; 2; 3] = ValueNone @>
+  test <@ List.ValueOption.traverse tenfoldUnlessTwoVOpt [] = ValueSome [] @>
+  test <@ List.ValueOption.sequence vsomeAndNone = ValueNone @>
+  test <@ List.ValueOption.sequence allVSome = ValueSome [1; 2] @>
+
+[<Test>]
+let ``List.NonEmpty.ValueOption functions`` () =
+  test <@ List.NonEmpty.ValueOption.traverse tenfoldUnlessTwoVOpt (NonEmpty.assume [1; 1]) = ValueSome (NonEmpty.assume [10; 10]) @>
+  test <@ List.NonEmpty.ValueOption.traverse tenfoldUnlessTwoVOpt (NonEmpty.assume [1; 2; 3]) = ValueNone @>
+  test <@ List.NonEmpty.ValueOption.sequence (NonEmpty.assume vsomeAndNone) = ValueNone @>
+  test <@ List.NonEmpty.ValueOption.sequence (NonEmpty.assume allVSome) = ValueSome (NonEmpty.assume [1; 2]) @>

@@ -7,6 +7,7 @@ open Swensen.Unquote
 
 open SafetyFirst
 open SafetyFirst.Specs.ResultFixtures
+open SafetyFirst.Specs.OptionFixtures
 
 // DICTIONARIES COMPARE BY REFERENCE, SO THESE TESTS COMPARE KEY/VALUE PAIRS INSTEAD
 let toPairs (d : #seq<KeyValuePair<_, _>>) = d |> Seq.map (fun (KeyValue (k, v)) -> (k, v)) |> Seq.toList
@@ -92,3 +93,58 @@ let ``Dictionary functions compare keys of a non-Dictionary structurally`` () =
   test <@ mapped.ContainsKey [| 1 |] @>
   test <@ traversed |> Result.map (fun d -> d.ContainsKey [| 1 |]) = Ok true @>
   test <@ oks.ContainsKey [| 1 |] @>
+
+[<Test>]
+let ``Dictionary.Option functions`` () =
+  let pairs = Option.map toPairs
+
+  test <@ Dictionary.Option.traverse (withKeyOpt tenfoldUnlessTwoOpt) (dict [("a", 1); ("b", 1)]) |> pairs = Some [("a", 10); ("b", 10)] @>
+  test <@ Dictionary.Option.traverse (withKeyOpt tenfoldUnlessTwoOpt) (dict keyedNumbers) |> pairs = None @>
+  test <@ Dictionary.Option.traverse (withKeyOpt tenfoldUnlessTwoOpt) (dict []) |> pairs = Some [] @>
+  test <@ Dictionary.Option.sequence (dict keyedSomeAndNone) |> pairs = None @>
+  test <@ Dictionary.Option.sequence (dict keyedAllSome) |> pairs = Some [("w", 1); ("x", 2)] @>
+
+[<Test>]
+let ``Dictionary.NonEmpty.Option functions`` () =
+  let pairs = Option.map nonEmptyPairs
+
+  test
+    <@
+      Dictionary.NonEmpty.Option.traverse (withKeyOpt tenfoldUnlessTwoOpt) (NonEmpty.assume (dict [("a", 1); ("b", 1)]))
+      |> pairs = Some [("a", 10); ("b", 10)]
+    @>
+  test <@ Dictionary.NonEmpty.Option.traverse (withKeyOpt tenfoldUnlessTwoOpt) (NonEmpty.assume (dict keyedNumbers)) |> pairs = None @>
+  test <@ Dictionary.NonEmpty.Option.sequence (NonEmpty.assume (dict keyedSomeAndNone)) |> pairs = None @>
+  test <@ Dictionary.NonEmpty.Option.sequence (NonEmpty.assume (dict keyedAllSome)) |> pairs = Some [("w", 1); ("x", 2)] @>
+
+[<Test>]
+let ``Dictionary.ValueOption functions`` () =
+  let pairs = ValueOption.toOption >> Option.map toPairs
+
+  test <@ Dictionary.ValueOption.traverse (withKeyOpt tenfoldUnlessTwoVOpt) (dict [("a", 1); ("b", 1)]) |> pairs = Some [("a", 10); ("b", 10)] @>
+  test <@ Dictionary.ValueOption.traverse (withKeyOpt tenfoldUnlessTwoVOpt) (dict keyedNumbers) |> pairs = None @>
+  test <@ Dictionary.ValueOption.traverse (withKeyOpt tenfoldUnlessTwoVOpt) (dict []) |> pairs = Some [] @>
+  test <@ Dictionary.ValueOption.sequence (dict keyedVSomeAndNone) |> pairs = None @>
+  test <@ Dictionary.ValueOption.sequence (dict keyedAllVSome) |> pairs = Some [("w", 1); ("x", 2)] @>
+
+[<Test>]
+let ``Dictionary.NonEmpty.ValueOption functions`` () =
+  let pairs = ValueOption.toOption >> Option.map nonEmptyPairs
+
+  test
+    <@
+      Dictionary.NonEmpty.ValueOption.traverse (withKeyOpt tenfoldUnlessTwoVOpt) (NonEmpty.assume (dict [("a", 1); ("b", 1)]))
+      |> pairs = Some [("a", 10); ("b", 10)]
+    @>
+  test <@ Dictionary.NonEmpty.ValueOption.traverse (withKeyOpt tenfoldUnlessTwoVOpt) (NonEmpty.assume (dict keyedNumbers)) |> pairs = None @>
+  test <@ Dictionary.NonEmpty.ValueOption.sequence (NonEmpty.assume (dict keyedVSomeAndNone)) |> pairs = None @>
+  test <@ Dictionary.NonEmpty.ValueOption.sequence (NonEmpty.assume (dict keyedAllVSome)) |> pairs = Some [("w", 1); ("x", 2)] @>
+
+[<Test>]
+let ``Dictionary.Option functions keep the input Dictionary's key comparer`` () =
+  let caseInsensitive = Dictionary<string, int> (System.StringComparer.OrdinalIgnoreCase)
+  caseInsensitive.["a"] <- 1
+
+  let traversed = Dictionary.Option.traverse (withKeyOpt tenfoldUnlessTwoOpt) caseInsensitive
+
+  test <@ traversed |> Option.map (fun d -> d.ContainsKey "A") = Some true @>

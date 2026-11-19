@@ -16,6 +16,8 @@ The Map and Dictionary versions pass the key to the function, e.g. `Map.Result.t
 
 The Set versions omit `partition` and `partitionMap` because it's not decided yet what collection should contain the errors.
 
+Likewise adds nested `Option` and `ValueOption` modules (e.g., `Array.Option`, `Map.NonEmpty.ValueOption`), each with `traverse` and `sequence`. Unlike the existing `Option.traverse` and `Option.sequence`, which always return a list, these return the same collection type as the input. ([#113](https://github.com/ntwilson/SafetyFirst/issues/113))
+
 ## Bug fixes:
 
 - `Dictionary.map` now keeps the input's key comparer when the input is a `Dictionary` (e.g. a case-insensitive dictionary stays case-insensitive). Other `IDictionary` implementations don't expose their comparer, so they still get the default one.

@@ -50,6 +50,9 @@ let private traverseResult (fn : 'a -> Result<'b, 'e>) (xs : Set<'a>) : Result<S
 
   traverse' Set.empty
 
+let private traverseOption fn xs = traverseResult (fn >> Option.toResult ()) xs |> Option.ofResult
+let private traverseVOption fn xs = traverseResult (fn >> ValueOption.toResult ()) xs |> ValueOption.ofResult
+
 let private collectResult (results : Set<Result<'a, 'e>>) : Result<Set<'a>, NonEmptyList<'e>> =
   let addResult (oks, errs) result =
     match result with
@@ -410,6 +413,42 @@ module NonEmpty =
     let collect (NonEmpty results : NonEmptySet<Result<_, _>>) : Result<NonEmptySet<_>, NonEmptyList<_>> =
       collectResult results |> Result.map NonEmpty
 
+  /// <summary>
+  /// Functions for NonEmpty sets of Options, or for mapping NonEmpty sets with Option-producing functions.
+  /// </summary>
+  module Option =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+    /// Elements after the first None are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptySet<_>) : NonEmptySet<_> option =
+      traverseOption fn xs |> Option.map NonEmpty
+
+    /// <summary>
+    /// Returns Some of all the contained values, or None if any is None.
+    /// Elements after the first None are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptySet<_ option>) = traverse id maybes
+
+  /// <summary>
+  /// Functions for NonEmpty sets of ValueOptions, or for mapping NonEmpty sets with ValueOption-producing functions.
+  /// </summary>
+  module ValueOption =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+    /// Elements after the first ValueNone are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptySet<_>) : NonEmptySet<_> voption =
+      match traverseVOption fn xs with
+      | ValueSome ys -> ValueSome (NonEmpty ys)
+      | ValueNone -> ValueNone
+
+    /// <summary>
+    /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+    /// Elements after the first ValueNone are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptySet<_ voption>) = traverse id maybes
+
 /// <summary>
 /// Functions for sets of Results, or for mapping sets with Result-producing functions.
 /// </summary>
@@ -430,3 +469,35 @@ module Result =
   /// Returns Ok of all the contained values if every Result is Ok, otherwise an Error of every contained error.
   /// </summary>
   let collect (results : Set<Result<_, _>>) : Result<Set<_>, NonEmptyList<_>> = collectResult results
+
+/// <summary>
+/// Functions for sets of Options, or for mapping sets with Option-producing functions.
+/// </summary>
+module Option =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+  /// Elements after the first None are not evaluated.
+  /// </summary>
+  let traverse fn (xs : Set<_>) = traverseOption fn xs
+
+  /// <summary>
+  /// Returns Some of all the contained values, or None if any is None.
+  /// Elements after the first None are not evaluated.
+  /// </summary>
+  let sequence (maybes : Set<_ option>) = traverse id maybes
+
+/// <summary>
+/// Functions for sets of ValueOptions, or for mapping sets with ValueOption-producing functions.
+/// </summary>
+module ValueOption =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+  /// Elements after the first ValueNone are not evaluated.
+  /// </summary>
+  let traverse fn (xs : Set<_>) = traverseVOption fn xs
+
+  /// <summary>
+  /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+  /// Elements after the first ValueNone are not evaluated.
+  /// </summary>
+  let sequence (maybes : Set<_ voption>) = traverse id maybes
