@@ -152,7 +152,96 @@ let alwaysProduceSameOutputForSeq2ExceptNonEmpty safeVersion unsafeVersion =
   alwaysProduceSameOutput2ExceptNonEmpty
     (fun a xs -> safeVersion a (List.toSeq xs))
     (fun a xs -> unsafeVersion a (List.toSeq xs))
-    
+
+// Collections become lists and tuples become lists of fields, so NonEmpty and plain results compare equal.
+let rec private normalize (x: obj) : obj =
+  match x with
+  | null | :? string -> x
+  | :? System.Collections.IEnumerable as xs -> xs |> Seq.cast<obj> |> Seq.map normalize |> List.ofSeq |> box
+  | _ when Reflection.FSharpType.IsTuple (x.GetType ()) ->
+    Reflection.FSharpValue.GetTupleFields x |> Array.map normalize |> List.ofArray |> box
+  | _ -> x
+
+let private outcome (run: unit -> 'a) : Result<obj, unit> =
+  try Ok (normalize (box (run ()))) with _ -> Error ()
+
+// COMPARE WITH .Equals, NOT =, SO NaN MATCHES NaN
+let private matchesThrowing (safeResult: Result<_, _>) unsafeVersion =
+  match safeResult with
+  | Ok x -> (outcome unsafeVersion).Equals (Ok (normalize (box x)) : Result<obj, unit>)
+  | Error _ -> Result.isError (outcome unsafeVersion)
+
+let private matches nonEmptyVersion plainVersion =
+  (outcome nonEmptyVersion).Equals (outcome plainVersion)
+
+// Each property builds its non-empty input from a generated head and tail.
+// `ofList` builds the NonEmpty side's collection and `plainOfList` the plain side's.
+
+let nonEmptyMatchesThrowing1 ofList plainOfList safeVersion unsafeVersion =
+  Check.QuickThrowOnFailure (fun x xs ->
+    matchesThrowing
+      (safeVersion (NonEmpty.assume (ofList (x :: xs))))
+      (fun () -> unsafeVersion (plainOfList (x :: xs))))
+
+let nonEmptyMatchesThrowing2 ofList plainOfList safeVersion unsafeVersion =
+  Check.QuickThrowOnFailure (fun arg x xs ->
+    matchesThrowing
+      (safeVersion arg (NonEmpty.assume (ofList (x :: xs))))
+      (fun () -> unsafeVersion arg (plainOfList (x :: xs))))
+
+let nonEmptyMatches1 ofList plainOfList nonEmptyVersion plainVersion =
+  Check.QuickThrowOnFailure (fun x xs ->
+    matches
+      (fun () -> nonEmptyVersion (NonEmpty.assume (ofList (x :: xs))))
+      (fun () -> plainVersion (plainOfList (x :: xs))))
+
+let nonEmptyMatches2 ofList plainOfList nonEmptyVersion plainVersion =
+  Check.QuickThrowOnFailure (fun arg x xs ->
+    matches
+      (fun () -> nonEmptyVersion arg (NonEmpty.assume (ofList (x :: xs))))
+      (fun () -> plainVersion arg (plainOfList (x :: xs))))
+
+// The last collection is one longer half the time, so both the equal-length and mismatched paths get exercised.
+
+let nonEmptyMatchesThrowingZip2 ofList plainOfList safeVersion unsafeVersion =
+  Check.QuickThrowOnFailure (fun arg (x: _ * _) xys lastIsLonger ->
+    let xs = List.map fst (x :: xys)
+    let ys = List.map snd (x :: xys) @ (if lastIsLonger then [snd x] else [])
+    matchesThrowing
+      (safeVersion arg (NonEmpty.assume (ofList xs)) (NonEmpty.assume (ofList ys)))
+      (fun () -> unsafeVersion arg (plainOfList xs) (plainOfList ys)))
+
+let private unzip3NonEmpty ((x: _ * _ * _), xyzs) lastIsLonger =
+  let (xs, ys, zs) = List.unzip3 (x :: xyzs)
+  let (_, _, z) = x
+  (xs, ys, zs @ (if lastIsLonger then [z] else []))
+
+let nonEmptyMatchesThrowingZip3 ofList plainOfList safeVersion unsafeVersion =
+  Check.QuickThrowOnFailure (fun arg x xyzs lastIsLonger ->
+    let (xs, ys, zs) = unzip3NonEmpty (x, xyzs) lastIsLonger
+    matchesThrowing
+      (safeVersion arg (NonEmpty.assume (ofList xs)) (NonEmpty.assume (ofList ys)) (NonEmpty.assume (ofList zs)))
+      (fun () -> unsafeVersion arg (plainOfList xs) (plainOfList ys) (plainOfList zs)))
+
+let nonEmptyMatchesZip3 ofList plainOfList nonEmptyVersion plainVersion =
+  Check.QuickThrowOnFailure (fun x xyzs lastIsLonger ->
+    let (xs, ys, zs) = unzip3NonEmpty (x, xyzs) lastIsLonger
+    matches
+      (fun () -> nonEmptyVersion (NonEmpty.assume (ofList xs)) (NonEmpty.assume (ofList ys)) (NonEmpty.assume (ofList zs)))
+      (fun () -> plainVersion (plainOfList xs) (plainOfList ys) (plainOfList zs)))
+
+/// Runs `iterate` with an action that records what it's given.
+let visits iterate =
+  let visited = ResizeArray ()
+  iterate visited.Add
+  List.ofSeq visited
+
+let visitsOrError iterate =
+  let visited = ResizeArray ()
+  iterate visited.Add |> Result.map (fun () -> List.ofSeq visited)
+
+let toPositive n = abs (n % 100) + 1
+let toNatural n = abs (n % 100)
 
 
 [<Test>]
@@ -532,3 +621,72 @@ let ``zips multiple sequences together via computation expression`` () =
     }
 
   test <@ List.ofSeq result = [11;23;35;47;59] @>
+
+module NonEmptyParity =
+  let sameOrBothFail1 safeVersion unsafeVersion = nonEmptyMatchesThrowing1 List.toSeq List.toSeq safeVersion unsafeVersion
+  let sameOrBothFail2 safeVersion unsafeVersion = nonEmptyMatchesThrowing2 List.toSeq List.toSeq safeVersion unsafeVersion
+  let same1 nonEmptyVersion plainVersion = nonEmptyMatches1 List.toSeq List.toSeq nonEmptyVersion plainVersion
+  let same2 nonEmptyVersion plainVersion = nonEmptyMatches2 List.toSeq List.toSeq nonEmptyVersion plainVersion
+
+  [<Test>]
+  let ``Seq.NonEmpty functions error whenever the Seq versions throw, and otherwise match them`` () =
+    sameOrBothFail2 Seq.NonEmpty.chunkBySize'                                        Seq.chunkBySize
+    sameOrBothFail2 (fun n -> Seq.NonEmpty.tryChunkBySize n >> Option.toResult ())   Seq.chunkBySize
+    sameOrBothFail1 Seq.NonEmpty.exactlyOne'                                         Seq.exactlyOne
+    sameOrBothFail1 (Seq.NonEmpty.tryExactlyOne >> Option.toResult ())               Seq.exactlyOne
+    sameOrBothFail2 Seq.NonEmpty.find'                                               Seq.find
+    sameOrBothFail2 Seq.NonEmpty.findBack'                                           Seq.findBack
+    sameOrBothFail2 Seq.NonEmpty.findIndex'                                          Seq.findIndex
+    sameOrBothFail2 Seq.NonEmpty.findIndexBack'                                      Seq.findIndexBack
+    sameOrBothFail2 Seq.NonEmpty.item'                                               Seq.item
+    sameOrBothFail2 Seq.NonEmpty.pick'                                               Seq.pick
+    sameOrBothFail2 Seq.NonEmpty.splitInto'                                          Seq.splitInto
+    sameOrBothFail2 (fun n -> Seq.NonEmpty.trySplitInto n >> Option.toResult ())     Seq.splitInto
+    sameOrBothFail2 Seq.NonEmpty.windowed'                                           Seq.windowed
+    sameOrBothFail2 (fun n -> Seq.NonEmpty.tryWindowed n >> Option.toResult ())      Seq.windowed
+
+  [<Test>]
+  let ``Seq.NonEmpty functions always match the Seq versions`` () =
+    same2 (fun n -> Seq.NonEmpty.chunksOf (PositiveInt.assume (toPositive n)))    (fun n -> Seq.chunkBySize (toPositive n))
+    same2 (fun n -> Seq.NonEmpty.splitIntoN (PositiveInt.assume (toPositive n)))  (fun n -> Seq.splitInto (toPositive n))
+    same2 (fun n -> Seq.NonEmpty.window (PositiveInt.assume (toPositive n)))      (fun n -> Seq.windowed (toPositive n))
+    same2 (fun n -> Seq.NonEmpty.drop (NaturalInt.assume (toNatural n)))          (fun n xs -> Seq.skip (min (toNatural n) (Seq.length xs)) xs)
+    same2 Seq.NonEmpty.dropLenient                                                (fun n xs -> Seq.skip (max 0 (min n (Seq.length xs))) xs)
+    same2 (fun (f: _ -> float) -> Seq.NonEmpty.averageBy f)                       (fun f -> Seq.averageBy f)
+    same2 Seq.NonEmpty.contains                                                   Seq.contains
+    same2 Seq.NonEmpty.countBy                                                    Seq.countBy
+    same2 Seq.NonEmpty.exists                                                     Seq.exists
+    same2 Seq.NonEmpty.forall                                                     Seq.forall
+    same2 Seq.NonEmpty.groupBy                                                    Seq.groupBy
+    same2 (fun (f, s) xs -> Seq.NonEmpty.foldBack f xs s)                         (fun (f, s) xs -> Seq.foldBack f xs s)
+    same1 Seq.NonEmpty.last                                                       Seq.last
+    same2 Seq.NonEmpty.reduceBack                                                 Seq.reduceBack
+    same2 Seq.NonEmpty.skipUntilIncluding                                         Seq.skipUntilIncluding
+    same1 (Seq.NonEmpty.sort : NonEmptySeq<int> -> _)                             Seq.sort
+    same2 (fun (f: _ -> int) -> Seq.NonEmpty.sortBy f)                            (fun f -> Seq.sortBy f)
+    same1 (Seq.NonEmpty.sortDescending : NonEmptySeq<int> -> _)                   Seq.sortDescending
+    same2 (fun (f: _ -> int) -> Seq.NonEmpty.sortByDescending f)                  (fun f -> Seq.sortByDescending f)
+    same2 Seq.NonEmpty.sortWith                                                   Seq.sortWith
+    same2 Seq.NonEmpty.tryFindBack                                                Seq.tryFindBack
+    same2 Seq.NonEmpty.tryFindIndex                                               Seq.tryFindIndex
+    same2 Seq.NonEmpty.tryFindIndexBack                                           Seq.tryFindIndexBack
+    same2 Seq.NonEmpty.tryPick                                                    Seq.tryPick
+    same1 (fun xs -> (Seq.NonEmpty.sum xs : int))                                 Seq.sum<int>
+    same2 (fun (f: _ -> int) -> Seq.NonEmpty.sumBy f)                             (fun f -> Seq.sumBy f)
+    same2 Seq.NonEmpty.choose                                                     Seq.choose
+    same2 Seq.NonEmpty.takeWhile                                                  Seq.takeWhile
+    same2 Seq.NonEmpty.skipWhile                                                  Seq.skipWhile
+    same2 (fun (f, s) xs -> Seq.NonEmpty.scanBack f xs s)                         (fun (f, s) xs -> Seq.scanBack f xs s)
+    same2 (fun (f, s) -> Seq.NonEmpty.mapFold f s)                                (fun (f, s) -> Seq.mapFold f s)
+    same2 (fun (f, s) xs -> Seq.NonEmpty.mapFoldBack f xs s)                      (fun (f, s) xs -> Seq.mapFoldBack f xs s)
+    same1 (fun xs -> visits (fun visit -> Seq.NonEmpty.iter visit xs))           (fun xs -> visits (fun visit -> Seq.iter visit xs))
+    same1
+      (fun xs -> visits (fun visit -> Seq.NonEmpty.iteri (fun i x -> visit (i, x)) xs))
+      (fun xs -> visits (fun visit -> Seq.iteri (fun i x -> visit (i, x)) xs))
+    nonEmptyMatchesZip3 List.toSeq List.toSeq Seq.NonEmpty.zip3 Seq.zip3
+
+  [<Test>]
+  let ``zip3 stops at the shortest input, even when another is infinite`` () =
+    let infinite : NonEmptySeq<_> = NonEmpty.assume (Seq.initInfinite id)
+    let result = Seq.NonEmpty.zip3 (NonEmpty.assume [3;1;2]) (NonEmpty.assume [10;20]) infinite
+    test <@ Seq.NonEmpty.toList result = [(3,10,0);(1,20,1)] @>
