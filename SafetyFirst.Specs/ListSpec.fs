@@ -350,3 +350,70 @@ let ``List.NonEmpty.Result functions`` () =
   test <@ List.NonEmpty.Result.collect (NonEmpty.assume allOk) = Ok (NonEmpty.assume [1; 2]) @>
   test <@ List.NonEmpty.Result.partitionMap tenfoldIfEven (NonEmpty.assume [1; 2; 3; 4]) = ([20; 40], ["1 is odd"; "3 is odd"]) @>
   test <@ List.NonEmpty.Result.partition (NonEmpty.assume okAndErr) = ([1; 2], ["a"; "b"]) @>
+
+module NonEmptyParity =
+  open SafetyFirst.Numbers
+
+  let sameOrBothFail1 safeVersion unsafeVersion = nonEmptyMatchesThrowing1 id id safeVersion unsafeVersion
+  let sameOrBothFail2 safeVersion unsafeVersion = nonEmptyMatchesThrowing2 id id safeVersion unsafeVersion
+  let sameOrBothFailZip2 safeVersion unsafeVersion = nonEmptyMatchesThrowingZip2 id id safeVersion unsafeVersion
+  let sameOrBothFailZip3 safeVersion unsafeVersion = nonEmptyMatchesThrowingZip3 id id safeVersion unsafeVersion
+  let same1 nonEmptyVersion plainVersion = nonEmptyMatches1 id id nonEmptyVersion plainVersion
+  let same2 nonEmptyVersion plainVersion = nonEmptyMatches2 id id nonEmptyVersion plainVersion
+
+  [<Test>]
+  let ``List.NonEmpty functions error whenever the List versions throw, and otherwise match them`` () =
+    sameOrBothFail2 List.NonEmpty.chunkBySize'                                       List.chunkBySize
+    sameOrBothFail2 (fun n -> List.NonEmpty.tryChunkBySize n >> Option.toResult ())  List.chunkBySize
+    sameOrBothFail1 List.NonEmpty.exactlyOne'                                        List.exactlyOne
+    sameOrBothFail1 (List.NonEmpty.tryExactlyOne >> Option.toResult ())              List.exactlyOne
+    sameOrBothFail2 List.NonEmpty.item'                                              List.item
+    sameOrBothFail2 List.NonEmpty.pick'                                              List.pick
+    sameOrBothFail2 List.NonEmpty.splitAt'                                           List.splitAt
+    sameOrBothFail2 (fun n -> List.NonEmpty.trySplitAt n >> Option.toResult ())      List.splitAt
+    sameOrBothFail2 List.NonEmpty.splitInto'                                         List.splitInto
+    sameOrBothFail2 (fun n -> List.NonEmpty.trySplitInto n >> Option.toResult ())    List.splitInto
+
+    sameOrBothFailZip2 (fun (f, s) -> List.NonEmpty.fold2' f s)                     (fun (f, s) -> List.fold2 f s)
+    sameOrBothFailZip2 (fun (f, s) xs ys -> List.NonEmpty.tryFold2 f s xs ys |> Option.toResult ()) (fun (f, s) -> List.fold2 f s)
+    sameOrBothFailZip2 (fun (f, s) xs ys -> List.NonEmpty.foldBack2' f xs ys s)      (fun (f, s) xs ys -> List.foldBack2 f xs ys s)
+    sameOrBothFailZip2 (fun (f, s) xs ys -> List.NonEmpty.tryFoldBack2 f xs ys s |> Option.toResult ()) (fun (f, s) xs ys -> List.foldBack2 f xs ys s)
+    sameOrBothFailZip2 List.NonEmpty.forall2'                                        List.forall2
+    sameOrBothFailZip2 (fun f xs ys -> List.NonEmpty.tryForall2 f xs ys |> Option.toResult ()) List.forall2
+    sameOrBothFailZip2 List.NonEmpty.mapi2'                                          List.mapi2
+    sameOrBothFailZip2 (fun f xs ys -> List.NonEmpty.tryMapi2 f xs ys |> Option.toResult ()) List.mapi2
+    sameOrBothFailZip3 List.NonEmpty.map3'                                           List.map3
+    sameOrBothFailZip3 (fun f xs ys zs -> List.NonEmpty.tryMap3 f xs ys zs |> Option.toResult ()) List.map3
+
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> List.NonEmpty.iter2' (fun x y -> visit (x, y)) xs ys))
+      (fun () xs ys -> visits (fun visit -> List.iter2 (fun x y -> visit (x, y)) xs ys))
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> List.NonEmpty.tryIter2 (fun x y -> visit (x, y)) xs ys |> Option.toResult ()))
+      (fun () xs ys -> visits (fun visit -> List.iter2 (fun x y -> visit (x, y)) xs ys))
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> List.NonEmpty.iteri2' (fun i x y -> visit (i, x, y)) xs ys))
+      (fun () xs ys -> visits (fun visit -> List.iteri2 (fun i x y -> visit (i, x, y)) xs ys))
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> List.NonEmpty.tryIteri2 (fun i x y -> visit (i, x, y)) xs ys |> Option.toResult ()))
+      (fun () xs ys -> visits (fun visit -> List.iteri2 (fun i x y -> visit (i, x, y)) xs ys))
+
+  [<Test>]
+  let ``List.NonEmpty functions always match the List versions`` () =
+    same2 (fun n -> List.NonEmpty.chunksOf (PositiveInt.assume (toPositive n)))    (fun n -> List.chunkBySize (toPositive n))
+    same2 (fun n -> List.NonEmpty.splitIntoN (PositiveInt.assume (toPositive n)))  (fun n -> List.splitInto (toPositive n))
+    same2 List.NonEmpty.tryPick                                                    List.tryPick
+    same2 List.NonEmpty.skipUntilIncluding                                         List.skipUntilIncluding
+    same1 (fun xs -> (List.NonEmpty.sum xs : int))                                 List.sum<int>
+    same2 (fun (f: _ -> int) -> List.NonEmpty.sumBy f)                             (fun f -> List.sumBy f)
+    same2 List.NonEmpty.choose                                                     List.choose
+    same2 List.NonEmpty.takeWhile                                                  List.takeWhile
+    same2 List.NonEmpty.skipWhile                                                  List.skipWhile
+    same2 List.NonEmpty.sortWith                                                   List.sortWith
+    same2 (fun (f, s) xs -> List.NonEmpty.scanBack f xs s)                         (fun (f, s) xs -> List.scanBack f xs s)
+    same2 (fun (f, s) -> List.NonEmpty.mapFold f s)                                (fun (f, s) -> List.mapFold f s)
+    same2 (fun (f, s) xs -> List.NonEmpty.mapFoldBack f xs s)                      (fun (f, s) xs -> List.mapFoldBack f xs s)
+    same1 (fun xs -> visits (fun visit -> List.NonEmpty.iter visit xs))           (fun xs -> visits (fun visit -> List.iter visit xs))
+    same1
+      (fun xs -> visits (fun visit -> List.NonEmpty.iteri (fun i x -> visit (i, x)) xs))
+      (fun xs -> visits (fun visit -> List.iteri (fun i x -> visit (i, x)) xs))

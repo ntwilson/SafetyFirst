@@ -48,7 +48,7 @@ let ``Safe Array functions error whenever unsafe versions throw for all random i
   errorsWheneverThrows2 Array.windowed'         Array.windowed
   errorsWheneverThrows2 Array.zip'              Array.zip
   errorsWheneverThrows3 Array.zip3'             Array.zip3
-                                                
+
 
 [<Test>]
 let ``Safe Array functions always produce the same output as unsafe versions for all random inputs`` () =
@@ -77,7 +77,7 @@ let ``Safe Array functions always produce the same output as unsafe versions for
   alwaysProduceSameOutput2 Array.reduceBack'      Array.reduceBack
   alwaysProduceSameOutput2 Array.skip'            Array.skip
   alwaysProduceSameOutput2 Array.splitAt'         Array.splitAt
-  alwaysProduceSameOutput3 Array.sub'             Array.sub      
+  alwaysProduceSameOutput3 Array.sub'             Array.sub
   alwaysProduceSameOutput1 Array.tail'            Array.tail
   alwaysProduceSameOutput2 Array.take'            Array.take
   alwaysProduceSameOutputForSeq1 Array.transpose' Array.transpose
@@ -95,11 +95,11 @@ let ``zips multiple arrays together via computation expression`` () =
   let ys = [|10;20;30;40;50;60|]
   let zs = [|0 .. 100|]
 
-  let result = 
+  let result =
     Array.zipper {
       let! x = xs
-      and! y = ys 
-      and! z = zs 
+      and! y = ys
+      and! z = zs
       return x + y + z
     }
 
@@ -109,29 +109,29 @@ let ``zips multiple arrays together via computation expression`` () =
   let ys = NonEmpty.assume [|10;20;30;40;50;60|]
   let zs = NonEmpty.assume [|0 .. 100|]
 
-  let result = 
+  let result =
     Array.NonEmpty.zipper {
       let! x = xs
-      and! y = ys 
-      and! z = zs 
+      and! y = ys
+      and! z = zs
       return x + y + z
     }
 
   test <@ result = NonEmpty.assume [|11;23;35;47;59|] @>
 
-module Splitting = 
+module Splitting =
   let toArrs xs = Seq.map Array.NonEmpty.toArray xs |> Array.ofSeq
 
   [<Test>]
   let ``returns what the documentation says`` () =
 
-    test 
+    test
       <@
         (Array.splitPairwise (=) [|0;1;1;2;3;4;4;4;5|] |> toArrs)
           = [|[|0;1|];[|1;2;3;4|];[|4|];[|4;5|]|]
       @>
 
-    test 
+    test
       <@
         (Array.NonEmpty.split ((=) 100) (Array.NonEmpty.create 1 [|2;3;100;100;4;100;5;6|]) |> toArrs)
           = [|[|1;2;3;100|];[|100|];[|4;100|];[|5;6|]|]
@@ -144,8 +144,8 @@ module Splitting =
 
 
   [<Test>]
-  let ``splits empty and single element sequences`` () = 
-    test 
+  let ``splits empty and single element sequences`` () =
+    test
       <@
         (Array.splitPairwise (=) [||] |> toArrs) = [||]
         &&
@@ -153,10 +153,10 @@ module Splitting =
         &&
         (Array.splitPairwise (=) [|5; 5|] |> toArrs) = [|[|5|]; [|5|]|]
       @>
-  
+
   [<Test>]
-  let ``splits properly for multiple types of inputs`` () = 
-    test 
+  let ``splits properly for multiple types of inputs`` () =
+    test
       <@
         (Array.NonEmpty.split ((=) 5) (Array.NonEmpty.singleton 0) |> toArrs) = [|[|0|]|]
         &&
@@ -322,3 +322,72 @@ let ``Array.NonEmpty.Result functions`` () =
   test <@ Array.NonEmpty.Result.collect allOk = Ok (NonEmpty.assume [|1; 2|]) @>
   test <@ Array.NonEmpty.Result.partitionMap tenfoldIfEven (NonEmpty.assume [|1; 2; 3; 4|]) = ([|20; 40|], [|"1 is odd"; "3 is odd"|]) @>
   test <@ Array.NonEmpty.Result.partition okAndErr = ([|1; 2|], [|"a"; "b"|]) @>
+
+module NonEmptyParity =
+  open SafetyFirst.Numbers
+
+  let sameOrBothFail1 safeVersion unsafeVersion = nonEmptyMatchesThrowing1 Array.ofList Array.ofList safeVersion unsafeVersion
+  let sameOrBothFail2 safeVersion unsafeVersion = nonEmptyMatchesThrowing2 Array.ofList Array.ofList safeVersion unsafeVersion
+  let sameOrBothFailZip2 safeVersion unsafeVersion = nonEmptyMatchesThrowingZip2 Array.ofList Array.ofList safeVersion unsafeVersion
+  let sameOrBothFailZip3 safeVersion unsafeVersion = nonEmptyMatchesThrowingZip3 Array.ofList Array.ofList safeVersion unsafeVersion
+  let same1 nonEmptyVersion plainVersion = nonEmptyMatches1 Array.ofList Array.ofList nonEmptyVersion plainVersion
+  let same2 nonEmptyVersion plainVersion = nonEmptyMatches2 Array.ofList Array.ofList nonEmptyVersion plainVersion
+
+  [<Test>]
+  let ``Array.NonEmpty functions error whenever the Array versions throw, and otherwise match them`` () =
+    sameOrBothFail2 Array.NonEmpty.chunkBySize'                                       Array.chunkBySize
+    sameOrBothFail2 (fun n -> Array.NonEmpty.tryChunkBySize n >> Option.toResult ())  Array.chunkBySize
+    sameOrBothFail1 Array.NonEmpty.exactlyOne'                                        Array.exactlyOne
+    sameOrBothFail1 (Array.NonEmpty.tryExactlyOne >> Option.toResult ())              Array.exactlyOne
+    sameOrBothFail2 Array.NonEmpty.item'                                              Array.item
+    sameOrBothFail2 Array.NonEmpty.pick'                                              Array.pick
+    sameOrBothFail2 Array.NonEmpty.splitAt'                                           Array.splitAt
+    sameOrBothFail2 (fun n -> Array.NonEmpty.trySplitAt n >> Option.toResult ())      Array.splitAt
+    sameOrBothFail2 Array.NonEmpty.splitInto'                                         Array.splitInto
+    sameOrBothFail2 (fun n -> Array.NonEmpty.trySplitInto n >> Option.toResult ())    Array.splitInto
+    sameOrBothFail2 (fun (i, n) xs -> Array.NonEmpty.sub' xs i n)                     (fun (i, n) xs -> Array.sub xs i n)
+    sameOrBothFail2 (fun (i, n) xs -> Array.NonEmpty.trySub xs i n |> Option.toResult ()) (fun (i, n) xs -> Array.sub xs i n)
+
+    sameOrBothFailZip2 (fun (f, s) -> Array.NonEmpty.fold2' f s)                     (fun (f, s) -> Array.fold2 f s)
+    sameOrBothFailZip2 (fun (f, s) xs ys -> Array.NonEmpty.tryFold2 f s xs ys |> Option.toResult ()) (fun (f, s) -> Array.fold2 f s)
+    sameOrBothFailZip2 (fun (f, s) xs ys -> Array.NonEmpty.foldBack2' f xs ys s)      (fun (f, s) xs ys -> Array.foldBack2 f xs ys s)
+    sameOrBothFailZip2 (fun (f, s) xs ys -> Array.NonEmpty.tryFoldBack2 f xs ys s |> Option.toResult ()) (fun (f, s) xs ys -> Array.foldBack2 f xs ys s)
+    sameOrBothFailZip2 Array.NonEmpty.forall2'                                        Array.forall2
+    sameOrBothFailZip2 (fun f xs ys -> Array.NonEmpty.tryForall2 f xs ys |> Option.toResult ()) Array.forall2
+    sameOrBothFailZip2 Array.NonEmpty.mapi2'                                          Array.mapi2
+    sameOrBothFailZip2 (fun f xs ys -> Array.NonEmpty.tryMapi2 f xs ys |> Option.toResult ()) Array.mapi2
+    sameOrBothFailZip3 Array.NonEmpty.map3'                                           Array.map3
+    sameOrBothFailZip3 (fun f xs ys zs -> Array.NonEmpty.tryMap3 f xs ys zs |> Option.toResult ()) Array.map3
+
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> Array.NonEmpty.iter2' (fun x y -> visit (x, y)) xs ys))
+      (fun () xs ys -> visits (fun visit -> Array.iter2 (fun x y -> visit (x, y)) xs ys))
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> Array.NonEmpty.tryIter2 (fun x y -> visit (x, y)) xs ys |> Option.toResult ()))
+      (fun () xs ys -> visits (fun visit -> Array.iter2 (fun x y -> visit (x, y)) xs ys))
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> Array.NonEmpty.iteri2' (fun i x y -> visit (i, x, y)) xs ys))
+      (fun () xs ys -> visits (fun visit -> Array.iteri2 (fun i x y -> visit (i, x, y)) xs ys))
+    sameOrBothFailZip2
+      (fun () xs ys -> visitsOrError (fun visit -> Array.NonEmpty.tryIteri2 (fun i x y -> visit (i, x, y)) xs ys |> Option.toResult ()))
+      (fun () xs ys -> visits (fun visit -> Array.iteri2 (fun i x y -> visit (i, x, y)) xs ys))
+
+  [<Test>]
+  let ``Array.NonEmpty functions always match the Array versions`` () =
+    same2 (fun n -> Array.NonEmpty.chunksOf (PositiveInt.assume (toPositive n)))    (fun n -> Array.chunkBySize (toPositive n))
+    same2 (fun n -> Array.NonEmpty.splitIntoN (PositiveInt.assume (toPositive n)))  (fun n -> Array.splitInto (toPositive n))
+    same2 Array.NonEmpty.tryPick                                                    Array.tryPick
+    same2 Array.NonEmpty.skipUntilIncluding                                         Array.skipUntilIncluding
+    same1 (fun xs -> (Array.NonEmpty.sum xs : int))                                 Array.sum<int>
+    same2 (fun (f: _ -> int) -> Array.NonEmpty.sumBy f)                             (fun f -> Array.sumBy f)
+    same2 Array.NonEmpty.choose                                                     Array.choose
+    same2 Array.NonEmpty.takeWhile                                                  Array.takeWhile
+    same2 Array.NonEmpty.skipWhile                                                  Array.skipWhile
+    same2 Array.NonEmpty.sortWith                                                   Array.sortWith
+    same2 (fun (f, s) xs -> Array.NonEmpty.scanBack f xs s)                         (fun (f, s) xs -> Array.scanBack f xs s)
+    same2 (fun (f, s) -> Array.NonEmpty.mapFold f s)                                (fun (f, s) -> Array.mapFold f s)
+    same2 (fun (f, s) xs -> Array.NonEmpty.mapFoldBack f xs s)                      (fun (f, s) xs -> Array.mapFoldBack f xs s)
+    same1 (fun xs -> visits (fun visit -> Array.NonEmpty.iter visit xs))           (fun xs -> visits (fun visit -> Array.iter visit xs))
+    same1
+      (fun xs -> visits (fun visit -> Array.NonEmpty.iteri (fun i x -> visit (i, x)) xs))
+      (fun xs -> visits (fun visit -> Array.iteri (fun i x -> visit (i, x)) xs))

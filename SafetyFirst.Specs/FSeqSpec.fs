@@ -560,3 +560,38 @@ module Zipping =
 
 
 
+
+module NonEmptyParity =
+  open SafetyFirst.Numbers
+  open SafetyFirst.Specs.SeqSpec
+
+  let sameOrBothFail2 safeVersion unsafeVersion = nonEmptyMatchesThrowing2 FSeq.ofList List.toSeq safeVersion unsafeVersion
+  let same1 nonEmptyVersion plainVersion = nonEmptyMatches1 FSeq.ofList List.toSeq nonEmptyVersion plainVersion
+  let same2 nonEmptyVersion plainVersion = nonEmptyMatches2 FSeq.ofList List.toSeq nonEmptyVersion plainVersion
+
+  [<Test>]
+  let ``FSeq.NonEmpty functions error whenever the Seq versions throw, and otherwise match them`` () =
+    sameOrBothFail2 FSeq.NonEmpty.chunkBySize'                                       Seq.chunkBySize
+    sameOrBothFail2 (fun n -> FSeq.NonEmpty.tryChunkBySize n >> Option.toResult ())  Seq.chunkBySize
+    sameOrBothFail2 FSeq.NonEmpty.splitInto'                                         Seq.splitInto
+    sameOrBothFail2 (fun n -> FSeq.NonEmpty.trySplitInto n >> Option.toResult ())    Seq.splitInto
+
+  [<Test>]
+  let ``FSeq.NonEmpty functions always match the Seq versions`` () =
+    same2 (fun n -> FSeq.NonEmpty.chunksOf (PositiveInt.assume (toPositive n)))    (fun n -> Seq.chunkBySize (toPositive n))
+    same2 (fun n -> FSeq.NonEmpty.splitIntoN (PositiveInt.assume (toPositive n)))  (fun n -> Seq.splitInto (toPositive n))
+    same2 FSeq.NonEmpty.cons                                                       (fun x xs -> Seq.append [x] xs)
+    same2 FSeq.NonEmpty.skipUntilIncluding                                         Seq.skipUntilIncluding
+    same1 (fun xs -> (FSeq.NonEmpty.sum xs : int))                                 Seq.sum<int>
+    same2 (fun (f: _ -> int) -> FSeq.NonEmpty.sumBy f)                             (fun f -> Seq.sumBy f)
+    same2 FSeq.NonEmpty.choose                                                     Seq.choose
+    same2 FSeq.NonEmpty.takeWhile                                                  Seq.takeWhile
+    same2 FSeq.NonEmpty.skipWhile                                                  Seq.skipWhile
+    same2 FSeq.NonEmpty.sortWith                                                   Seq.sortWith
+    same2 (fun (f, s) xs -> FSeq.NonEmpty.scanBack f xs s)                         (fun (f, s) xs -> Seq.scanBack f xs s)
+    same2 (fun (f, s) -> FSeq.NonEmpty.mapFold f s)                                (fun (f, s) -> Seq.mapFold f s)
+    same2 (fun (f, s) xs -> FSeq.NonEmpty.mapFoldBack f xs s)                      (fun (f, s) xs -> Seq.mapFoldBack f xs s)
+    same1 (fun xs -> visits (fun visit -> FSeq.NonEmpty.iter visit xs))           (fun xs -> visits (fun visit -> Seq.iter visit xs))
+    same1
+      (fun xs -> visits (fun visit -> FSeq.NonEmpty.iteri (fun i x -> visit (i, x)) xs))
+      (fun xs -> visits (fun visit -> Seq.iteri (fun i x -> visit (i, x)) xs))

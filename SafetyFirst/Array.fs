@@ -1582,6 +1582,369 @@ module NonEmpty =
   let takeUntilIncluding predicate (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> =
     NonEmpty (takeUntilIncluding predicate xs)
 
+  /// <summary>
+  /// Divides the input array into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let chunkBySizeSafe size (NonEmpty xs : NonEmptyArray<_>) : Result<NonEmptyArray<NonEmptyArray<_>>, _> =
+    NonEmpty <!> chunkBySizeSafe size xs
+
+  /// <summary>
+  /// Divides the input array into chunks of size at most <c>size</c>.
+  /// Returns a NegativeInput Error if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  [<CompiledName("chunkBySizeSafe_F#")>]
+  let inline chunkBySize' size xs = chunkBySizeSafe size xs
+
+  /// <summary>
+  /// Divides the input array into chunks of size at most <c>size</c>.
+  /// Returns None if the <c>size</c> is less than or equal to zero.
+  /// </summary>
+  let inline tryChunkBySize size xs = chunkBySizeSafe size xs |> Result.toOption
+
+  /// <summary>
+  /// Divides the input array into chunks of size at most <c>size</c>.
+  /// </summary>
+  let chunksOf size (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
+    NonEmpty (chunksOf size xs)
+
+  /// <summary>
+  /// If the input array has only one element, returns that element.
+  /// Returns a WrongNumberOfElements Error if the input array has more than one element.
+  /// </summary>
+  let exactlyOneSafe (NonEmpty xs : NonEmptyArray<_>) = exactlyOneSafe xs
+
+  /// <summary>
+  /// If the input array has only one element, returns that element.
+  /// Returns a WrongNumberOfElements Error if the input array has more than one element.
+  /// </summary>
+  [<CompiledName("exactlyOneSafe_F#")>]
+  let inline exactlyOne' xs = exactlyOneSafe xs
+
+  /// <summary>
+  /// If the input array has only one element, returns that element.
+  /// Returns None if the input array has more than one element.
+  /// </summary>
+  let inline tryExactlyOne xs = exactlyOneSafe xs |> Result.toOption
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two arrays, threading an accumulator argument
+  /// through the computation.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let fold2Safe folder initialState (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) =
+    fold2Safe folder initialState xs ys
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two arrays, threading an accumulator argument
+  /// through the computation.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  [<CompiledName("fold2Safe_F#")>]
+  let inline fold2' folder initialState xs ys = fold2Safe folder initialState xs ys
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two arrays, threading an accumulator argument
+  /// through the computation.
+  /// Returns None if the input arrays have a different number of elements.
+  /// </summary>
+  let inline tryFold2 folder initialState xs ys = fold2Safe folder initialState xs ys |> Result.toOption
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two arrays, starting from the end, threading an
+  /// accumulator argument through the computation.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let foldBack2Safe folder (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) initialState =
+    foldBack2Safe folder xs ys initialState
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two arrays, starting from the end, threading an
+  /// accumulator argument through the computation.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  [<CompiledName("foldBack2Safe_F#")>]
+  let inline foldBack2' folder xs ys initialState = foldBack2Safe folder xs ys initialState
+
+  /// <summary>
+  /// Applies a function to corresponding elements of two arrays, starting from the end, threading an
+  /// accumulator argument through the computation.
+  /// Returns None if the input arrays have a different number of elements.
+  /// </summary>
+  let inline tryFoldBack2 folder xs ys initialState = foldBack2Safe folder xs ys initialState |> Result.toOption
+
+  /// <summary>
+  /// Tests if all corresponding elements of the arrays satisfy the given predicate pairwise.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let forall2Safe predicate (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) =
+    forall2Safe predicate xs ys
+
+  /// <summary>
+  /// Tests if all corresponding elements of the arrays satisfy the given predicate pairwise.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  [<CompiledName("forall2Safe_F#")>]
+  let inline forall2' predicate xs ys = forall2Safe predicate xs ys
+
+  /// <summary>
+  /// Tests if all corresponding elements of the arrays satisfy the given predicate pairwise.
+  /// Returns None if the input arrays have a different number of elements.
+  /// </summary>
+  let inline tryForall2 predicate xs ys = forall2Safe predicate xs ys |> Result.toOption
+
+  /// <summary>
+  /// Gets the element at the specified index.
+  /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the array.
+  /// </summary>
+  let itemSafe index (NonEmpty xs : NonEmptyArray<_>) = itemSafe index xs
+
+  /// <summary>
+  /// Gets the element at the specified index.
+  /// Returns an IndexOutOfRange Error if the index is negative or exceeds the size of the array.
+  /// </summary>
+  [<CompiledName("itemSafe_F#")>]
+  let inline item' index xs = itemSafe index xs
+
+  /// <summary>
+  /// Applies the given function to two arrays simultaneously.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let iter2Safe action (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) =
+    iter2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two arrays simultaneously.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  [<CompiledName("iter2Safe_F#")>]
+  let inline iter2' action xs ys = iter2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two arrays simultaneously.
+  /// Returns None if the input arrays have a different number of elements.
+  /// </summary>
+  let inline tryIter2 action xs ys = iter2Safe action xs ys |> Result.toOption
+
+  /// <summary>
+  /// Applies the given function to two arrays simultaneously, also passing the index of the elements.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let iteri2Safe action (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) =
+    iteri2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two arrays simultaneously, also passing the index of the elements.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  [<CompiledName("iteri2Safe_F#")>]
+  let inline iteri2' action xs ys = iteri2Safe action xs ys
+
+  /// <summary>
+  /// Applies the given function to two arrays simultaneously, also passing the index of the elements.
+  /// Returns None if the input arrays have a different number of elements.
+  /// </summary>
+  let inline tryIteri2 action xs ys = iteri2Safe action xs ys |> Result.toOption
+
+  /// <summary>
+  /// Like mapi, but mapping corresponding elements from two arrays of equal length.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let mapi2Safe f (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) : Result<NonEmptyArray<_>,_> =
+    NonEmpty <!> mapi2Safe f xs ys
+
+  /// <summary>
+  /// Like mapi, but mapping corresponding elements from two arrays of equal length.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  [<CompiledName("mapi2Safe_F#")>]
+  let inline mapi2' f xs ys : Result<NonEmptyArray<_>,_> = mapi2Safe f xs ys
+
+  /// <summary>
+  /// Like mapi, but mapping corresponding elements from two arrays of equal length.
+  /// Returns None if the input arrays have a different number of elements.
+  /// </summary>
+  let inline tryMapi2 f xs ys : Option<NonEmptyArray<_>> = mapi2Safe f xs ys |> Result.toOption
+
+  /// <summary>
+  /// Builds a new array whose elements are the results of applying the given function
+  /// to the corresponding elements of the three arrays simultaneously.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  let map3Safe f (NonEmpty xs : NonEmptyArray<_>) (NonEmpty ys : NonEmptyArray<_>) (NonEmpty zs : NonEmptyArray<_>) : Result<NonEmptyArray<_>,_> =
+    NonEmpty <!> map3Safe f xs ys zs
+
+  /// <summary>
+  /// Builds a new array whose elements are the results of applying the given function
+  /// to the corresponding elements of the three arrays simultaneously.
+  /// Returns a DifferingLengths Error if the input arrays have a different number of elements.
+  /// </summary>
+  [<CompiledName("map3Safe_F#")>]
+  let inline map3' f xs ys zs : Result<NonEmptyArray<_>,_> = map3Safe f xs ys zs
+
+  /// <summary>
+  /// Builds a new array whose elements are the results of applying the given function
+  /// to the corresponding elements of the three arrays simultaneously.
+  /// Returns None if the input arrays have a different number of elements.
+  /// </summary>
+  let inline tryMap3 f xs ys zs : Option<NonEmptyArray<_>> = map3Safe f xs ys zs |> Result.toOption
+
+  /// <summary>
+  /// Returns the first result where the given function returns "Some(x)".
+  /// Returns a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  let pickSafe chooser (NonEmpty xs : NonEmptyArray<_>) = pickSafe chooser xs
+
+  /// <summary>
+  /// Returns the first result where the given function returns "Some(x)".
+  /// Returns a NoMatchingElement Error if no such element exists.
+  /// </summary>
+  [<CompiledName("pickSafe_F#")>]
+  let inline pick' chooser xs = pickSafe chooser xs
+
+  /// <summary>
+  /// Returns the first result where the given function returns "Some(x)".
+  /// Returns None if no such element exists.
+  /// </summary>
+  let tryPick chooser (NonEmpty xs : NonEmptyArray<_>) = Array.tryPick chooser xs
+
+  /// <summary>
+  /// Returns the elements of the array after the first element for which the given function returns True.
+  /// If no element matches, an empty array is returned.
+  /// </summary>
+  let skipUntilIncluding predicate (NonEmpty xs : NonEmptyArray<_>) = skipUntilIncluding predicate xs
+
+  /// <summary>
+  /// Splits an array into two arrays, at the given index.
+  /// Returns an IndexOutOfBounds Error when the split index is negative or exceeds the number of elements.
+  /// </summary>
+  let splitAtSafe index (NonEmpty xs : NonEmptyArray<_>) = splitAtSafe index xs
+
+  /// <summary>
+  /// Splits an array into two arrays, at the given index.
+  /// Returns an IndexOutOfBounds Error when the split index is negative or exceeds the number of elements.
+  /// </summary>
+  [<CompiledName("splitAtSafe_F#")>]
+  let inline splitAt' index xs = splitAtSafe index xs
+
+  /// <summary>
+  /// Splits an array into two arrays, at the given index.
+  /// Returns None when the split index is negative or exceeds the number of elements.
+  /// </summary>
+  let inline trySplitAt index xs = splitAtSafe index xs |> Result.toOption
+
+  /// <summary>
+  /// Splits the input array into at most <c>count</c> chunks.
+  /// Returns a NegativeInput Error if <c>count</c> is not positive.
+  /// </summary>
+  let splitIntoSafe count (NonEmpty xs : NonEmptyArray<_>) : Result<NonEmptyArray<NonEmptyArray<_>>, _> =
+    NonEmpty <!> splitIntoSafe count xs
+
+  /// <summary>
+  /// Splits the input array into at most <c>count</c> chunks.
+  /// Returns a NegativeInput Error if <c>count</c> is not positive.
+  /// </summary>
+  [<CompiledName("splitIntoSafe_F#")>]
+  let inline splitInto' count xs = splitIntoSafe count xs
+
+  /// <summary>
+  /// Splits the input array into at most <c>count</c> chunks.
+  /// Returns None if <c>count</c> is not positive.
+  /// </summary>
+  let inline trySplitInto count xs = splitIntoSafe count xs |> Result.toOption
+
+  /// <summary>
+  /// Splits the input array into at most <c>count</c> chunks.
+  /// </summary>
+  let splitIntoN count (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<NonEmptyArray<_>> =
+    NonEmpty (splitIntoN count xs)
+
+  /// <summary>
+  /// Slices an array given a starting index and a count of elements to return.
+  /// Returns an IndexOutOfBounds Error if either <c>startIndex</c> or <c>count</c> is negative,
+  /// or if <c>startIndex</c> + <c>count</c> exceeds the length of the array.
+  /// </summary>
+  let subSafe (NonEmpty xs : NonEmptyArray<_>) startIndex count = subSafe xs startIndex count
+
+  /// <summary>
+  /// Slices an array given a starting index and a count of elements to return.
+  /// Returns an IndexOutOfBounds Error if either <c>startIndex</c> or <c>count</c> is negative,
+  /// or if <c>startIndex</c> + <c>count</c> exceeds the length of the array.
+  /// </summary>
+  [<CompiledName("subSafe_F#")>]
+  let inline sub' xs startIndex count = subSafe xs startIndex count
+
+  /// <summary>
+  /// Slices an array given a starting index and a count of elements to return.
+  /// Returns None if either <c>startIndex</c> or <c>count</c> is negative,
+  /// or if <c>startIndex</c> + <c>count</c> exceeds the length of the array.
+  /// </summary>
+  let inline trySub xs startIndex count = subSafe xs startIndex count |> Result.toOption
+
+  /// <summary>
+  /// Returns the sum of the elements in the array.
+  /// </summary>
+  let inline sum (NonEmpty xs : NonEmptyArray<_>) = Array.sum xs
+
+  /// <summary>
+  /// Returns the sum of the results generated by applying the function to each element of the array.
+  /// </summary>
+  let inline sumBy projection (NonEmpty xs : NonEmptyArray<_>) = Array.sumBy projection xs
+
+  /// <summary>
+  /// Applies the given function to each element of the array.
+  /// </summary>
+  let iter action (NonEmpty xs : NonEmptyArray<_>) = Array.iter action xs
+
+  /// <summary>
+  /// Applies the given function to each element of the array, also passing the index of the element.
+  /// </summary>
+  let iteri action (NonEmpty xs : NonEmptyArray<_>) = Array.iteri action xs
+
+  /// <summary>
+  /// Applies the given function to each element of the array, returning the array of results
+  /// for each element where the function returns Some.
+  /// </summary>
+  let choose chooser (NonEmpty xs : NonEmptyArray<_>) = Array.choose chooser xs
+
+  /// <summary>
+  /// Returns the elements of the array while the given predicate returns True.
+  /// </summary>
+  let takeWhile predicate (NonEmpty xs : NonEmptyArray<_>) = Array.takeWhile predicate xs
+
+  /// <summary>
+  /// Bypasses elements of the array while the given predicate returns True, and then returns
+  /// the remaining elements.
+  /// </summary>
+  let skipWhile predicate (NonEmpty xs : NonEmptyArray<_>) = Array.skipWhile predicate xs
+
+  /// <summary>
+  /// Sorts the elements of an array, using the given comparison function. This is a stable sort.
+  /// </summary>
+  let sortWith comparer (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> = NonEmpty (Array.sortWith comparer xs)
+
+  /// <summary>
+  /// Like foldBack, but returns both the intermediary and final results.
+  /// </summary>
+  let scanBack f (NonEmpty xs : NonEmptyArray<_>) initialState : NonEmptyArray<_> =
+    NonEmpty (Array.scanBack f xs initialState)
+
+  /// <summary>
+  /// Combines map and fold. Builds a new array whose elements are the results of applying the given
+  /// function to each element, while also threading an accumulator through the computation.
+  /// </summary>
+  let mapFold mapping initialState (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> * _ =
+    let (results, finalState) = Array.mapFold mapping initialState xs
+    (NonEmpty results, finalState)
+
+  /// <summary>
+  /// Combines map and foldBack. Builds a new array whose elements are the results of applying the given
+  /// function to each element, while also threading an accumulator through the computation starting from the end.
+  /// </summary>
+  let mapFoldBack mapping (NonEmpty xs : NonEmptyArray<_>) initialState : NonEmptyArray<_> * _ =
+    let (results, finalState) = Array.mapFoldBack mapping xs initialState
+    (NonEmpty results, finalState)
+
   type ZipperExpression() =
     member inline this.MergeSources(t1, t2) = 
       zipShortest t1 t2
