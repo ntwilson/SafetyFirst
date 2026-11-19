@@ -6,13 +6,14 @@ open Swensen.Unquote
 open SafetyFirst
 open SafetyFirst.Specs.SeqSpec
 open SafetyFirst.Specs.ResultFixtures
+open SafetyFirst.Specs.OptionFixtures
 
 let averageFloats' (xs:float list) = List.average' xs
 let averageFloats (xs:float list) = List.average xs
 let averageByFloats' (projection:_ -> float) xs = List.averageBy' projection xs
 let averageByFloats (projection:_ -> float) xs = List.averageBy projection xs
 
-let arrayTransposeComparable xs = 
+let arrayTransposeComparable xs =
   Array.transpose xs
   |> Seq.map (Array.toList) |> Seq.toList
 
@@ -68,7 +69,7 @@ let ``Safe List functions always produce the same output as unsafe versions for 
   alwaysProduceSameOutput2 List.findIndexBack'            List.findIndexBack
   alwaysProduceSameOutput4 List.fold2'                    List.fold2
   alwaysProduceSameOutput4 List.foldBack2'                List.foldBack2
-  alwaysProduceSameOutput3 List.forall2'                  List.forall2 
+  alwaysProduceSameOutput3 List.forall2'                  List.forall2
   alwaysProduceSameOutput1 List.head'                     List.head
   alwaysProduceSameOutput2 List.item'                     List.item
   alwaysProduceSameOutput1 List.last'                     List.last
@@ -102,11 +103,11 @@ let ``zips multiple lists together via computation expression`` () =
   let ys = [10;20;30;40;50;60]
   let zs = [0 .. 100]
 
-  let result = 
+  let result =
     List.zipper {
       let! x = xs
-      and! y = ys 
-      and! z = zs 
+      and! y = ys
+      and! z = zs
       return x + y + z
     }
 
@@ -116,31 +117,31 @@ let ``zips multiple lists together via computation expression`` () =
   let ys = NonEmpty.assume [10;20;30;40;50;60]
   let zs = NonEmpty.assume [0 .. 100]
 
-  let result = 
+  let result =
     List.NonEmpty.zipper {
       let! x = xs
-      and! y = ys 
-      and! z = zs 
+      and! y = ys
+      and! z = zs
       return x + y + z
     }
 
   test <@ result = NonEmpty.assume [11;23;35;47;59] @>
 
 
-module Splitting = 
+module Splitting =
   let toLists xs = Seq.map List.NonEmpty.toList xs |> List.ofSeq
 
   [<Test>]
 
   let ``returns what the documentation says`` () =
 
-    test 
+    test
       <@
         (List.splitPairwise (=) [0;1;1;2;3;4;4;4;5] |> toLists)
           = [[0;1];[1;2;3;4];[4];[4;5]]
       @>
 
-    test 
+    test
       <@
         (List.NonEmpty.split ((=) 100) (List.NonEmpty.create 1 [2;3;100;100;4;100;5;6]) |> toLists)
           = [[1;2;3;100];[100];[4;100];[5;6]]
@@ -152,8 +153,8 @@ module Splitting =
       @>
 
   [<Test>]
-  let ``splits empty and single element sequences`` () = 
-    test 
+  let ``splits empty and single element sequences`` () =
+    test
       <@
         (List.splitPairwise (=) [] |> toLists) = []
         &&
@@ -161,10 +162,10 @@ module Splitting =
         &&
         (List.splitPairwise (=) [5; 5] |> toLists) = [[5]; [5]]
       @>
-  
+
   [<Test>]
-  let ``splits properly for multiple types of inputs`` () = 
-    test 
+  let ``splits properly for multiple types of inputs`` () =
+    test
       <@
         (List.NonEmpty.split ((=) 5) (List.NonEmpty.singleton 0) |> toLists) = [[0]]
         &&
@@ -180,9 +181,9 @@ module Splitting =
       @>
 
   [<Test>]
-  let ``splits pairwise properly for multiple types of inputs`` () = 
+  let ``splits pairwise properly for multiple types of inputs`` () =
     let bigDiff i j = abs (i - j) > 5
-    test 
+    test
       <@
         (List.NonEmpty.splitPairwise (=) (List.NonEmpty.singleton 0) |> toLists) = [[0]]
         &&
@@ -225,10 +226,10 @@ module Splitting =
 
   [<Test>]
   let ``works when the start and end elements match the predicate`` () =
-    test 
-      <@ 
-        (List.split ((=) 100) [100; 100; 1; 2; 3; 100] |> toLists) 
-          = [ [100]; [100]; [1;2;3;100] ] 
+    test
+      <@
+        (List.split ((=) 100) [100; 100; 1; 2; 3; 100] |> toLists)
+          = [ [100]; [100]; [1;2;3;100] ]
       @>
 
   [<Test>]
@@ -350,6 +351,36 @@ let ``List.NonEmpty.Result functions`` () =
   test <@ List.NonEmpty.Result.collect (NonEmpty.assume allOk) = Ok (NonEmpty.assume [1; 2]) @>
   test <@ List.NonEmpty.Result.partitionMap tenfoldIfEven (NonEmpty.assume [1; 2; 3; 4]) = ([20; 40], ["1 is odd"; "3 is odd"]) @>
   test <@ List.NonEmpty.Result.partition (NonEmpty.assume okAndErr) = ([1; 2], ["a"; "b"]) @>
+
+[<Test>]
+let ``List.Option functions`` () =
+  test <@ List.Option.traverse tenfoldUnlessTwoOpt [1; 1] = Some [10; 10] @>
+  test <@ List.Option.traverse tenfoldUnlessTwoOpt [1; 2; 3] = None @>
+  test <@ List.Option.traverse tenfoldUnlessTwoOpt [] = Some [] @>
+  test <@ List.Option.sequence someAndNone = None @>
+  test <@ List.Option.sequence allSome = Some [1; 2] @>
+
+[<Test>]
+let ``List.NonEmpty.Option functions`` () =
+  test <@ List.NonEmpty.Option.traverse tenfoldUnlessTwoOpt (NonEmpty.assume [1; 1]) = Some (NonEmpty.assume [10; 10]) @>
+  test <@ List.NonEmpty.Option.traverse tenfoldUnlessTwoOpt (NonEmpty.assume [1; 2; 3]) = None @>
+  test <@ List.NonEmpty.Option.sequence (NonEmpty.assume someAndNone) = None @>
+  test <@ List.NonEmpty.Option.sequence (NonEmpty.assume allSome) = Some (NonEmpty.assume [1; 2]) @>
+
+[<Test>]
+let ``List.ValueOption functions`` () =
+  test <@ List.ValueOption.traverse tenfoldUnlessTwoVOpt [1; 1] = ValueSome [10; 10] @>
+  test <@ List.ValueOption.traverse tenfoldUnlessTwoVOpt [1; 2; 3] = ValueNone @>
+  test <@ List.ValueOption.traverse tenfoldUnlessTwoVOpt [] = ValueSome [] @>
+  test <@ List.ValueOption.sequence vsomeAndNone = ValueNone @>
+  test <@ List.ValueOption.sequence allVSome = ValueSome [1; 2] @>
+
+[<Test>]
+let ``List.NonEmpty.ValueOption functions`` () =
+  test <@ List.NonEmpty.ValueOption.traverse tenfoldUnlessTwoVOpt (NonEmpty.assume [1; 1]) = ValueSome (NonEmpty.assume [10; 10]) @>
+  test <@ List.NonEmpty.ValueOption.traverse tenfoldUnlessTwoVOpt (NonEmpty.assume [1; 2; 3]) = ValueNone @>
+  test <@ List.NonEmpty.ValueOption.sequence (NonEmpty.assume vsomeAndNone) = ValueNone @>
+  test <@ List.NonEmpty.ValueOption.sequence (NonEmpty.assume allVSome) = ValueSome (NonEmpty.assume [1; 2]) @>
 
 module NonEmptyParity =
   open SafetyFirst.Numbers

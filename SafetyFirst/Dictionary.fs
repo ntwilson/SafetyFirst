@@ -167,6 +167,9 @@ let private partitionMapResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : IDictiona
 
   (oks, errs)
 
+let private traverseOption fn xs = traverseResult (fun k v -> fn k v |> Option.toResult ()) xs |> Option.ofResult
+let private traverseVOption fn xs = traverseResult (fun k v -> fn k v |> ValueOption.toResult ()) xs |> ValueOption.ofResult
+
 let private collectResult (results : IDictionary<_, Result<_, _>>) : Result<Dictionary<_, _>, NonEmptyDictionary<_, _>> =
   let oks, errs = partitionMapResult (fun _ r -> r) results
   if errs.Count = 0 then Ok oks else Error (NonEmpty (errs :> IDictionary<_, _>))
@@ -201,6 +204,38 @@ module Result =
   /// Splits the Results into the Ok values and the Error values by key.
   /// </summary>
   let partition (results : IDictionary<_, Result<_, _>>) = partitionMap (fun _ r -> r) results
+
+/// <summary>
+/// Functions for dictionaries of Options, or for mapping dictionaries with Option-producing functions.
+/// </summary>
+module Option =
+  /// <summary>
+  /// Maps each binding with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+  /// Bindings after the first None in enumeration order are not evaluated.
+  /// </summary>
+  let traverse fn (xs : IDictionary<_, _>) = traverseOption fn xs
+
+  /// <summary>
+  /// Returns Some of all the contained values, or None if any is None.
+  /// Bindings after the first None in enumeration order are not evaluated.
+  /// </summary>
+  let sequence (maybes : IDictionary<_, _ option>) = traverse (fun _ m -> m) maybes
+
+/// <summary>
+/// Functions for dictionaries of ValueOptions, or for mapping dictionaries with ValueOption-producing functions.
+/// </summary>
+module ValueOption =
+  /// <summary>
+  /// Maps each binding with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+  /// Bindings after the first ValueNone in enumeration order are not evaluated.
+  /// </summary>
+  let traverse fn (xs : IDictionary<_, _>) = traverseVOption fn xs
+
+  /// <summary>
+  /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+  /// Bindings after the first ValueNone in enumeration order are not evaluated.
+  /// </summary>
+  let sequence (maybes : IDictionary<_, _ voption>) = traverse (fun _ m -> m) maybes
 
 /// <summary>
 /// Functions for manipulating NonEmpty Dictionaries
@@ -239,3 +274,39 @@ module NonEmpty =
     /// Splits the Results into the Ok values and the Error values by key.
     /// </summary>
     let partition (results : NonEmptyDictionary<_, Result<_, _>>) = partitionMap (fun _ r -> r) results
+
+  /// <summary>
+  /// Functions for NonEmpty dictionaries of Options, or for mapping NonEmpty dictionaries with Option-producing functions.
+  /// </summary>
+  module Option =
+    /// <summary>
+    /// Maps each binding with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+    /// Bindings after the first None in enumeration order are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyDictionary<_, _>) : NonEmptyDictionary<_, _> option =
+      traverseOption fn xs |> Option.map (fun d -> NonEmpty (d :> IDictionary<_, _>))
+
+    /// <summary>
+    /// Returns Some of all the contained values, or None if any is None.
+    /// Bindings after the first None in enumeration order are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyDictionary<_, _ option>) = traverse (fun _ m -> m) maybes
+
+  /// <summary>
+  /// Functions for NonEmpty dictionaries of ValueOptions, or for mapping NonEmpty dictionaries with ValueOption-producing functions.
+  /// </summary>
+  module ValueOption =
+    /// <summary>
+    /// Maps each binding with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+    /// Bindings after the first ValueNone in enumeration order are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyDictionary<_, _>) : NonEmptyDictionary<_, _> voption =
+      match traverseVOption fn xs with
+      | ValueSome ys -> ValueSome (NonEmpty (ys :> IDictionary<_, _>))
+      | ValueNone -> ValueNone
+
+    /// <summary>
+    /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+    /// Bindings after the first ValueNone in enumeration order are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyDictionary<_, _ voption>) = traverse (fun _ m -> m) maybes

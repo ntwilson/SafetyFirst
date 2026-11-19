@@ -1001,6 +1001,9 @@ let private partitionResults (results : Result<'a, 'e>[]) : 'a[] * 'e[] =
 
 let private partitionMapResult fn (xs : _[]) = partitionResults (Array.map fn xs)
 
+let private traverseOption fn xs = traverseResult (fn >> Option.toResult ()) xs |> Option.ofResult
+let private traverseVOption fn xs = traverseResult (fn >> ValueOption.toResult ()) xs |> ValueOption.ofResult
+
 let private collectResult (results : Result<_, _>[]) : Result<_[], NonEmptyArray<_>> =
   match partitionResults results with
   | oks, [||] -> Ok oks
@@ -1989,6 +1992,42 @@ module NonEmpty =
     /// </summary>
     let partition (NonEmpty results : NonEmptyArray<Result<_, _>>) = partitionResults results
 
+  /// <summary>
+  /// Functions for NonEmpty arrays of Options, or for mapping NonEmpty arrays with Option-producing functions.
+  /// </summary>
+  module Option =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+    /// Elements after the first None are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> option =
+      traverseOption fn xs |> Option.map NonEmpty
+
+    /// <summary>
+    /// Returns Some of all the contained values, or None if any is None.
+    /// Elements after the first None are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyArray<_ option>) = traverse id maybes
+
+  /// <summary>
+  /// Functions for NonEmpty arrays of ValueOptions, or for mapping NonEmpty arrays with ValueOption-producing functions.
+  /// </summary>
+  module ValueOption =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+    /// Elements after the first ValueNone are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyArray<_>) : NonEmptyArray<_> voption =
+      match traverseVOption fn xs with
+      | ValueSome ys -> ValueSome (NonEmpty ys)
+      | ValueNone -> ValueNone
+
+    /// <summary>
+    /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+    /// Elements after the first ValueNone are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyArray<_ voption>) = traverse id maybes
+
 type ZipperExpression() =
   member inline this.MergeSources(t1, t2) = 
     zipShortest t1 t2
@@ -2031,3 +2070,34 @@ module Result =
   /// </summary>
   let partition (results : Result<_, _>[]) = partitionResults results
 
+/// <summary>
+/// Functions for arrays of Options, or for mapping arrays with Option-producing functions.
+/// </summary>
+module Option =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+  /// Elements after the first None are not evaluated.
+  /// </summary>
+  let traverse fn (xs : _[]) = traverseOption fn xs
+
+  /// <summary>
+  /// Returns Some of all the contained values, or None if any is None.
+  /// Elements after the first None are not evaluated.
+  /// </summary>
+  let sequence (maybes : _ option[]) = traverse id maybes
+
+/// <summary>
+/// Functions for arrays of ValueOptions, or for mapping arrays with ValueOption-producing functions.
+/// </summary>
+module ValueOption =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+  /// Elements after the first ValueNone are not evaluated.
+  /// </summary>
+  let traverse fn (xs : _[]) = traverseVOption fn xs
+
+  /// <summary>
+  /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+  /// Elements after the first ValueNone are not evaluated.
+  /// </summary>
+  let sequence (maybes : _ voption[]) = traverse id maybes

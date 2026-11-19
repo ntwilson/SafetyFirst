@@ -210,6 +210,9 @@ let private partitionMapResult (fn : 'k -> 'a -> Result<'b, 'e>) (xs : Map<'k, '
 
   Map.fold addResult (Map.empty, Map.empty) xs
 
+let private traverseOption fn xs = traverseResult (fun k v -> fn k v |> Option.toResult ()) xs |> Option.ofResult
+let private traverseVOption fn xs = traverseResult (fun k v -> fn k v |> ValueOption.toResult ()) xs |> ValueOption.ofResult
+
 let private collectResult (results : Map<_, Result<_, _>>) : Result<Map<_, _>, NonEmptyMap<_, _>> =
   let oks, errs = partitionMapResult (fun _ r -> r) results
   if Map.isEmpty errs then Ok oks else Error (NonEmpty errs)
@@ -244,6 +247,38 @@ module Result =
   /// Splits the Results into the Ok values and the Error values by key.
   /// </summary>
   let partition (results : Map<_, Result<_, _>>) = partitionMap (fun _ r -> r) results
+
+/// <summary>
+/// Functions for maps of Options, or for mapping maps with Option-producing functions.
+/// </summary>
+module Option =
+  /// <summary>
+  /// Maps each binding with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+  /// Bindings after the first None in key order are not evaluated.
+  /// </summary>
+  let traverse fn (xs : Map<_, _>) = traverseOption fn xs
+
+  /// <summary>
+  /// Returns Some of all the contained values, or None if any is None.
+  /// Bindings after the first None in key order are not evaluated.
+  /// </summary>
+  let sequence (maybes : Map<_, _ option>) = traverse (fun _ m -> m) maybes
+
+/// <summary>
+/// Functions for maps of ValueOptions, or for mapping maps with ValueOption-producing functions.
+/// </summary>
+module ValueOption =
+  /// <summary>
+  /// Maps each binding with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+  /// Bindings after the first ValueNone in key order are not evaluated.
+  /// </summary>
+  let traverse fn (xs : Map<_, _>) = traverseVOption fn xs
+
+  /// <summary>
+  /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+  /// Bindings after the first ValueNone in key order are not evaluated.
+  /// </summary>
+  let sequence (maybes : Map<_, _ voption>) = traverse (fun _ m -> m) maybes
 
 /// <summary>
 /// Functions for manipulating NonEmpty Maps
@@ -282,3 +317,38 @@ module NonEmpty =
     /// </summary>
     let partition (results : NonEmptyMap<_, Result<_, _>>) = partitionMap (fun _ r -> r) results
 
+  /// <summary>
+  /// Functions for NonEmpty maps of Options, or for mapping NonEmpty maps with Option-producing functions.
+  /// </summary>
+  module Option =
+    /// <summary>
+    /// Maps each binding with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+    /// Bindings after the first None in key order are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyMap<_, _>) : NonEmptyMap<_, _> option =
+      traverseOption fn xs |> Option.map NonEmpty
+
+    /// <summary>
+    /// Returns Some of all the contained values, or None if any is None.
+    /// Bindings after the first None in key order are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyMap<_, _ option>) = traverse (fun _ m -> m) maybes
+
+  /// <summary>
+  /// Functions for NonEmpty maps of ValueOptions, or for mapping NonEmpty maps with ValueOption-producing functions.
+  /// </summary>
+  module ValueOption =
+    /// <summary>
+    /// Maps each binding with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+    /// Bindings after the first ValueNone in key order are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyMap<_, _>) : NonEmptyMap<_, _> voption =
+      match traverseVOption fn xs with
+      | ValueSome ys -> ValueSome (NonEmpty ys)
+      | ValueNone -> ValueNone
+
+    /// <summary>
+    /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+    /// Bindings after the first ValueNone in key order are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyMap<_, _ voption>) = traverse (fun _ m -> m) maybes

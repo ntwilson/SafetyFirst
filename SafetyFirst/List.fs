@@ -967,6 +967,9 @@ let private partitionMapResult (fn : 'a -> Result<'b, 'e>) (xs : 'a list) : 'b l
 
   partition' [] [] xs
 
+let private traverseOption fn xs = traverseResult (fn >> Option.toResult ()) xs |> Option.ofResult
+let private traverseVOption fn xs = traverseResult (fn >> ValueOption.toResult ()) xs |> ValueOption.ofResult
+
 let private collectResult (results : Result<'a, 'e> list) : Result<'a list, NonEmptyList<'e>> =
   match partitionMapResult id results with
   | oks, [] -> Ok oks
@@ -1938,6 +1941,42 @@ module NonEmpty =
     let partition (results : NonEmptyList<Result<_, _>>) = partitionMap id results
 
 
+  /// <summary>
+  /// Functions for NonEmpty lists of Options, or for mapping NonEmpty lists with Option-producing functions.
+  /// </summary>
+  module Option =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+    /// Elements after the first None are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> option =
+      traverseOption fn xs |> Option.map NonEmpty
+
+    /// <summary>
+    /// Returns Some of all the contained values, or None if any is None.
+    /// Elements after the first None are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyList<_ option>) = traverse id maybes
+
+  /// <summary>
+  /// Functions for NonEmpty lists of ValueOptions, or for mapping NonEmpty lists with ValueOption-producing functions.
+  /// </summary>
+  module ValueOption =
+    /// <summary>
+    /// Maps each element with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+    /// Elements after the first ValueNone are not evaluated.
+    /// </summary>
+    let traverse fn (NonEmpty xs : NonEmptyList<_>) : NonEmptyList<_> voption =
+      match traverseVOption fn xs with
+      | ValueSome ys -> ValueSome (NonEmpty ys)
+      | ValueNone -> ValueNone
+
+    /// <summary>
+    /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+    /// Elements after the first ValueNone are not evaluated.
+    /// </summary>
+    let sequence (maybes : NonEmptyList<_ voption>) = traverse id maybes
+
 type ZipperExpression() =
   member inline this.MergeSources(t1, t2) = 
     zipShortest t1 t2
@@ -1980,3 +2019,34 @@ module Result =
   /// </summary>
   let partition (results : Result<_, _> list) = partitionMap id results
 
+/// <summary>
+/// Functions for lists of Options, or for mapping lists with Option-producing functions.
+/// </summary>
+module Option =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning Some of all the mapped values, or None if any mapping is None.
+  /// Elements after the first None are not evaluated.
+  /// </summary>
+  let traverse fn (xs : _ list) = traverseOption fn xs
+
+  /// <summary>
+  /// Returns Some of all the contained values, or None if any is None.
+  /// Elements after the first None are not evaluated.
+  /// </summary>
+  let sequence (maybes : _ option list) = traverse id maybes
+
+/// <summary>
+/// Functions for lists of ValueOptions, or for mapping lists with ValueOption-producing functions.
+/// </summary>
+module ValueOption =
+  /// <summary>
+  /// Maps each element with <c>fn</c>, returning ValueSome of all the mapped values, or ValueNone if any mapping is ValueNone.
+  /// Elements after the first ValueNone are not evaluated.
+  /// </summary>
+  let traverse fn (xs : _ list) = traverseVOption fn xs
+
+  /// <summary>
+  /// Returns ValueSome of all the contained values, or ValueNone if any is ValueNone.
+  /// Elements after the first ValueNone are not evaluated.
+  /// </summary>
+  let sequence (maybes : _ voption list) = traverse id maybes

@@ -21,6 +21,7 @@
     <Compile Include="NonEmptySpec.fs" />
     <Compile Include="SeqSpec.fs" />
     <Compile Include="ResultFixtures.fs" />
+    <Compile Include="OptionFixtures.fs" />
     <Compile Include="ListSpec.fs" />
     <Compile Include="ArraySpec.fs" />
     <Compile Include="MapSpec.fs" />

@@ -2,9 +2,9 @@
 
 ## New features:
 
-- The `result`, `option`, and `voption` computation expressions now support `if ... then` without an `else` (e.g., `if verbose then printfn "..."`, or `if x < 0 then do! Error "negative"` to return early)
+- The `result`, `option`, and `voption` computation expressions now support `if ... then` without an `else` (e.g., `if verbose then printfn "..."`, or `if x < 0 then do! Error "negative"` to return early) ([#97](https://github.com/ntwilson/SafetyFirst/issues/97))
 
-- Adds a nested `Result` module to the List/Array/Set/Map/Dictionary modules and to their `NonEmpty` modules (e.g., `List.Result`, `Map.NonEmpty.Result`), each with:
+- Adds a nested `Result` module to the List/Array/Set/Map/Dictionary modules and to their `NonEmpty` modules (e.g., `List.Result`, `Map.NonEmpty.Result`) ([#106](https://github.com/ntwilson/SafetyFirst/issues/106)), each with:
 
   - `traverse`: maps with a Result-producing function, returning Ok of the mapped collection, or the first Error without evaluating the rest
   - `sequence`: same as `traverse`, but for a collection that already holds Results
@@ -16,7 +16,7 @@
 
   The Set versions omit `partition` and `partitionMap` because it's not decided yet what collection should contain the errors.
 
-- Brings the `NonEmpty` submodules closer to parity with their parent modules, so a NonEmpty collection no longer needs converting back before calling these. Where the input being non-empty guarantees a non-empty result, the result is NonEmpty.
+- Brings the `NonEmpty` submodules closer to parity with their parent modules, so a NonEmpty collection no longer needs converting back before calling these ([#103](https://github.com/ntwilson/SafetyFirst/issues/103)). Where the input being non-empty guarantees a non-empty result, the result is NonEmpty.
 
 ### Array.NonEmpty and List.NonEmpty
 
@@ -42,6 +42,8 @@
 
 - `cons`, `chunkBySize` (Safe/'/try), `chunksOf`, `splitInto` (Safe/'/try), `splitIntoN`, `skipUntilIncluding`
 - `sum`, `sumBy`, `iter`, `iteri`, `choose`, `takeWhile`, `skipWhile`, `sortWith`, `scanBack`, `mapFold`, `mapFoldBack`
+
+Likewise adds nested `Option` and `ValueOption` modules (e.g., `Array.Option`, `Map.NonEmpty.ValueOption`), each with `traverse` and `sequence`. Unlike the existing `Option.traverse` and `Option.sequence`, which always return a list, these return the same collection type as the input. ([#113](https://github.com/ntwilson/SafetyFirst/issues/113))
 
 ## Bug fixes:
 
