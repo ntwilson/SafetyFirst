@@ -57,9 +57,17 @@
     <Compile Include="IEnumerable.fs" />
     <Compile Include="IDictionaryExtensions.fs" />
   </ItemGroup>
+  <!-- generate-llms.fsx READS THIS FILE; CHANGE ITS PATH THERE TOO. -->
+  <PropertyGroup>
+    <SignatureFile>$(MSBuildProjectDirectory)/obj/SafetyFirst.fsi</SignatureFile>
+    <OtherFlags Condition="'$(TargetFramework)' == 'netstandard2.0'">$(OtherFlags) --sig:"$(SignatureFile)"</OtherFlags>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Include="../README.md" Pack="true" PackagePath="\" />
     <Content Include="../v4.0_UpgradeGuide.md" Pack="true" PackagePath="\" />
+    <Content Include="../llms.txt" Pack="true" PackagePath="\" />
+    <None Include="$(SignatureFile)" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="fsharp.core" Version="4.5.0" />
