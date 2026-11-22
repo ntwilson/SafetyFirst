@@ -384,6 +384,71 @@ let y : NaturalInt = xs |> List.length |> NaturalInt.verify |> Option.unless "li
 
 Functions that utilize `PositiveInt` include `chunksOf` (a safe version of `chunkBySize`), `splitIntoN` (a safe version of `splitInto`), and `window` (a safe version of `windowed`).  Functions that utilize `NaturalInt` include `drop` and `skip`.
 
+## For LLMs
+
+The NuGet package includes two files for coding agents, at the root of the package folder:
+
+- `llms.txt`: a condensed guide to the library's conventions and types, plus an index of every public function. It's roughly 6,000 tokens (an estimate), a small fraction of a modern model's context window.
+- `SafetyFirst.fsi`: every signature with its doc comments. It's too big to read whole, so agents should search it for a name.
+
+They are also in this repository ([`llms.txt`](llms.txt)), but those describe the latest code rather than the version you have installed.
+
+To use them, add this to your project's agent instructions file:
+
+```markdown
+## SafetyFirst
+
+This project uses the SafetyFirst NuGet package. Before writing code that uses it, read `llms.txt` in its package folder:
+`~/.nuget/packages/safetyfirst/<version>/llms.txt` (`%USERPROFILE%\.nuget\packages\...` on Windows, or under `$NUGET_PACKAGES` if that is set),
+where `<version>` is the version this project references. For an exact signature, search `SafetyFirst.fsi` in the same folder.
+```
+
+It's a plain-text pointer rather than an import on purpose: the agent reads the file only when it needs it, and it reads the copy that matches your installed version.
+
+Which file is your agent instructions file depends on your tool:
+
+| Tool | File |
+| --- | --- |
+| Claude Code | `CLAUDE.md` |
+| OpenAI Codex, GitHub Copilot, Cursor and most others | `AGENTS.md` |
+| Gemini CLI | `GEMINI.md` |
+
+Check your tool's documentation if it isn't listed. To use SafetyFirst's guide across many repositories, put the same pointer in a user-level instructions file or a reusable skill instead of repeating it in each project.
+
+`llms.txt` is only in packages built from this version onward. With an older package installed, point your agent at the repository copy instead.
+
 ## Development
 
 To test the NuGet package itself rather than the project, run `./test-package.ps1`. It packs into `artifacts/` and runs `PackageTests` against that package.
+
+After changing the public API, build and run `dotnet fsi generate-llms.fsx` to refresh the API index in `llms.txt`; CI fails if it is stale.
+
+To do this automatically, save the following as `.git/hooks/pre-commit`. Whenever a commit includes library source, it builds, regenerates `llms.txt` and stages it if it changed. The build uses your working tree, so if library source also has unstaged changes, the hook aborts the commit instead of guessing. You can then check `llms.txt` by hand and commit with `--no-verify`, or stash the unstaged changes first.
+
+The same script works on Windows, because Git for Windows runs hooks with its bundled `sh`. On Linux and macOS, also run `chmod +x .git/hooks/pre-commit`.
+
+```sh
+#!/bin/sh
+# Refreshes the API index in llms.txt when library source is part of the commit.
+src='^SafetyFirst/.*\.fs(proj)?$'
+git diff --cached --name-only | grep -Eq "$src" || exit 0
+
+# THE BUILD READS THE WORKING TREE, SO UNSTAGED SOURCE CHANGES WOULD LEAK INTO THE COMMITTED INDEX.
+unstaged=$(git diff --name-only | grep -E "$src")
+if [ -n "$unstaged" ]; then
+  echo "pre-commit: these files have unstaged changes, so llms.txt can't be regenerated from what you're committing:"
+  echo "$unstaged" | sed 's/^/  /'
+  echo "Either check llms.txt by hand and commit with --no-verify, or set the changes aside:"
+  echo "  git stash push --keep-index"
+  echo "  <your git commit command again>"
+  echo "  git stash pop"
+  exit 1
+fi
+
+# THE GENERATOR READS obj/SafetyFirst.fsi, WHICH ONLY A BUILD REFRESHES.
+dotnet build SafetyFirst/SafetyFirst.fsproj -c Release -f netstandard2.0 --nologo -v quiet || exit 1
+dotnet fsi generate-llms.fsx > /dev/null || exit 1
+git diff --quiet llms.txt || git add llms.txt
+```
+
+Save it with LF line endings: `sh` rejects a script with CRLF endings.

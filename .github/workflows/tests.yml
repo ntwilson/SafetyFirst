@@ -26,6 +26,10 @@ jobs:
         run: dotnet restore SafetyFirst.sln
       - name: Build with dotnet
         run: dotnet build SafetyFirst.sln -c Release --no-restore
+      - name: Check llms.txt is up to date
+        run: |
+          dotnet fsi generate-llms.fsx
+          git diff --exit-code llms.txt || { echo "::error::llms.txt is stale. Build, run 'dotnet fsi generate-llms.fsx' and commit the result."; exit 1; }
       - name: Test with dotnet
         run: dotnet test SafetyFirst.sln -f net10.0 -c Release --no-build
       - name: Pack and test package

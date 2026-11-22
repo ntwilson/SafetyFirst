@@ -1,0 +1,556 @@
+# SafetyFirst
+
+> Total (non-throwing) replacements for the partial functions in FSharp.Core and LINQ, plus restricted types (`NonEmpty`, `FiniteSeq`, `InfiniteSeq`, `NaturalInt`/`PositiveInt`/`NegativeInt`) that rule out invalid inputs. F# first; C# supported.
+
+Exact signatures with doc comments are in `SafetyFirst.fsi` at the root of the NuGet package (e.g. `~/.nuget/packages/safetyfirst/<version>/SafetyFirst.fsi`). It is about 12,000 lines: search it for a name rather than reading it whole.
+
+## Using it from F#
+
+`open SafetyFirst`. The `Seq`, `List`, `Array`, `Set`, `Map`, `Option`, `Result` and `String` modules extend the FSharp.Core modules of the same name, so `List.map` etc. still resolve. FSharpPlus defines its own `result` (its `return`/`pure`), so if you open FSharpPlus *after* SafetyFirst, its `result` shadows SafetyFirst's `result { }` computation expression. Open FSharpPlus first.
+
+### Naming convention
+
+For a FSharp.Core function `foo` that throws on some inputs, a module offers up to three variants:
+
+- `fooSafe` returns `Result<_, ErrorType>`. This is the only spelling callable from C#.
+- `foo'` is the same function as `fooSafe` with the F# spelling.
+- `tryFoo` returns `Option<_>` (only added where FSharp.Core lacks it).
+
+Example: `List.head'`, `List.headSafe : 'a list -> Result<'a, SeqIsEmpty>`. The partial FSharp.Core originals still work.
+
+Error types (all in `SafetyFirst`, each a single-case union carrying a message): `SeqIsEmpty`, `NotEnoughElements`, `NoMatchingElement`, `DifferingLengths`, `NegativeInput`, `IndexOutOfRange`, `DuplicateKeys`, `MismatchingKeys`; and `WrongNumberOfElements = TooManyElements of string | NotEnoughElements of string`.
+
+### Getting values out
+
+- `Result.expect : Result<'a,'e> -> 'a` throws with the error's message.
+- `Result.unless : string -> Result<'a,'e> -> 'a` and `Option.unless : string -> 'a option -> 'a` throw with your message.
+
+Use these when an error can't be handled and should crash with context.
+
+### Computation expressions
+
+- `option { }`, `voption { }`, `result { }`. In `result { }`, `let! ... and! ...` collects errors from every `and!` binding using FSharpPlus semigroup append (e.g. error lists are concatenated). All results in one expression need the same error type.
+- `List.zipper { let! x = xs and! y = ys in return x + y }` zips any number of collections, truncating to the shortest. It is available for every collection module (`Seq`, `List`, `Array`, `FSeq`, `Map`, ...).
+
+### Restricted types
+
+- **`NonEmpty<'coll, 'a>`**, with aliases `NonEmptySeq<'a>`, `NonEmptyList<'a>`, `NonEmptyArray<'a>`, `NonEmptyFSeq<'a>`, `NonEmptySet<'a>`, `NonEmptyMap<'k,'v>`.
+  - Create with `match xs with Empty -> ... | NotEmpty nes -> ...`, `NonEmpty.verify xs : option`, `List.NonEmpty.create head tail`, or `NonEmpty.assume` (throws).
+  - `List.NonEmpty`, `Seq.NonEmpty`, `Array.NonEmpty`, `FSeq.NonEmpty` etc. hold total versions of `head`, `reduce`, `max`, ... that need no `Result`.
+- **`FiniteSeq<'a>`** (alias `'a fseq`; module `FiniteSeq` aliased `FSeq`): a lazy sequence asserted to be finite, with structural equality. Create with `fseq xs` (F#) or `xs.Finite()` (C#). Use it instead of `seq` in records that need lazy sequences but also equality.
+- **`InfiniteSeq<'a>`**: create with `InfiniteSeq.initBounded n f`. It throws instead of hanging once `n` elements have been produced without a result. `InfiniteSeq.initUnbounded` has no limit. `Seq.isHungAfter n xs` gives the same protection to a plain `seq`.
+- **Numbers** (`open SafetyFirst.Numbers`): `NaturalInt` (>= 0), `PositiveInt` (> 0), `NegativeInt` (< 0).
+  - Create with `PositiveInt.verify : int -> PositiveInt option`, `PositiveInt.assume` (throws), or the active patterns `Positive | Negative | Zero` and `Natural | NonNatural`.
+  - Collection functions that take them need no `Result`: `chunksOf` (`chunkBySize`), `splitIntoN` (`splitInto`), `window` (`windowed`). `drop` takes a `NaturalInt` in `FSeq` and the `NonEmpty` modules; `Seq`/`List`/`Array.drop` take an `int` and act like `skipLenient` (dropping too many returns empty).
+
+## Using it from C#
+
+- `using SafetyFirst;` for LINQ extensions on `IEnumerable<T>`: `AggregateSafe`, `AverageSafe`, `ElementAtSafe`, `FirstSafe`, `LastSafe`, `MaxSafe`, `MinSafe`, `SingleSafe`, `ZipSafe`, plus `IDictionary.FindSafe` and `.Finite()`.
+- `using SafetyFirst.CSharp;` for the C# `Result<TVal, TErr>`. It supports LINQ query syntax (`from x in r1 from y in r2 select ...`), `.Match(ok: ..., error: ...)`, `.Expect()` and `.Unless(msg)`.
+- The F# modules are callable too, using the `Safe` spelling: `List.headSafe`.
+
+## API index
+
+Every public F# function name, grouped by module. Variants that share a base name are joined with `/` (`headSafe/head'/tryHead`). Search `SafetyFirst.fsi` for a name to get its signature.
+
+<!-- BEGIN GENERATED API INDEX (generate-llms.fsx) -->
+
+### Option
+
+```
+unless, collect, traverse, sequence, ofFloat, ofResult, toResult, toResultWith, ofVOption, toVOption
+```
+
+### OptionExpression (AutoOpen)
+
+```
+option
+```
+
+### ValueOption
+
+```
+unless, collect, ofFloat, ofResult, toResult, toResultWith, ofOption, toOption
+```
+
+### ValueOptionExpression (AutoOpen)
+
+```
+voption
+```
+
+### Numbers.NaturalIntMatchers (AutoOpen)
+
+```
+(|NaturalInt|), (|PositiveInt|), (|NegativeInt|), (|Natural|NonNatural|), (|Positive|Negative|Zero|)
+```
+
+### Numbers.NaturalInt
+
+```
+verify, assume
+```
+
+### Numbers.NegativeInt
+
+```
+verify, assume
+```
+
+### Numbers.PositiveInt
+
+```
+verify, assume
+```
+
+### StringConversionHelpers
+
+```
+isVOptionOrListContainingVOptions
+```
+
+### Conversions (AutoOpen)
+
+```
+str, stringUnsafe
+```
+
+### Conversions.Float32
+
+```
+ofByte, ofInt16, ofInt32, ofInt64, uncheckedOfFloat, tryOfFloat, unsafeOfFloat
+```
+
+### Conversions.Float
+
+```
+ofByte, ofInt16, ofInt32, ofInt64, ofFloat32
+```
+
+### Match (AutoOpen)
+
+```
+(|SeqOneOrMore|_|), (|SeqTwoOrMore|_|), (|SeqThreeOrMore|_|), (|SeqFourOrMore|_|)
+(|SeqFiveOrMore|_|)
+```
+
+### NonEmptySeqMatcher (AutoOpen)
+
+```
+(|Empty|NotEmpty|), (|NonEmpty|)
+```
+
+### NonEmpty
+
+```
+verify, assume
+```
+
+### FSeqBuilder (AutoOpen)
+
+```
+fseq, (|FiniteSeq|), (|FSeq|)
+```
+
+### ResultExpression (AutoOpen)
+
+```
+result
+```
+
+### Result
+
+```
+createContext, addContext, bind2, bind3, bind4, collect, traverse, sequence, bindAll, map2, map3
+map4, mapAll, isOk, isError, ifOk, ifError, defaultValue, defaultWith, unless, unlessErr, expect
+ofCs, toCs, ofOption, ofOptionWith, toOption, Bind, Bind2, Bind3, Bind4, Traverse, Sequence, BindAll
+Map, Map2, Map3, Map4, MapAll, Ok, Error, FromFs, Collect
+```
+
+### FsResultExtensions
+
+```
+ToCs
+```
+
+### FiniteSeq
+
+```
+append, averageSafe/average'/tryAverage, averageBySafe/averageBy'/tryAverageBy, choose
+chunkBySizeSafe/chunkBySize'/tryChunkBySize, chunksOf, concat, contains, collect, cons, countBy
+distinct, distinctBy, drop, dropLenient, empty, exists, fold, foldBack, filter
+findSafe/find'/tryFind, findBackSafe/findBack'/tryFindBack, findIndexSafe/findIndex'/tryFindIndex
+findIndexBackSafe/findIndexBack'/tryFindIndexBack, forall, groupBy, group, headSafe/head'/tryHead
+indexed, isEmpty, iter, iteri, lastSafe/last'/tryLast, length, map, mapi
+map2Safe/map2'/map2/tryMap2, mapFold, mapFoldBack, maxSafe/max'/tryMax, maxBySafe/maxBy'/tryMaxBy
+minSafe/min'/tryMin, minBySafe/minBy'/tryMinBy, ofArray, ofSeq, ofList, pairwise
+reduceSafe/reduce'/tryReduce, reduceBackSafe/reduceBack'/tryReduceBack, rev, scan, scanBack, sort
+sortBy, sortDescending, sortByDescending, sortWith, skipSafe/skip'/trySkip, skipLenient, skipWhile
+skipUntilIncluding, splitIntoN, splitIntoSafe/splitInto'/trySplitInto, split, splitPairwise, sum
+sumBy, tailSafe/tail'/tryTail, takeSafe/take'/tryTake, takeWhile, takeUntilIncluding, toArray
+toList, toSeq, transposeSafe/transpose'/transpose/tryTranspose, truncate
+unconsSafe/uncons'/tryUncons, window, windowedSafe/windowed'/tryWindowed, zipSafe/zip'/zip/tryZip
+zip3Safe/zip3'/zip3/tryZip3, zipper
+```
+
+### FSeq
+
+Same functions as `FiniteSeq`. Lacks: skipLenient.
+
+### FSeq.NonEmpty
+
+```
+(|NonEmptyFSeq|), create, singleton, average, averageBy, head, min, max, minBy, maxBy, last, tail
+uncons, reduce, reduceBack, length, fold, foldBack, map, mapi, map2, filter, appendL, appendR
+append, concat, contains, countBy, collect, distinct, distinctBy, drop, dropLenient, exists
+findSafe/find'/tryFind, findIndexSafe/findIndex'/tryFindIndex, findBackSafe/findBack'/tryFindBack
+findIndexBackSafe/findIndexBack'/tryFindIndexBack, forall, groupBy, group, indexed
+ofFSeqSafe/ofFSeq'/tryOfFSeq, pairwise, rev, scan, sort, sortBy, sortDescending, sortByDescending
+toArray, toNonEmptyArray, toList, toNonEmptyList, toSeq, ofNonEmptySeq, toNonEmptySeq, toFSeq
+transposeSafe/transpose'/transpose/tryTranspose, truncate, trySkip, tryTake, window
+windowedSafe/windowed'/tryWindowed, zipSafe/zip'/zip/tryZip, zip3Safe/zip3'/zip3/tryZip3, split
+splitPairwise, takeUntilIncluding, cons, chunkBySizeSafe/chunkBySize'/tryChunkBySize, chunksOf
+skipUntilIncluding, splitIntoSafe/splitInto'/trySplitInto, splitIntoN, sum, sumBy, iter, iteri
+choose, takeWhile, skipWhile, sortWith, scanBack, mapFold, mapFoldBack, zipper
+```
+
+### EnumerableExtensions
+
+```
+Finite
+```
+
+### Seq
+
+```
+averageSafe/average'/tryAverage, averageBySafe/averageBy'/tryAverageBy
+chunkBySizeSafe/chunkBySize'/tryChunkBySize, chunksOf, exactlyOneSafe/exactlyOne'/tryExactlyOne
+findSafe/find', findBackSafe/findBack', findIndexSafe/findIndex', findIndexBackSafe/findIndexBack'
+group, headSafe/head', isHungAfter, itemSafe/item', lastSafe/last', maxSafe/max'/tryMax
+maxBySafe/maxBy'/tryMaxBy, minSafe/min'/tryMin, minBySafe/minBy'/tryMinBy, pickSafe/pick'
+reduceSafe/reduce'/tryReduce, reduceBackSafe/reduceBack'/tryReduceBack, skipSafe/skip'/trySkip
+skipLenient, skipUntilIncluding, drop, splitIntoSafe/splitInto'/trySplitInto, splitIntoN
+takeUntilIncluding, split, splitPairwise, tailSafe/tail'/tryTail, takeSafe/take'/tryTake
+windowedSafe/windowed'/tryWindowed, window, zipper
+```
+
+### Seq.NonEmpty
+
+```
+create, singleton, average, head, min, max, minBy, maxBy, tail, uncons, reduce, length, fold
+indexed, isHungAfter, map, mapi, map2, filter, append, appendL, appendR, concat, collect, distinct
+distinctBy, group, ofSeqSafe/ofSeq'/tryOfSeq, pairwise, rev, scan, takeUntilIncluding, toArray
+toNonEmptyArray, toList, toNonEmptyList, toSeq, toNonEmptyFSeq, truncate, findSafe/find'/tryFind
+trySkip, tryTake, zip, split, splitPairwise, averageBy, chunkBySizeSafe/chunkBySize'/tryChunkBySize
+chunksOf, contains, countBy, drop, dropLenient, exactlyOneSafe/exactlyOne'/tryExactlyOne, exists
+findBackSafe/findBack'/tryFindBack, findIndexSafe/findIndex'/tryFindIndex
+findIndexBackSafe/findIndexBack'/tryFindIndexBack, foldBack, forall, groupBy, itemSafe/item', last
+pickSafe/pick'/tryPick, reduceBack, skipUntilIncluding, sort, sortBy, sortDescending
+sortByDescending, splitIntoSafe/splitInto'/trySplitInto, splitIntoN
+windowedSafe/windowed'/tryWindowed, window, zip3, sum, sumBy, iter, iteri, choose, takeWhile
+skipWhile, sortWith, scanBack, mapFold, mapFoldBack, zipper
+```
+
+### List
+
+```
+averageSafe/average'/tryAverage, averageBySafe/averageBy'/tryAverageBy
+chunkBySizeSafe/chunkBySize'/tryChunkBySize, chunksOf, exactlyOneSafe/exactlyOne'/tryExactlyOne
+findSafe/find', findBackSafe/findBack', findIndexSafe/findIndex', findIndexBackSafe/findIndexBack'
+fold2Safe/fold2'/tryFold2, foldBack2Safe/foldBack2'/tryFoldBack2, forall2Safe/forall2'/tryForall2
+group, headSafe/head', itemSafe/item', iter2Safe/iter2'/tryIter2, iteri2Safe/iteri2'/tryIteri2
+lastSafe/last', map2Safe/map2'/tryMap2, mapi2Safe/mapi2'/tryMapi2, map3Safe/map3'/tryMap3
+maxSafe/max'/tryMax, maxBySafe/maxBy'/tryMaxBy, minSafe/min'/tryMin, minBySafe/minBy'/tryMinBy
+pickSafe/pick', reduceSafe/reduce'/tryReduce, reduceBackSafe/reduceBack'/tryReduceBack
+skipSafe/skip'/trySkip, skipLenient, drop, skipUntilIncluding, splitAtSafe/splitAt'/trySplitAt
+splitIntoSafe/splitInto'/trySplitInto, splitIntoN, splitPairwise, split, tailSafe/tail'/tryTail
+takeSafe/take'/tryTake, takeUntilIncluding, windowedSafe/windowed'/tryWindowed, window, zipShortest
+zipSafe/zip'/tryZip, zip3Safe/zip3'/tryZip3, transposeSafe/transpose'/tryTranspose, zipper
+```
+
+### List.NonEmpty
+
+```
+create, cons, singleton, average, averageBy, head, last, min, max, minBy, maxBy, tail, uncons
+reduce, reduceBack, length, fold, foldBack, forall, groupBy, indexed, map, group, mapi
+map2Safe/map2'/tryMap2, filter, append, appendL, appendR, concat, contains, countBy, collect
+distinct, distinctBy, drop, dropUnsafe, dropLenient, exists, findSafe/find'/tryFind
+findBackSafe/findBack'/tryFindBack, findIndexSafe/findIndex'/tryFindIndex
+findIndexBackSafe/findIndexBack'/tryFindIndexBack, ofListSafe/ofList'/tryOfList, pairwise, rev, scan
+sort, sortBy, sortDescending, sortByDescending, toArray, toNonEmptyArray, toList, toSeq
+toNonEmptySeq, toNonEmptyFSeq, transposeSafe/transpose'/tryTranspose, truncate, trySkip, tryTake
+windowedSafe/windowed'/tryWindowed, window, zipShortest, zipSafe/zip'/tryZip, zip3Safe/zip3'/tryZip3
+split, splitPairwise, takeUntilIncluding, chunkBySizeSafe/chunkBySize'/tryChunkBySize, chunksOf
+exactlyOneSafe/exactlyOne'/tryExactlyOne, fold2Safe/fold2'/tryFold2
+foldBack2Safe/foldBack2'/tryFoldBack2, forall2Safe/forall2'/tryForall2, itemSafe/item'
+iter2Safe/iter2'/tryIter2, iteri2Safe/iteri2'/tryIteri2, mapi2Safe/mapi2'/tryMapi2
+map3Safe/map3'/tryMap3, pickSafe/pick'/tryPick, skipUntilIncluding, splitAtSafe/splitAt'/trySplitAt
+splitIntoSafe/splitInto'/trySplitInto, splitIntoN, sum, sumBy, iter, iteri, choose, takeWhile
+skipWhile, sortWith, scanBack, mapFold, mapFoldBack, zipper
+```
+
+### List.NonEmpty.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### List.NonEmpty.Option
+
+```
+traverse, sequence
+```
+
+### List.NonEmpty.ValueOption
+
+```
+traverse, sequence
+```
+
+### List.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### List.Option
+
+```
+traverse, sequence
+```
+
+### List.ValueOption
+
+```
+traverse, sequence
+```
+
+### Array
+
+Same functions as `List`. Also has: subSafe/sub'/trySub.
+
+### Array.NonEmpty
+
+```
+create, singleton, average, averageBy, head, last, min, max, minBy, maxBy, tail, uncons, reduce
+reduceBack, length, fold, foldBack, forall, groupBy, indexed, map, group, mapi
+map2Safe/map2'/tryMap2, filter, append, appendL, appendR, concat, collect, contains, countBy
+distinct, distinctBy, drop, dropUnsafe, dropLenient, exists, findSafe/find'/tryFind
+findBackSafe/findBack'/tryFindBack, findIndexSafe/findIndex'/tryFindIndex
+findIndexBackSafe/findIndexBack'/tryFindIndexBack, ofArraySafe/ofArray'/tryOfArray, pairwise, rev
+scan, sort, sortBy, sortDescending, sortByDescending, toArray, toList, toNonEmptyList, toSeq
+toNonEmptySeq, toNonEmptyFSeq, transposeSafe/transpose'/tryTranspose, truncate, trySkip, tryTake
+windowedSafe/windowed'/tryWindowed, window, zipShortest, zipSafe/zip'/tryZip, zip3Safe/zip3'/tryZip3
+split, splitPairwise, takeUntilIncluding, chunkBySizeSafe/chunkBySize'/tryChunkBySize, chunksOf
+exactlyOneSafe/exactlyOne'/tryExactlyOne, fold2Safe/fold2'/tryFold2
+foldBack2Safe/foldBack2'/tryFoldBack2, forall2Safe/forall2'/tryForall2, itemSafe/item'
+iter2Safe/iter2'/tryIter2, iteri2Safe/iteri2'/tryIteri2, mapi2Safe/mapi2'/tryMapi2
+map3Safe/map3'/tryMap3, pickSafe/pick'/tryPick, skipUntilIncluding, splitAtSafe/splitAt'/trySplitAt
+splitIntoSafe/splitInto'/trySplitInto, splitIntoN, subSafe/sub'/trySub, sum, sumBy, iter, iteri
+choose, takeWhile, skipWhile, sortWith, scanBack, mapFold, mapFoldBack, zipper
+```
+
+### Array.NonEmpty.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### Array.NonEmpty.Option
+
+```
+traverse, sequence
+```
+
+### Array.NonEmpty.ValueOption
+
+```
+traverse, sequence
+```
+
+### Array.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### Array.Option
+
+```
+traverse, sequence
+```
+
+### Array.ValueOption
+
+```
+traverse, sequence
+```
+
+### Set
+
+```
+minElementSafe/minElement'/tryMinElement, maxElementSafe/maxElement'/tryMaxElement
+```
+
+### Set.NonEmpty
+
+```
+create, singleton, minElement, maxElement, add, contains, count, difference, differenceL
+differenceR, exists, filter, fold, foldBack, forall, intersect, intersectL, intersectR
+intersectMany, isProperSubset, isProperSubsetL, isProperSubsetR, isProperSuperset, isProperSupersetL
+isProperSupersetR, isSubset, isSubsetL, isSubsetR, isSuperset, isSupersetL, isSupersetR, iter, map
+ofArraySafe/ofArray'/tryOfArray, ofNonEmptyArray, ofSeqSafe/ofSeq'/tryOfSeq, ofNonEmptySeq
+ofListSafe/ofList'/tryOfList, ofNonEmptyList, partition, remove, toArray, toNonEmptyArray, toList
+toNonEmptyList, toSeq, toNonEmptySeq, union, unionL, unionR, unionMany
+```
+
+### Set.NonEmpty.Result
+
+```
+traverse, sequence, collect
+```
+
+### Set.NonEmpty.Option
+
+```
+traverse, sequence
+```
+
+### Set.NonEmpty.ValueOption
+
+```
+traverse, sequence
+```
+
+### Set.Result
+
+```
+traverse, sequence, collect
+```
+
+### Set.Option
+
+```
+traverse, sequence
+```
+
+### Set.ValueOption
+
+```
+traverse, sequence
+```
+
+### Map
+
+```
+findSafe/find', ofListSafe/ofList'/tryOfList, ofArraySafe/ofArray'/tryOfArray
+ofSeqSafe/ofSeq'/tryOfSeq, keys, choose2, choose, map2Intersection, zipIntersection
+map2Safe/map2'/tryMap2, zipSafe/zip'/tryZip, zipper
+```
+
+### Map.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### Map.Option
+
+```
+traverse, sequence
+```
+
+### Map.ValueOption
+
+```
+traverse, sequence
+```
+
+### Map.NonEmpty.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### Map.NonEmpty.Option
+
+```
+traverse, sequence
+```
+
+### Map.NonEmpty.ValueOption
+
+```
+traverse, sequence
+```
+
+### Dictionary
+
+```
+findSafe/find'/tryFind, count, keys, values, containsKey, map, ofListSafe/ofList'/tryOfList
+ofArraySafe/ofArray'/tryOfArray, ofSeqSafe/ofSeq'/tryOfSeq
+```
+
+### Dictionary.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### Dictionary.Option
+
+```
+traverse, sequence
+```
+
+### Dictionary.ValueOption
+
+```
+traverse, sequence
+```
+
+### Dictionary.NonEmpty.Result
+
+```
+traverse, sequence, collect, partitionMap, partition
+```
+
+### Dictionary.NonEmpty.Option
+
+```
+traverse, sequence
+```
+
+### Dictionary.NonEmpty.ValueOption
+
+```
+traverse, sequence
+```
+
+### InfiniteSeq
+
+```
+init, initBounded, initUnbounded, assume, append, filter, isHungAfter, item, take, takeWhile, choose
+chunksOf, chunkBySizeUnsafe, skip, skipWhile, skipUntilIncluding, head, tail, uncons, map, mapi
+map2, pairwise, find, zip, scan, split, splitPairwise
+```
+
+### String
+
+```
+split, splitNoEmptyEntries
+```
+
+### IDictionaryExtensions
+
+```
+FindSafe
+```
+
+### Prelude
+
+```
+DictSafe, DictLenient
+```
+
+<!-- END GENERATED API INDEX -->
